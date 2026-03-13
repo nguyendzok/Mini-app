@@ -111,7 +111,7 @@
             background: linear-gradient(135deg, var(--accent), #ea580c); color: #fff; box-shadow: 0 0 15px var(--accent-glow);
             border-color: transparent;}
         
-        /* FIX HIỆU ỨNG ACCORDION GIẬT CỤC (Dùng transition tiên tiến) */
+        /* FIX HIỆU ỨNG ACCORDION GIẬT CỤC */
         .card-detail { max-height: 0;
             opacity: 0; overflow: hidden; transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease-out, padding 0.3s ease; padding: 0 20px;
         }
@@ -163,12 +163,12 @@
         .stepper { display: flex; justify-content: space-between;
             align-items: flex-end; position: relative; margin-bottom: 10px; z-index: 2;}
         
-        /* ĐÃ FIX LẠI CHIỀU DÀI THANH TRẠNG THÁI (MỞ RỘNG TỪ 5% ĐẾN 95%) */
+        /* FIX LỖI OVERFLOW TOÁN HỌC - TÂM ICON CÁCH 2 BÊN 12.5% VÀ ĐỘ DÀI THANH 75% LÀ VỪA KHÍT 100% */
         .stepper::before { content: '';
-            position: absolute; left: 5%; right: 5%; bottom: 12px; height: 4px; background: #27272a; z-index: -1; border-radius: 4px;
+            position: absolute; left: 12.5%; right: 12.5%; bottom: 12px; height: 5px; background: #27272a; z-index: -1; border-radius: 4px;
             box-shadow: inset 0 1px 3px rgba(0,0,0,0.8);}
-        .stepper-line-active { position: absolute; left: 5%;
-            bottom: 12px; height: 4px; background: linear-gradient(90deg, var(--accent), var(--success)); z-index: -1; 
+        .stepper-line-active { position: absolute; left: 12.5%;
+            bottom: 12px; height: 5px; background: linear-gradient(90deg, var(--accent), var(--success)); z-index: -1; 
             transition: width 0.7s cubic-bezier(0.25, 0.8, 0.25, 1);
             box-shadow: 0 0 15px var(--success), 0 0 5px var(--accent); border-radius: 4px;}
         
@@ -387,23 +387,35 @@
         }
         document.addEventListener("DOMContentLoaded", initApp);
 
-        function extractNameFromLink(url) {
-            if (!url) return "Sản phẩm đính kèm";
+        // Hàm giả lập mở trang web để bóc tách lấy tên gốc của sản phẩm bằng Proxy
+        async function fetchTitleFromUrl(url) {
             try {
-                let u = new URL(url);
-                let path = decodeURIComponent(u.pathname);
-                // Trích xuất tên từ các link shopee, lazada dài có cấu trúc
-                if (u.hostname.includes('shopee') || u.hostname.includes('lazada')) {
-                    let parts = path.split('/');
-                    let name = parts[1] || "";
-                    if(name.toLowerCase() === 'product' || name.toLowerCase() === 'item') name = parts[2] || "";
-                    name = name.replace(/-i\.\d+\.\d+.*$/, ''); 
-                    name = name.replace(/-i\d+\.html.*$/, ''); 
-                    name = name.replace(/-/g, ' ');
-                    if(name.length > 5) return name.charAt(0).toUpperCase() + name.slice(1);
+                // Dùng AllOrigins Proxy để vượt qua rào cản CORS của trình duyệt
+                const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
+                const response = await fetch(proxyUrl);
+                const data = await response.json();
+                
+                if (data.contents) {
+                    // Chuyển chuỗi HTML nhận được thành DOM để đọc
+                    const doc = new DOMParser().parseFromString(data.contents, "text/html");
+                    let title = doc.querySelector("title") ? doc.querySelector("title").innerText : "";
+                    
+                    if (title) {
+                        // Cắt bỏ các đuôi thừa thường gặp của Shopee và Lazada
+                        title = title.replace(/\| Shopee Việt Nam/gi, '')
+                                     .replace(/\| Lazada\.vn/gi, '')
+                                     .replace(/Mua ngay /gi, '')
+                                     .trim();
+                        // Trả về tên nếu trang không bị chặn Captcha (Bị chặn thường hiển thị "Shopee")
+                        if (title.length > 8 && !title.toLowerCase().startsWith("shopee") && !title.toLowerCase().startsWith("lazada")) {
+                            return title;
+                        }
+                    }
                 }
-                return "Sản phẩm đính kèm";
-            } catch(e) { return "Sản phẩm đính kèm"; }
+            } catch (e) {
+                console.error("Lỗi quét link:", e);
+            }
+            return null;
         }
 
         async function fetchOrders(id) {
@@ -413,8 +425,7 @@
                 document.getElementById('uTotal').innerText = data.length;
                 renderOrders(data);
             } catch (error) {
-                document.getElementById('orderList').innerHTML = `<div style="text-align:center; padding: 40px; color: var(--danger)">❌ Mất kết nối tới máy chủ API.
-                Vui lòng thử lại.</div>`;
+                document.getElementById('orderList').innerHTML = `<div style="text-align:center; padding: 40px; color: var(--danger)">❌ Mất kết nối tới máy chủ API. Vui lòng thử lại.</div>`;
             }
         }
 
@@ -425,13 +436,9 @@
 
         function getShippingStep(stageText) {
             const txt = (stageText || "").toLowerCase();
-            // Bước 4: Chứa chữ "Thành công", "Đã giao", "Hoàn thành"
             if (txt.includes('thành công') || txt.includes('đã giao') || txt.includes('hoàn thành')) return 4;
-            // Bước 3: Đang giao, bưu tá đi giao, đang phát
             if (txt.includes('đang giao') || txt.includes('bưu tá') || txt.includes('đang phát')) return 3;
-            // Bước 2: Vận chuyển, kho, hub, soc, lấy hàng, trung chuyển, đã nhận
             if (txt.includes('kho') || txt.includes('hub') || txt.includes('soc') || txt.includes('vận chuyển') || txt.includes('lấy hàng') || txt.includes('trung chuyển') || txt.includes('đã nhận')) return 2;
-            // Mặc định là Bước 1
             return 1;
         }
 
@@ -443,6 +450,9 @@
                 list.innerHTML = `<div style="text-align:center; padding: 40px; color: var(--text-sub)">Bạn chưa có đơn hàng nào.</div>`;
                 return;
             }
+
+            let fullHtml = "";
+            let fetchTasks = []; // Danh sách các link cần lấy tên
 
             orders.forEach(o => {
                 let sttClass = 'wait';
@@ -466,15 +476,9 @@
                 let itemsHtml = '';
                 if(o.items && o.items.length > 0) {
                     o.items.forEach((item, idx) => {
-                        // TỰ ĐỘNG CẬP NHẬT TÊN SẢN PHẨM HOẶC LẤY TÊN GỐC CỦA ĐƠN HÀNG
-                        let extractedName = extractNameFromLink(item.link);
-                        let realName = extractedName;
-                        if (extractedName.includes("Sản phẩm đính kèm")) {
-                            realName = item.product_name || item.name || o.product_name || "Sản phẩm";
-                        }
-                        
                         let advPay = item.advance_payment > 0 ? `<div class="advance-pay"><span>Thanh toán thêm:</span> <span>${new Intl.NumberFormat('vi-VN').format(item.advance_payment)}đ</span></div>` : '';
                         let historyHtml = '<div class="tl-item"><div class="tl-desc" style="color:var(--text-sub)">Đơn hàng đang chờ xử lý...</div></div>';
+                        
                         if(item.tracking_history && item.tracking_history.length > 0) {
                             historyHtml = item.tracking_history.slice(0, 4).map((hist, hIdx) => `
                                 <div class="tl-item ${hIdx === 0 ? 'latest' : ''}">
@@ -487,8 +491,8 @@
                         let current_stage = item.spx_stage || o.status; 
                         let step = getShippingStep(current_stage);
                         
-                        /* ĐÃ FIX: THANH SẼ ĐI ĐỦ 100% VÀ TỰ DÀI RA ĐẾN HẾT GÓC */
-                        let wPercent = (step === 1) ? 0 : (step === 2) ? 33 : (step === 3) ? 66 : 100;
+                        /* ĐỘ DÀI TOÁN HỌC CHUẨN XÁC: 0 - 25% - 50% - 75% */
+                        let wPercent = (step === 1) ? 0 : (step === 2) ? 25 : (step === 3) ? 50 : 75;
                         
                         let animIcon = "";
                         if(step === 1) animIcon = `<div class="anim-container"><div class="css-box"></div><div class="shadow-pulse"></div></div>`;
@@ -532,6 +536,19 @@
                                 </div>
                             </div>
                         `;
+
+                        // TẠO ID ĐỘC NHẤT CHO THẺ CHỨA TÊN VÀ ĐẨY VÀO HÀNG ĐỢI QUÉT TÊN TỪ LINK
+                        let nameId = `pname_${o.order_id}_${idx}_${Math.random().toString(36).substr(2, 5)}`;
+                        let fallbackName = item.product_name || item.name || o.product_name || "Sản phẩm đính kèm";
+                        let realNameHtml = "";
+
+                        if (item.link && item.link.startsWith("http")) {
+                            fetchTasks.push({ id: nameId, url: item.link, fallback: fallbackName });
+                            realNameHtml = `<a href="${item.link}" target="_blank" id="${nameId}" style="color: #fff; text-decoration: none;">🔄 Đang lấy tên từ link...</a>`;
+                        } else {
+                            realNameHtml = `<a href="#" style="color: #fff; text-decoration: none;">${fallbackName}</a>`;
+                        }
+
                         itemsHtml += `
                             <div class="package">
                                 <div class="pkg-head">
@@ -540,7 +557,7 @@
                                 </div>
                                 <div class="real-product-name">
                                     <span style="font-size:16px; text-shadow: 0 0 8px rgba(255,255,255,0.6);">🛒</span> 
-                                    <a href="${item.link}" target="_blank" style="color: #fff; text-decoration: none;">${realName}</a>
+                                    ${realNameHtml}
                                 </div>
                                 ${trackerHtml}
                                 <div class="timeline">${historyHtml}</div>
@@ -550,7 +567,7 @@
                     });
                 }
 
-                let card = `
+                fullHtml += `
                     <div class="card">
                         <div class="card-main" onclick="toggleCard(this)">
                             <div class="flex-between">
@@ -587,7 +604,18 @@
                         </div>
                     </div>
                 `;
-                list.innerHTML += card;
+            });
+            
+            list.innerHTML = fullHtml;
+
+            // Kích hoạt các luồng giả lập quét tên ngầm sau khi load xong giao diện
+            fetchTasks.forEach(task => {
+                fetchTitleFromUrl(task.url).then(title => {
+                    let el = document.getElementById(task.id);
+                    if(el) {
+                        el.innerText = title ? title : task.fallback;
+                    }
+                });
             });
         }
     </script>
