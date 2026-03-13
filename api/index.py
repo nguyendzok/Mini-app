@@ -1,6 +1,6 @@
 from fastapi import FastAPI, Query
 from fastapi.middleware.cors import CORSMiddleware
-from motor.motor_asyncio import AsyncIOMotorClient
+from pymongo import MongoClient
 import os
 
 app = FastAPI()
@@ -13,19 +13,20 @@ app.add_middleware(
 )
 
 MONGO_URI = os.environ.get("MONGO_URI")
+# Kết nối đồng bộ an toàn cho Vercel Serverless
+client = MongoClient(MONGO_URI) if MONGO_URI else None
 
 @app.get("/api/orders")
-async def get_user_orders(user_id: int = Query(..., description="Telegram User ID")):
-    if not MONGO_URI:
+def get_user_orders(user_id: int = Query(..., description="Telegram User ID")):
+    if not client:
         return []
 
-    client = AsyncIOMotorClient(MONGO_URI)
     db = client['shop_database']
     orders_col = db['orders']
     
-    # Chỉ truy vấn dữ liệu theo đúng user_id của khách (Bảo mật tuyệt đối)
+    # Lấy dữ liệu
     cursor = orders_col.find({"user_id": user_id}).sort("created_at", -1).limit(30)
-    orders = await cursor.to_list(length=30)
+    orders = list(cursor)
     
     result = []
     for o in orders:
