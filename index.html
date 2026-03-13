@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AutoMoneyXD - Quản Lý Đơn Hàng</title>
+    <title>Quản Lý Đơn Hàng</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
@@ -49,7 +49,10 @@
             background: linear-gradient(135deg, #f5a623, #ea580c);
             display: flex; justify-content: center; align-items: center;
             font-size: 20px; font-weight: 800; color: #fff; text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+            overflow: hidden;
         }
+        .avatar img { width: 100%; height: 100%; object-fit: cover; }
+        
         .name { font-size: 16px; font-weight: 700; letter-spacing: -0.3px; }
         .uid { font-size: 12px; color: var(--text-sub); margin-top: 2px; display: flex; align-items: center; gap: 4px;}
         
@@ -146,7 +149,7 @@
         <div class="user-info">
             <div class="avatar" id="uAvatar"></div>
             <div>
-                <div class="name" id="uName">Xác thực...</div>
+                <div class="name" id="uName">Đang tải...</div>
                 <div class="uid" id="uId"><svg width="12" height="12"><use href="#icon-user"></use></svg> --------</div>
             </div>
         </div>
@@ -162,31 +165,68 @@
             <div><div class="skeleton skel-title"></div><div class="skeleton skel-date" style="margin-top:8px"></div></div>
             <div class="flex-between"><div class="skeleton skel-price"></div><div class="skeleton skel-badge" style="width:32px;height:32px;border-radius:50%"></div></div>
         </div>
-        <div class="skel-card">
-            <div class="flex-between"><div class="skeleton skel-badge"></div><div class="skeleton skel-badge"></div></div>
-            <div><div class="skeleton skel-title"></div><div class="skeleton skel-date" style="margin-top:8px"></div></div>
-            <div class="flex-between"><div class="skeleton skel-price"></div><div class="skeleton skel-badge" style="width:32px;height:32px;border-radius:50%"></div></div>
-        </div>
     </div>
 
     <script>
-        const tg = window.Telegram.WebApp;
-        tg.expand();
-        tg.ready();
+        // MÃ JS CHỐNG LỖI HOÀN TOÀN
+        function initApp() {
+            try {
+                const tg = window.Telegram.WebApp;
+                tg.expand();
+                tg.ready();
 
-        const user = tg.initDataUnsafe?.user;
-        let userId = 0;
+                // Bắt dữ liệu an toàn
+                const initData = tg.initDataUnsafe || {};
+                const user = initData.user;
 
-        if (user) {
-            userId = user.id;
-            document.getElementById('uName').innerText = user.first_name + (user.last_name ? ' ' + user.last_name : '');
-            document.getElementById('uAvatar').innerText = user.first_name.charAt(0).toUpperCase();
-            document.getElementById('uId').innerHTML = `<svg width="12" height="12"><use href="#icon-user"></use></svg> ID: ${userId}`;
-            fetchOrders(userId);
-        } else {
-            document.getElementById('orderList').innerHTML = `<div style="text-align:center; padding: 40px; color: var(--danger)">⚠️ Bạn phải mở từ trong Bot Telegram.</div>`;
+                if (user && user.id) {
+                    const userId = user.id;
+                    const firstName = user.first_name || "Khách hàng";
+                    const lastName = user.last_name ? " " + user.last_name : "";
+                    
+                    document.getElementById('uName').innerText = firstName + lastName;
+                    document.getElementById('uId').innerHTML = `<svg width="12" height="12"><use href="#icon-user"></use></svg> ID: ${userId}`;
+                    
+                    // Xử lý Avatar xịn
+                    if (user.photo_url) {
+                        document.getElementById('uAvatar').innerHTML = `<img src="${user.photo_url}" alt="avatar">`;
+                        document.getElementById('uAvatar').style.background = 'transparent';
+                    } else {
+                        document.getElementById('uAvatar').innerText = firstName.charAt(0).toUpperCase();
+                    }
+
+                    fetchOrders(userId);
+
+                } else {
+                    // NẾU LỖI: In thẳng mã lỗi ra màn hình để báo bệnh
+                    document.getElementById('orderList').innerHTML = `
+                        <div style="text-align:center; padding: 20px; color: var(--danger)">
+                            ⚠️ <b>Không thể lấy ID Telegram</b><br><br>
+                            <span style="font-size: 13px; color: var(--text-sub)">Xin lưu ý: Đường link trong Bot bắt buộc phải dùng <b>https://</b> thì Telegram mới cấp quyền.<br><br>Hãy đóng cửa sổ này và mở lại.</span><br><br>
+                            <div style="background: #18181b; padding: 12px; border-radius: 8px; font-size: 11px; text-align: left; color: #a1a1aa; word-wrap: break-word; border: 1px solid #3f3f46;">
+                                <b>Log hệ thống:</b><br>${JSON.stringify(initData)}<br><br>
+                                <b>Nền tảng:</b> ${tg.platform || 'Không xác định'}
+                            </div>
+                        </div>
+                    `;
+                    document.getElementById('uName').innerText = "Lỗi bảo mật";
+                }
+            } catch (err) {
+                document.getElementById('orderList').innerHTML = `
+                    <div style="text-align:center; padding: 20px; color: var(--danger)">
+                        ❌ <b>Lỗi Thực Thi JS</b><br>
+                        <span style="font-size: 12px;">${err.message}</span>
+                    </div>
+                `;
+            }
         }
 
+        // Đợi DOM load xong, chờ thêm 350 mili-giây để Telegram kịp đẩy data vào trình duyệt
+        document.addEventListener("DOMContentLoaded", () => {
+            setTimeout(initApp, 350);
+        });
+
+        // HÀM LẤY DATA TỪ VERCEL (GIỮ NGUYÊN)
         async function fetchOrders(id) {
             try {
                 const response = await fetch(`/api/orders?user_id=${id}`);
@@ -194,7 +234,7 @@
                 document.getElementById('uTotal').innerText = data.length;
                 renderOrders(data);
             } catch (error) {
-                document.getElementById('orderList').innerHTML = `<div style="text-align:center; padding: 40px; color: var(--danger)">❌ Mất kết nối tới máy chủ. Vui lòng thử lại.</div>`;
+                document.getElementById('orderList').innerHTML = `<div style="text-align:center; padding: 40px; color: var(--danger)">❌ Mất kết nối tới máy chủ API. Kiểm tra lại Backend Vercel.</div>`;
             }
         }
 
