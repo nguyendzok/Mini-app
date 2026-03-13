@@ -163,11 +163,11 @@
         .stepper { display: flex; justify-content: space-between;
             align-items: flex-end; position: relative; margin-bottom: 10px; z-index: 2;}
         
-        /* ĐÃ FIX LỖI TRÀN VIỀN */
+        /* ĐÃ FIX LẠI CHIỀU DÀI THANH TRẠNG THÁI (MỞ RỘNG TỪ 5% ĐẾN 95%) */
         .stepper::before { content: '';
-            position: absolute; left: 12.5%; right: 12.5%; bottom: 12px; height: 4px; background: #27272a; z-index: -1; border-radius: 4px;
+            position: absolute; left: 5%; right: 5%; bottom: 12px; height: 4px; background: #27272a; z-index: -1; border-radius: 4px;
             box-shadow: inset 0 1px 3px rgba(0,0,0,0.8);}
-        .stepper-line-active { position: absolute; left: 12.5%;
+        .stepper-line-active { position: absolute; left: 5%;
             bottom: 12px; height: 4px; background: linear-gradient(90deg, var(--accent), var(--success)); z-index: -1; 
             transition: width 0.7s cubic-bezier(0.25, 0.8, 0.25, 1);
             box-shadow: 0 0 15px var(--success), 0 0 5px var(--accent); border-radius: 4px;}
@@ -388,17 +388,21 @@
         document.addEventListener("DOMContentLoaded", initApp);
 
         function extractNameFromLink(url) {
-            if (!url) return "Sản phẩm không có link";
+            if (!url) return "Sản phẩm đính kèm";
             try {
                 let u = new URL(url);
                 let path = decodeURIComponent(u.pathname);
-                if (u.hostname.includes('shopee.vn') || u.hostname.includes('lazada.vn')) {
+                // Trích xuất tên từ các link shopee, lazada dài có cấu trúc
+                if (u.hostname.includes('shopee') || u.hostname.includes('lazada')) {
                     let parts = path.split('/');
                     let name = parts[1] || "";
-                    name = name.replace(/-i\.\d+\.\d+.*$/, ''); name = name.replace(/-i\d+\.html.*$/, ''); name = name.replace(/-/g, ' ');
-                    if(name.length > 3) return name.charAt(0).toUpperCase() + name.slice(1);
+                    if(name.toLowerCase() === 'product' || name.toLowerCase() === 'item') name = parts[2] || "";
+                    name = name.replace(/-i\.\d+\.\d+.*$/, ''); 
+                    name = name.replace(/-i\d+\.html.*$/, ''); 
+                    name = name.replace(/-/g, ' ');
+                    if(name.length > 5) return name.charAt(0).toUpperCase() + name.slice(1);
                 }
-                return "Sản phẩm đính kèm từ Link";
+                return "Sản phẩm đính kèm";
             } catch(e) { return "Sản phẩm đính kèm"; }
         }
 
@@ -462,7 +466,13 @@
                 let itemsHtml = '';
                 if(o.items && o.items.length > 0) {
                     o.items.forEach((item, idx) => {
-                        let realName = extractNameFromLink(item.link);
+                        // TỰ ĐỘNG CẬP NHẬT TÊN SẢN PHẨM HOẶC LẤY TÊN GỐC CỦA ĐƠN HÀNG
+                        let extractedName = extractNameFromLink(item.link);
+                        let realName = extractedName;
+                        if (extractedName.includes("Sản phẩm đính kèm")) {
+                            realName = item.product_name || item.name || o.product_name || "Sản phẩm";
+                        }
+                        
                         let advPay = item.advance_payment > 0 ? `<div class="advance-pay"><span>Thanh toán thêm:</span> <span>${new Intl.NumberFormat('vi-VN').format(item.advance_payment)}đ</span></div>` : '';
                         let historyHtml = '<div class="tl-item"><div class="tl-desc" style="color:var(--text-sub)">Đơn hàng đang chờ xử lý...</div></div>';
                         if(item.tracking_history && item.tracking_history.length > 0) {
@@ -477,8 +487,8 @@
                         let current_stage = item.spx_stage || o.status; 
                         let step = getShippingStep(current_stage);
                         
-                        /* ĐÃ FIX LỖI TÍNH TOÁN % CHIỀU DÀI THANH */
-                        let wPercent = (step === 1) ? 0 : (step === 2) ? 25 : (step === 3) ? 50 : 75;
+                        /* ĐÃ FIX: THANH SẼ ĐI ĐỦ 100% VÀ TỰ DÀI RA ĐẾN HẾT GÓC */
+                        let wPercent = (step === 1) ? 0 : (step === 2) ? 33 : (step === 3) ? 66 : 100;
                         
                         let animIcon = "";
                         if(step === 1) animIcon = `<div class="anim-container"><div class="css-box"></div><div class="shadow-pulse"></div></div>`;
@@ -486,15 +496,11 @@
                         if(step === 3) animIcon = `<div class="anim-container"><div class="css-bike"><div class="bike-body"></div><div class="bike-handle"></div><div class="bike-headlight"></div><div class="bike-box"></div><div class="bike-wheel w1"></div><div class="bike-wheel w2"></div><div class="wind-lines"></div></div></div>`;
                         if(step === 4) animIcon = `<div class="anim-container"><div class="css-success"></div></div>`;
 
-                        // TỰ ĐỘNG ĐỔI MÀU CHỮ DƯỚI TRACKER TÙY VÀO BƯỚC
                         let stageColor = "var(--text-main)";
                         let stageGlow = "none";
-                        if(step === 4) { stageColor = "var(--success)"; stageGlow = "0 0 10px rgba(16, 185, 129, 0.5)";
-                        }
-                        else if(step === 3) { stageColor = "var(--info)";
-                            stageGlow = "0 0 10px rgba(59, 130, 246, 0.5)"; }
-                        else if(step === 2) { stageColor = "var(--accent)";
-                            stageGlow = "0 0 10px rgba(245, 166, 35, 0.5)"; }
+                        if(step === 4) { stageColor = "var(--success)"; stageGlow = "0 0 10px rgba(16, 185, 129, 0.5)"; }
+                        else if(step === 3) { stageColor = "var(--info)"; stageGlow = "0 0 10px rgba(59, 130, 246, 0.5)"; }
+                        else if(step === 2) { stageColor = "var(--accent)"; stageGlow = "0 0 10px rgba(245, 166, 35, 0.5)"; }
 
                         let trackerHtml = `
                             <div class="live-tracker">
