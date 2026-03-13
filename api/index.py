@@ -13,7 +13,6 @@ app.add_middleware(
 )
 
 MONGO_URI = os.environ.get("MONGO_URI")
-# Kết nối đồng bộ an toàn cho Vercel Serverless
 client = MongoClient(MONGO_URI) if MONGO_URI else None
 
 @app.get("/api/orders")
@@ -24,7 +23,6 @@ def get_user_orders(user_id: int = Query(..., description="Telegram User ID")):
     db = client['shop_database']
     orders_col = db['orders']
     
-    # Lấy dữ liệu
     cursor = orders_col.find({"user_id": user_id}).sort("created_at", -1).limit(30)
     orders = list(cursor)
     
@@ -33,6 +31,7 @@ def get_user_orders(user_id: int = Query(..., description="Telegram User ID")):
         items_data = []
         for item in o.get("items", []):
             items_data.append({
+                "link": item.get("link", ""), # BỔ SUNG LẤY LINK SẢN PHẨM
                 "carrier": item.get("carrier", ""),
                 "spx_code": item.get("spx_code", ""),
                 "spx_stage": item.get("spx_stage", ""),
