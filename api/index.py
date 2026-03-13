@@ -28,10 +28,22 @@ def get_user_orders(user_id: int = Query(..., description="Telegram User ID")):
     
     result = []
     for o in orders:
+        # Lấy mảng items, nếu là đơn CŨ không có thì tự tạo 1 mảng ảo để Web App đọc được
+        raw_items = o.get("items", [])
+        if not raw_items:
+            raw_items = [{
+                "link": o.get("product_link", "Đơn hàng cũ"),
+                "carrier": o.get("carrier", "N/A"),
+                "spx_code": o.get("spx_code", ""),
+                "spx_stage": o.get("spx_stage", o.get("status", "")), # Lấy trạng thái tổng làm lộ trình
+                "advance_payment": o.get("advance_payment", o.get("cod_amount", 0)),
+                "tracking_history": o.get("tracking_history", [])
+            }]
+
         items_data = []
-        for item in o.get("items", []):
+        for item in raw_items:
             items_data.append({
-                "link": item.get("link", ""), # BỔ SUNG LẤY LINK SẢN PHẨM
+                "link": item.get("link", ""),
                 "carrier": item.get("carrier", ""),
                 "spx_code": item.get("spx_code", ""),
                 "spx_stage": item.get("spx_stage", ""),
