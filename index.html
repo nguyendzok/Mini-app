@@ -168,65 +168,74 @@
     </div>
 
     <script>
-        // MÃ JS CHỐNG LỖI HOÀN TOÀN
         function initApp() {
             try {
                 const tg = window.Telegram.WebApp;
-                tg.expand();
                 tg.ready();
+                tg.expand();
 
-                // Bắt dữ liệu an toàn
-                const initData = tg.initDataUnsafe || {};
-                const user = initData.user;
+                let attempts = 0;
+                
+                // Hàm kiểm tra và xử lý dữ liệu
+                const tryFetchData = () => {
+                    const initData = tg.initDataUnsafe || {};
+                    const user = initData.user;
 
-                if (user && user.id) {
-                    const userId = user.id;
-                    const firstName = user.first_name || "Khách hàng";
-                    const lastName = user.last_name ? " " + user.last_name : "";
-                    
-                    document.getElementById('uName').innerText = firstName + lastName;
-                    document.getElementById('uId').innerHTML = `<svg width="12" height="12"><use href="#icon-user"></use></svg> ID: ${userId}`;
-                    
-                    // Xử lý Avatar xịn
-                    if (user.photo_url) {
-                        document.getElementById('uAvatar').innerHTML = `<img src="${user.photo_url}" alt="avatar">`;
-                        document.getElementById('uAvatar').style.background = 'transparent';
-                    } else {
-                        document.getElementById('uAvatar').innerText = firstName.charAt(0).toUpperCase();
+                    if (user && user.id) {
+                        const userId = user.id;
+                        const firstName = user.first_name || "Khách hàng";
+                        const lastName = user.last_name ? " " + user.last_name : "";
+                        
+                        document.getElementById('uName').innerText = firstName + lastName;
+                        document.getElementById('uId').innerHTML = `<svg width="12" height="12"><use href="#icon-user"></use></svg> ID: ${userId}`;
+                        
+                        if (user.photo_url) {
+                            document.getElementById('uAvatar').innerHTML = `<img src="${user.photo_url}" alt="avatar">`;
+                            document.getElementById('uAvatar').style.background = 'transparent';
+                        } else {
+                            document.getElementById('uAvatar').innerText = firstName.charAt(0).toUpperCase();
+                        }
+
+                        fetchOrders(userId);
+                        return true; // Thành công
                     }
+                    return false; // Thất bại
+                };
 
-                    fetchOrders(userId);
-
-                } else {
-                    // NẾU LỖI: In thẳng mã lỗi ra màn hình để báo bệnh
-                    document.getElementById('orderList').innerHTML = `
-                        <div style="text-align:center; padding: 20px; color: var(--danger)">
-                            ⚠️ <b>Không thể lấy ID Telegram</b><br><br>
-                            <span style="font-size: 13px; color: var(--text-sub)">Xin lưu ý: Đường link trong Bot bắt buộc phải dùng <b>https://</b> thì Telegram mới cấp quyền.<br><br>Hãy đóng cửa sổ này và mở lại.</span><br><br>
-                            <div style="background: #18181b; padding: 12px; border-radius: 8px; font-size: 11px; text-align: left; color: #a1a1aa; word-wrap: break-word; border: 1px solid #3f3f46;">
-                                <b>Log hệ thống:</b><br>${JSON.stringify(initData)}<br><br>
-                                <b>Nền tảng:</b> ${tg.platform || 'Không xác định'}
-                            </div>
-                        </div>
-                    `;
-                    document.getElementById('uName').innerText = "Lỗi bảo mật";
+                // Chạy thử ngay lập tức
+                if (!tryFetchData()) {
+                    // Nếu thất bại, thử lại liên tục mỗi 200ms (tối đa 10 lần = 2 giây)
+                    const interval = setInterval(() => {
+                        attempts++;
+                        if (tryFetchData()) {
+                            clearInterval(interval); // Thành công thì dừng vòng lặp
+                        } else if (attempts >= 10) {
+                            clearInterval(interval); // Quá 10 lần vẫn không có data thì báo lỗi
+                            const initData = tg.initDataUnsafe || {};
+                            document.getElementById('orderList').innerHTML = `
+                                <div style="text-align:center; padding: 20px; color: var(--danger)">
+                                    ⚠️ <b>Lỗi Mất Dữ Liệu Telegram</b><br><br>
+                                    <span style="font-size: 13px; color: var(--text-sub)">Vui lòng đảm bảo đường link trong Bot có dấu gạch chéo ở cuối: <br><b>https://hoangngocnguyen.id.vn/</b></span><br><br>
+                                    <div style="background: #18181b; padding: 12px; border-radius: 8px; font-size: 11px; text-align: left; color: #a1a1aa; word-wrap: break-word; border: 1px solid #3f3f46;">
+                                        <b>Log:</b><br>${JSON.stringify(initData)}<br>
+                                        <b>Platform:</b> ${tg.platform || 'N/A'}<br>
+                                        <b>Full URL:</b> ${window.location.href}
+                                    </div>
+                                </div>
+                            `;
+                            document.getElementById('uName').innerText = "Lỗi bảo mật iOS";
+                        }
+                    }, 200);
                 }
             } catch (err) {
-                document.getElementById('orderList').innerHTML = `
-                    <div style="text-align:center; padding: 20px; color: var(--danger)">
-                        ❌ <b>Lỗi Thực Thi JS</b><br>
-                        <span style="font-size: 12px;">${err.message}</span>
-                    </div>
-                `;
+                document.getElementById('orderList').innerHTML = `<div style="text-align:center; padding: 20px; color: var(--danger)">❌ <b>Lỗi JS:</b> ${err.message}</div>`;
             }
         }
 
-        // Đợi DOM load xong, chờ thêm 350 mili-giây để Telegram kịp đẩy data vào trình duyệt
-        document.addEventListener("DOMContentLoaded", () => {
-            setTimeout(initApp, 350);
-        });
+        // Chạy hàm khi trang load xong
+        document.addEventListener("DOMContentLoaded", initApp);
 
-        // HÀM LẤY DATA TỪ VERCEL (GIỮ NGUYÊN)
+        // API lấy đơn hàng
         async function fetchOrders(id) {
             try {
                 const response = await fetch(`/api/orders?user_id=${id}`);
@@ -234,7 +243,7 @@
                 document.getElementById('uTotal').innerText = data.length;
                 renderOrders(data);
             } catch (error) {
-                document.getElementById('orderList').innerHTML = `<div style="text-align:center; padding: 40px; color: var(--danger)">❌ Mất kết nối tới máy chủ API. Kiểm tra lại Backend Vercel.</div>`;
+                document.getElementById('orderList').innerHTML = `<div style="text-align:center; padding: 40px; color: var(--danger)">❌ Mất kết nối tới máy chủ API. Vui lòng thử lại.</div>`;
             }
         }
 
@@ -336,5 +345,6 @@
             });
         }
     </script>
+
 </body>
 </html>
