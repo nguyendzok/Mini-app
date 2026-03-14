@@ -21,7 +21,7 @@
         * { margin: 0; padding: 0; box-sizing: border-box;
             font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
         body { background-color: var(--bg);
-            background-image: radial-gradient(circle at 50% -10%, var(--accent-glow), transparent 60%); color: var(--text-main); padding: 16px; padding-bottom: 60px; min-height: 100vh;
+            background-image: radial-gradient(circle at 50% -10%, var(--accent-glow), transparent 60%); color: var(--text-main); padding: 16px; padding-bottom: 60px; min-height: 100vh; overflow-x: hidden;
         }
         svg { flex-shrink: 0;
         }
@@ -163,33 +163,28 @@
             padding: 14px; border-radius: var(--radius-md); margin-top: 16px; color: var(--accent); font-weight: 700;
             box-shadow: inset 0 0 15px rgba(245,166,35,0.05);}
         
-        /* CSS NEON ANIMATION TRACKER */
+        /* 🔥 FIX LỖI THANH TRẠNG THÁI (TRACKER) CHUẨN TOÁN HỌC 🔥 */
         .live-tracker { background: rgba(0,0,0,0.6);
-            border-radius: var(--radius-md); padding: 24px 12px 20px 12px; margin-bottom: 18px; position: relative; border: 1px solid rgba(255,255,255,0.05);
+            border-radius: var(--radius-md); padding: 24px 0 24px 0; margin-bottom: 18px; position: relative; border: 1px solid rgba(255,255,255,0.05);
             box-shadow: inset 0 4px 20px rgba(0,0,0,0.8);}
-        .stepper { display: flex; justify-content: space-between;
-            align-items: flex-end; position: relative; margin-bottom: 10px; z-index: 2;}
         
-        .stepper::before { content: '';
-            position: absolute; left: 12.5%; right: 12.5%; bottom: 12px; height: 5px; background: #27272a; z-index: -1; border-radius: 4px;
-            box-shadow: inset 0 1px 3px rgba(0,0,0,0.8);}
-        .stepper-line-active { position: absolute; left: 12.5%;
-            bottom: 12px; height: 5px; background: linear-gradient(90deg, var(--accent), var(--success)); z-index: -1; 
-            transition: width 0.7s cubic-bezier(0.25, 0.8, 0.25, 1);
-            box-shadow: 0 0 15px var(--success), 0 0 5px var(--accent); border-radius: 4px;}
+        /* Container Flexbox với padding 2 bên bằng đúng 1 nửa width của Step (14px) */
+        .stepper { display: flex; justify-content: space-between; position: relative; margin-bottom: 10px; z-index: 2; padding: 0 14px 24px 14px; }
         
-        .step { display: flex;
-            flex-direction: column; align-items: center; gap: 10px; width: 25%; position: relative;}
-        .step-icon-wrapper { width: 28px;
-            height: 28px; border-radius: 50%; background: #1f1f22; border: 2px solid #3f3f46; display: flex; justify-content: center; align-items: center; transition: all 0.5s ease;
-            z-index: 5; box-shadow: 0 4px 6px rgba(0,0,0,0.5);}
-        .step.active .step-icon-wrapper { border-color: var(--success);
-            background: rgba(16, 185, 129, 0.2); box-shadow: 0 0 15px var(--success-glow), inset 0 0 8px rgba(16, 185, 129, 0.4);
-            color: #fff;}
-        .step-label { font-size: 10px; font-weight: 700; color: var(--text-sub); text-align: center;
-            letter-spacing: 0.5px;}
-        .step.active .step-label { color: #fff;
-            text-shadow: 0 0 8px rgba(255,255,255,0.6);}
+        /* Thanh Track mờ nằm ngang chuẩn xác */
+        .stepper-track { position: absolute; left: 28px; right: 28px; top: 13px; height: 4px; background: #27272a; z-index: -1; border-radius: 4px; box-shadow: inset 0 1px 3px rgba(0,0,0,0.8); }
+        
+        /* Thanh chạy Active xanh lá */
+        .stepper-line-active { position: absolute; left: 0; top: 0; bottom: 0; background: linear-gradient(90deg, var(--accent), var(--success)); transition: width 0.8s cubic-bezier(0.34, 1.56, 0.64, 1); box-shadow: 0 0 15px var(--success), 0 0 5px var(--accent); border-radius: 4px;}
+        
+        /* Hình tròn mốc */
+        .step { display: flex; flex-direction: column; align-items: center; width: 28px; position: relative; z-index: 3;}
+        .step-icon-wrapper { width: 28px; height: 28px; border-radius: 50%; background: #1f1f22; border: 2px solid #3f3f46; display: flex; justify-content: center; align-items: center; transition: all 0.5s ease; box-shadow: 0 4px 6px rgba(0,0,0,0.5);}
+        .step.active .step-icon-wrapper { border-color: var(--success); background: rgba(16, 185, 129, 0.2); box-shadow: 0 0 15px var(--success-glow), inset 0 0 8px rgba(16, 185, 129, 0.4); color: #fff;}
+        
+        /* Chữ của mốc (định vị absolute để không phá vỡ Grid) */
+        .step-label { font-size: 10px; font-weight: 700; color: var(--text-sub); text-align: center; letter-spacing: 0.5px; position: absolute; top: 36px; width: 70px; white-space: nowrap;}
+        .step.active .step-label { color: #fff; text-shadow: 0 0 8px rgba(255,255,255,0.6);}
 
         .anim-container { position: absolute; top: -48px; width: 40px;
             height: 40px; display: flex; justify-content: center; align-items: center; z-index: 10;}
@@ -326,14 +321,19 @@
 
     <svg style="display:none">
         <symbol id="icon-user" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></symbol>
-        <symbol id="icon-phone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></symbol>
+        <symbol id="icon-phone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 
+        2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></symbol>
         <symbol id="icon-map" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></symbol>
-        <symbol id="icon-box" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></symbol>
-        <symbol id="icon-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></symbol>
+        <symbol id="icon-box" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 
+        0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></symbol>
+        <symbol id="icon-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 16 14"></polyline></symbol>
         <symbol id="icon-down" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></symbol>
+        <symbol id="icon-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 
+        17 4 12"></polyline></symbol>
         <symbol id="icon-check-circle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></symbol>
         <symbol id="icon-truck" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></symbol>
-        <symbol id="icon-bike" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle><path d="M15 6a3.5 3.5 0 1 0-7 0"></path><path d="M12 17.5V10l-3-3"></path><path d="M14 10h5l-2 5"></path></symbol>
+        <symbol id="icon-bike" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle><path d="M15 6a3.5 3.5 
+        0 1 0-7 0"></path><path d="M12 17.5V10l-3-3"></path><path d="M14 10h5l-2 5"></path></symbol>
         <symbol id="icon-x-circle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></symbol>
     </svg>
 
@@ -357,16 +357,16 @@
             <div><span class="metric-val" id="statOnline">1</span> Đang xem</div>
         </div>
         <div class="metric" style="border-left: 1px solid rgba(255,255,255,0.1); padding-left: 16px; width: auto;">
-            <svg width="14" height="14" stroke="var(--info)" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+            <svg width="14" height="14" viewBox="0 0 24 24" style="overflow: visible;" stroke="var(--info)" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
             <div><span class="metric-val" id="statMonthly">1</span> Tháng này</div>
         </div>
     </div>
 
     <div class="order-list" id="orderList">
         <div class="skel-card">
-            <div class="flex-between"><div class="skeleton skel-badge"></div><div class="skeleton skel-badge"></div></div>
-            <div><div class="skeleton skel-title"></div><div class="skeleton skel-date" style="margin-top:8px"></div></div>
-            <div class="flex-between"><div class="skeleton skel-price"></div><div class="skeleton skel-badge" style="width:36px;height:36px;border-radius:50%"></div></div>
+            <div style="display:flex; justify-content:space-between;"><div style="width:80px;height:24px;border-radius:12px;" class="skeleton"></div><div style="width:100px;height:24px;border-radius:12px;" class="skeleton"></div></div>
+            <div style="width:80%;height:24px;margin-top:16px;" class="skeleton"></div>
+            <div style="display:flex; justify-content:space-between; margin-top:16px;"><div style="width:80px;height:28px;" class="skeleton"></div><div style="width:36px;height:36px;border-radius:50%;" class="skeleton"></div></div>
         </div>
     </div>
 
@@ -483,24 +483,19 @@
 
             orders.forEach(o => {
                 let sttClass = 'wait';
-                // THÊM VIEWBOX ĐỂ ICON KHÔNG BAO GIỜ BỊ CẮT VÀ TĂNG KÍCH THƯỚC LÊN 16x16
-                let sttIcon = '<svg width="16" height="16" viewBox="0 0 24 24" style="overflow: visible;"><use href="#icon-clock"></use></svg>'; 
                 let sttLower = o.status.toLowerCase();
                 
-                // LỌC BỎ SẠCH EMOJI ĐỂ KHÔNG BỊ TRÙNG LẶP ICON
-                let cleanStatus = o.status.replace(/[✅🚚🔴⏳📦]/g, '').trim(); 
+                // ĐÃ XÓA BỎ ICON THỪA Ở ĐÂY - CHỈ LẤY ĐÚNG CHỮ STATUS GỐC (CÓ SẴN EMOJI)
+                let cleanStatus = o.status.replace(/[✅🚚🔴⏳📦✓]/g, '').trim(); 
                 
                 if(sttLower.includes('thành công') || sttLower.includes('đã giao')) {
                     sttClass = 'success';
-                    sttIcon = '<svg width="16" height="16" viewBox="0 0 24 24" style="overflow: visible;"><use href="#icon-check-circle"></use></svg>';
                 }
                 else if(sttLower.includes('giao') || sttLower.includes('vận')) {
                     sttClass = 'deliv';
-                    sttIcon = '<svg width="16" height="16" viewBox="0 0 24 24" style="overflow: visible;"><use href="#icon-truck"></use></svg>';
                 }
                 else if(sttLower.includes('hủy')) {
                     sttClass = 'danger';
-                    sttIcon = '<svg width="16" height="16" viewBox="0 0 24 24" style="overflow: visible;"><use href="#icon-x-circle"></use></svg>';
                 }
 
                 let priceFmt = new Intl.NumberFormat('vi-VN').format(o.price) + 'đ';
@@ -524,13 +519,32 @@
                         let current_stage = (item.spx_stage || cleanStatus || 'Đang chờ hệ thống cập nhật'); 
                         let step = getShippingStep(current_stage);
                         
-                        let wPercent = (step === 1) ? 0 : (step === 2) ? 25 : (step === 3) ? 50 : 75;
+                        /* ĐÃ FIX TOÁN HỌC CHO THANH CHẠY KÉO DÀI TỪ ĐẦU ĐẾN CUỐI */
+                        let wPercent = (step === 1) ? "0" : (step === 2) ? "33.33" : (step === 3) ? "66.66" : "100";
                         
-                        let animIcon = "";
-                        if(step === 1) animIcon = `<div class="anim-container"><div class="css-box"></div><div class="shadow-pulse"></div></div>`;
-                        if(step === 2) animIcon = `<div class="anim-container"><div class="css-truck"><div class="truck-trailer"></div><div class="truck-cab"></div><div class="truck-wheel w1"></div><div class="truck-wheel w2"></div><div class="wind-lines"></div></div></div>`;
-                        if(step === 3) animIcon = `<div class="anim-container"><div class="css-bike"><div class="bike-body"></div><div class="bike-handle"></div><div class="bike-headlight"></div><div class="bike-box"></div><div class="bike-wheel w1"></div><div class="bike-wheel w2"></div><div class="wind-lines"></div></div></div>`;
-                        if(step === 4) animIcon = `<div class="anim-container"><div class="css-success"></div></div>`;
+                        const icons = ["📦", "🚚", "🛵", "🎉"];
+                        const labels = ["Chuẩn bị", "Vận chuyển", "Đang giao", "Thành công"];
+                        
+                        // Render các vòng tròn Tracker
+                        let stepsHtml = icons.map((icon, i) => {
+                            let isCompleted = step > i+1 || (step === 4 && i === 3);
+                            let isActive = step >= i+1;
+                            let isCurrent = step === i+1;
+                            
+                            // Đã fix lỗi ô thành công bị rỗng, hiển thị checkmark khi hoàn thành
+                            let innerSvg = isCompleted ? 
+                                '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="overflow:visible"><polyline points="20 6 9 17 4 12"></polyline></svg>' : 
+                                '<svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" stroke="none" style="overflow:visible"><circle cx="12" cy="12" r="6"></circle></svg>';
+
+                            return `
+                            <div class="step ${isActive ? 'active' : ''}">
+                                ${isCurrent ? `<div class="floating-anim"><span class="neon-glow">${icon}</span></div>` : ''}
+                                <div class="step-icon-wrapper">
+                                    ${innerSvg}
+                                </div>
+                                <div class="step-label">${labels[i]}</div>
+                            </div>`;
+                        }).join('');
 
                         let stageColor = "var(--text-main)";
                         let stageGlow = "none";
@@ -540,30 +554,13 @@
 
                         let trackerHtml = `
                             <div class="live-tracker">
-                                <div class="stepper">
-                                    <div class="stepper-line-active" style="width: ${wPercent}%;"></div>
-                                    <div class="step ${step >= 1 ? 'active' : ''}">
-                                        ${step === 1 ? animIcon : ''}
-                                        <div class="step-icon-wrapper"><svg width="12" height="12" stroke="currentColor"><use href="#icon-box"></use></svg></div>
-                                        <div class="step-label">Chuẩn bị</div>
-                                    </div>
-                                    <div class="step ${step >= 2 ? 'active' : ''}">
-                                        ${step === 2 ? animIcon : ''}
-                                        <div class="step-icon-wrapper"><svg width="12" height="12" stroke="currentColor"><use href="#icon-truck"></use></svg></div>
-                                        <div class="step-label">Vận chuyển</div>
-                                    </div>
-                                    <div class="step ${step >= 3 ? 'active' : ''}">
-                                        ${step === 3 ? animIcon : ''}
-                                        <div class="step-icon-wrapper"><svg width="12" height="12" stroke="currentColor"><use href="#icon-bike"></use></svg></div>
-                                        <div class="step-label">Đang giao</div>
-                                    </div>
-                                    <div class="step ${step >= 4 ? 'active' : ''}">
-                                        ${step === 4 ? animIcon : ''}
-                                        <div class="step-icon-wrapper"><svg width="14" height="14" stroke="currentColor"><use href="#icon-check"></use></svg></div>
-                                        <div class="step-label">Thành công</div>
+                                <div style="position: relative; padding: 0 14px; margin-bottom: 28px;">
+                                    <div class="stepper-track"><div class="stepper-line-active" style="width: ${wPercent}%;"></div></div>
+                                    <div class="stepper">
+                                        ${stepsHtml}
                                     </div>
                                 </div>
-                                <div style="text-align:center; font-size:13px; color:${stageColor}; margin-top: 18px; font-weight:800; text-transform:uppercase; letter-spacing: 0.5px; text-shadow: ${stageGlow};">
+                                <div style="text-align:center; font-size:13px; color:${stageColor}; font-weight:800; text-transform:uppercase; letter-spacing: 0.5px; text-shadow: ${stageGlow};">
                                     ${current_stage}
                                 </div>
                             </div>
@@ -597,12 +594,13 @@
                     });
                 }
 
+                // CHỈ IN STATUS GỐC (Sạch emoji trùng lặp)
                 fullHtml += `
                     <div class="card">
                         <div class="card-main" onclick="toggleCard(this)">
                             <div class="flex-between">
                                 <div class="badge">#${o.order_id}</div>
-                                <div class="status ${sttClass}">${sttIcon} ${cleanStatus}</div>
+                                <div class="status ${sttClass}">${o.status}</div>
                             </div>
                             <div class="product-name">${o.product_name}</div>
                             <div class="date"><svg width="12" height="12"><use href="#icon-clock"></use></svg> ${o.created_at}</div>
