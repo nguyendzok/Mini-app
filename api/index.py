@@ -2,6 +2,7 @@ from fastapi import FastAPI, Query
 from fastapi.middleware.cors import CORSMiddleware
 from pymongo import MongoClient
 import os
+from datetime import datetime, timedelta
 
 app = FastAPI()
 
@@ -28,14 +29,13 @@ def get_user_orders(user_id: int = Query(..., description="Telegram User ID")):
     
     result = []
     for o in orders:
-        # Lấy mảng items, nếu là đơn CŨ không có thì tự tạo 1 mảng ảo để Web App đọc được
         raw_items = o.get("items", [])
         if not raw_items:
             raw_items = [{
                 "link": o.get("product_link", "Đơn hàng cũ"),
                 "carrier": o.get("carrier", "N/A"),
                 "spx_code": o.get("spx_code", ""),
-                "spx_stage": o.get("spx_stage", o.get("status", "")), # Lấy trạng thái tổng làm lộ trình
+                "spx_stage": o.get("spx_stage", o.get("status", "")),
                 "advance_payment": o.get("advance_payment", o.get("cod_amount", 0)),
                 "tracking_history": o.get("tracking_history", [])
             }]
@@ -65,3 +65,38 @@ def get_user_orders(user_id: int = Query(..., description="Telegram User ID")):
         })
         
     return result
+
+# ==========================================
+# API MỚI: THEO DÕI NGƯỜI DÙNG REAL-TIME
+# ==========================================
+@app.get("/api/stats")
+def get_web_stats(user_id: int = Query(0, description="Telegram User ID")):
+    if not client:
+        return {"online": 1, "monthly": 1}
+
+    db = client['shop_database']
+    stats_col = db['web_stats']
+    
+    now = datetime.utcnow()
+    current_month = now.strftime("%Y-%m")
+
+    # 1. Ghi nhận người dùng đang truy cập
+    if user_id != 0:
+        stats_col.update_one(
+            {"user_id": user_id, "month": current_month},
+            {"$set": {"last_active": now}},
+            upsert=True
+        )
+
+    # 2. Đếm số người đang online (Có hoạt động trong 3 phút qua)
+    three_mins_ago = now - timedelta(minutes=3)
+    online_count = stats_col.count_documents({"last_active": {"$gte": three_mins_ago}})
+    
+    # 3. Đếm tổng truy cập duy nhất trong tháng hiện tại
+    monthly_count = stats_col.count_documents({"month": current_month})
+
+    # Giữ mức tối thiểu là 1 (chính là user đang xem)
+    return {
+        "online": max(1, online_count),
+        "monthly": max(1, monthly_count)
+    }
