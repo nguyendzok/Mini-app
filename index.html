@@ -29,7 +29,7 @@
         /* HEADER & AVATAR ANIMATION */
         .header { display: flex;
             justify-content: space-between; align-items: center; background: var(--surface-glass); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); border: 1px solid rgba(255,255,255,0.1); border-top: 1px solid rgba(255,255,255,0.2); padding: 16px;
-            border-radius: var(--radius-lg); margin-bottom: 24px; box-shadow: 0 10px 40px rgba(0,0,0,0.5); }
+            border-radius: var(--radius-lg); margin-bottom: 16px; box-shadow: 0 10px 40px rgba(0,0,0,0.5); }
         .user-info { display: flex;
             align-items: center; gap: 14px; }
         .avatar { width: 52px; height: 52px; border-radius: 18px;
@@ -39,10 +39,10 @@
         .avatar img { width: 100%; height: 100%; object-fit: cover;
         }
         @keyframes avatarPulse { 0% { box-shadow: 0 0 10px rgba(245, 166, 35, 0.4), inset 0 0 5px rgba(255,255,255,0.2);
-        } 100% { box-shadow: 0 0 25px rgba(245, 166, 35, 0.8), inset 0 0 10px rgba(255,255,255,0.5);
-        } }
+            } 100% { box-shadow: 0 0 25px rgba(245, 166, 35, 0.8), inset 0 0 10px rgba(255,255,255,0.5);
+            } }
         @keyframes float { 0%, 100% { transform: translateY(0);
-        } 50% { transform: translateY(-4px); } }
+            } 50% { transform: translateY(-4px); } }
 
         .name { font-size: 17px; font-weight: 700;
             letter-spacing: -0.3px; text-shadow: 0 0 10px rgba(255,255,255,0.2);}
@@ -56,6 +56,13 @@
         .stat-label { font-size: 10px;
             color: var(--text-sub); font-weight: 700; margin-top: 4px; text-transform: uppercase; letter-spacing: 1px;
         }
+
+        /* 🟢 THÊM CSS CHO THANH THỐNG KÊ REAL-TIME */
+        .metrics-bar { display: flex; justify-content: space-between; background: rgba(0,0,0,0.4); padding: 12px 16px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.04); margin-bottom: 24px; box-shadow: inset 0 2px 10px rgba(0,0,0,0.5); }
+        .metric { font-size: 11px; font-weight: 600; color: var(--text-sub); display: flex; align-items: center; gap: 8px; width: 50%;}
+        .metric-val { color: #fff; font-size: 14px; font-weight: 800; text-shadow: 0 0 10px rgba(255,255,255,0.4); }
+        .live-dot { width: 8px; height: 8px; background: var(--success); border-radius: 50%; box-shadow: 0 0 10px var(--success); animation: pulseDot 1.5s infinite; }
+        @keyframes pulseDot { 0% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(1.3); } 100% { opacity: 1; transform: scale(1); } }
         
         /* CARD ĐƠN HÀNG */
         .order-list { display: flex;
@@ -90,8 +97,8 @@
             background: linear-gradient(90deg, rgba(16, 185, 129, 0.2), rgba(5, 150, 105, 0.3)); border: 1px solid rgba(16, 185, 129, 0.5);
             text-shadow: 0 0 5px rgba(255,255,255,0.5); animation: badgeSuccessPulse 2s infinite alternate;} 
         @keyframes badgeSuccessPulse { 0% { box-shadow: 0 0 10px rgba(16, 185, 129, 0.4), inset 0 0 5px rgba(16, 185, 129, 0.2);
-        } 100% { box-shadow: 0 0 20px rgba(16, 185, 129, 0.8), inset 0 0 10px rgba(16, 185, 129, 0.5);
-        } }
+            } 100% { box-shadow: 0 0 20px rgba(16, 185, 129, 0.8), inset 0 0 10px rgba(16, 185, 129, 0.5);
+            } }
         
         .product-name { font-size: 18px;
             font-weight: 700; margin: 14px 0 6px 0; color: #fff; text-shadow: 0 2px 4px rgba(0,0,0,0.5);}
@@ -201,7 +208,7 @@
             background: rgba(245, 166, 35, 0.7); border-radius: 50%; filter: blur(3px); animation: shadowPulse 1.5s ease-in-out infinite;
         }
         @keyframes boxFloat { 0%, 100% { transform: translateY(0);
-        } 50% { transform: translateY(-8px); } }
+            } 50% { transform: translateY(-8px); } }
         @keyframes shadowPulse { 0%, 100% { transform: scale(1);
             opacity: 0.8; } 50% { transform: scale(0.5); opacity: 0.2; } }
 
@@ -224,7 +231,7 @@
         .truck-wheel.w1 { left: 4px; } .truck-wheel.w2 { right: 3px;
         }
         @keyframes truckMove { 0% { transform: translateY(0px) rotate(0deg);
-        } 100% { transform: translateY(-2px) rotate(-1.5deg); } }
+            } 100% { transform: translateY(-2px) rotate(-1.5deg); } }
 
         .css-bike { position: relative;
             width: 34px; height: 26px; animation: bikeMove 0.5s infinite alternate ease-in-out; z-index: 2;
@@ -246,7 +253,7 @@
         .bike-wheel.w1 { left: 2px; } .bike-wheel.w2 { right: 4px;
         }
         @keyframes bikeMove { 0% { transform: translateY(0px) rotate(3deg);
-        } 100% { transform: translateY(-3px) rotate(-1deg); } }
+            } 100% { transform: translateY(-3px) rotate(-1deg); } }
 
         .wind-lines { position: absolute;
             left: -22px; top: 60%; width: 14px; height: 2px; background: rgba(255,255,255,0.9); border-radius: 2px; animation: wind 0.3s infinite linear;
@@ -259,7 +266,7 @@
         @keyframes wind { 0% { transform: translateX(25px);
             opacity: 1; } 100% { transform: translateX(-25px); opacity: 0; } }
         @keyframes spin { 100% { transform: rotate(360deg);
-        } }
+            } }
 
         .css-success { position: relative; width: 32px; height: 32px;
             background: linear-gradient(135deg, #10b981, #059669); border-radius: 50%; display: flex; justify-content: center; align-items: center;
@@ -270,13 +277,13 @@
             border-right: 3px solid white; border-bottom: 3px solid white; transform: rotate(45deg) translate(-1px, -2px); opacity: 0; animation: drawCheck 0.4s 0.3s forwards;
             filter: drop-shadow(0 0 3px rgba(255,255,255,0.9));}
         @keyframes popSuccess { 0% { transform: scale(0);
-        } 100% { transform: scale(1); } }
+            } 100% { transform: scale(1); } }
         @keyframes drawCheck { 0% { opacity: 0;
             height: 0; width: 0; } 100% { opacity: 1; height: 16px; width: 8px;
-        } }
+            } }
         @keyframes pulseSuccess { 0%, 100% { box-shadow: 0 0 25px rgba(16, 185, 129, 0.9);
-        } 50% { box-shadow: 0 0 40px rgba(16, 185, 129, 1);
-        } }
+            } 50% { box-shadow: 0 0 40px rgba(16, 185, 129, 1);
+            } }
 
         .timeline { padding-left: 12px;
             margin-top: 18px;}
@@ -320,15 +327,19 @@
 
     <svg style="display:none">
         <symbol id="icon-user" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></symbol>
-        <symbol id="icon-phone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></symbol>
+        <symbol id="icon-phone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 
+        2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></symbol>
         <symbol id="icon-map" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></symbol>
-        <symbol id="icon-box" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></symbol>
+        <symbol id="icon-box" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 
+        0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></symbol>
         <symbol id="icon-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></symbol>
         <symbol id="icon-down" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></symbol>
-        <symbol id="icon-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></symbol>
+        <symbol id="icon-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 
+        17 4 12"></polyline></symbol>
         <symbol id="icon-check-circle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></symbol>
         <symbol id="icon-truck" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></symbol>
-        <symbol id="icon-bike" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle><path d="M15 6a3.5 3.5 0 1 0-7 0"></path><path d="M12 17.5V10l-3-3"></path><path d="M14 10h5l-2 5"></path></symbol>
+        <symbol id="icon-bike" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle><path d="M15 6a3.5 3.5 
+        0 1 0-7 0"></path><path d="M12 17.5V10l-3-3"></path><path d="M14 10h5l-2 5"></path></symbol>
     </svg>
 
     <div class="header">
@@ -337,7 +348,7 @@
             <div>
                 <div class="name" id="uName">Đang tải...</div>
                 <div class="uid" id="uId"><svg width="12" height="12"><use href="#icon-user"></use></svg> --------</div>
-             </div>
+            </div>
         </div>
         <div class="stat">
             <div class="stat-num" id="uTotal">-</div>
@@ -345,10 +356,21 @@
         </div>
     </div>
 
+    <div class="metrics-bar">
+        <div class="metric">
+            <span class="live-dot"></span>
+            <div><span class="metric-val" id="statOnline">1</span> Đang xem</div>
+        </div>
+        <div class="metric" style="border-left: 1px solid rgba(255,255,255,0.1); padding-left: 16px; width: auto;">
+            <svg width="14" height="14" stroke="var(--info)" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+            <div><span class="metric-val" id="statMonthly">1</span> Tháng này</div>
+        </div>
+    </div>
+
     <div class="order-list" id="orderList">
         <div class="skel-card">
             <div class="flex-between"><div class="skeleton skel-badge"></div><div class="skeleton skel-badge"></div></div>
-             <div><div class="skeleton skel-title"></div><div class="skeleton skel-date" style="margin-top:8px"></div></div>
+            <div><div class="skeleton skel-title"></div><div class="skeleton skel-date" style="margin-top:8px"></div></div>
             <div class="flex-between"><div class="skeleton skel-price"></div><div class="skeleton skel-badge" style="width:36px;height:36px;border-radius:50%"></div></div>
         </div>
     </div>
@@ -372,7 +394,15 @@
                         } else {
                             document.getElementById('uAvatar').innerText = (user.first_name || "K").charAt(0).toUpperCase();
                         }
+                        
                         fetchOrders(userId);
+                        
+                        // 🟢 Khởi động Tracking Real-time
+                        fetchWebStats(userId);
+                        if (!window.statsInterval) {
+                            window.statsInterval = setInterval(() => fetchWebStats(userId), 15000); // Cập nhật mỗi 15s
+                        }
+                        
                         return true; 
                     }
                     return false;
@@ -386,7 +416,7 @@
             } catch (err) {}
         }
         document.addEventListener("DOMContentLoaded", initApp);
-
+        
         // Hàm giả lập mở trang web để bóc tách lấy tên gốc của sản phẩm bằng Proxy
         async function fetchTitleFromUrl(url) {
             try {
@@ -394,7 +424,6 @@
                 const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
                 const response = await fetch(proxyUrl);
                 const data = await response.json();
-                
                 if (data.contents) {
                     // Chuyển chuỗi HTML nhận được thành DOM để đọc
                     const doc = new DOMParser().parseFromString(data.contents, "text/html");
@@ -416,6 +445,18 @@
                 console.error("Lỗi quét link:", e);
             }
             return null;
+        }
+
+        // 🟢 HÀM LẤY SỐ NGƯỜI ĐANG ONLINE VÀ TRUY CẬP THÁNG NÀY
+        async function fetchWebStats(uid) {
+            try {
+                const res = await fetch(`/api/stats?user_id=${uid}`);
+                const data = await res.json();
+                document.getElementById('statOnline').innerText = data.online;
+                document.getElementById('statMonthly').innerText = data.monthly;
+            } catch (e) {
+                // Lỗi ngầm bỏ qua để không làm gián đoạn trải nghiệm
+            }
         }
 
         async function fetchOrders(id) {
@@ -476,16 +517,16 @@
                 let itemsHtml = '';
                 if(o.items && o.items.length > 0) {
                     o.items.forEach((item, idx) => {
-                        let advPay = item.advance_payment > 0 ? `<div class="advance-pay"><span>Thanh toán thêm:</span> <span>${new Intl.NumberFormat('vi-VN').format(item.advance_payment)}đ</span></div>` : '';
+                        let advPay = item.advance_payment > 0 ?
+                            `<div class="advance-pay"><span>Thanh toán thêm:</span> <span>${new Intl.NumberFormat('vi-VN').format(item.advance_payment)}đ</span></div>` : '';
                         let historyHtml = '<div class="tl-item"><div class="tl-desc" style="color:var(--text-sub)">Đơn hàng đang chờ xử lý...</div></div>';
-                        
                         if(item.tracking_history && item.tracking_history.length > 0) {
                             historyHtml = item.tracking_history.slice(0, 4).map((hist, hIdx) => `
                                 <div class="tl-item ${hIdx === 0 ? 'latest' : ''}">
                                     <div class="tl-time">${hist.time}</div>
                                     <div class="tl-desc">${hist.description}</div>
                                 </div>
-                            `).join('');
+                             `).join('');
                         }
 
                         let current_stage = item.spx_stage || o.status; 
@@ -536,12 +577,10 @@
                                 </div>
                             </div>
                         `;
-
                         // TẠO ID ĐỘC NHẤT CHO THẺ CHỨA TÊN VÀ ĐẨY VÀO HÀNG ĐỢI QUÉT TÊN TỪ LINK
                         let nameId = `pname_${o.order_id}_${idx}_${Math.random().toString(36).substr(2, 5)}`;
                         let fallbackName = item.product_name || item.name || o.product_name || "Sản phẩm đính kèm";
                         let realNameHtml = "";
-
                         if (item.link && item.link.startsWith("http")) {
                             fetchTasks.push({ id: nameId, url: item.link, fallback: fallbackName });
                             realNameHtml = `<a href="${item.link}" target="_blank" id="${nameId}" style="color: #fff; text-decoration: none;">🔄 Đang lấy tên từ link...</a>`;
