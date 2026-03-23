@@ -28,7 +28,6 @@
         body { background-color: var(--bg); background-image: radial-gradient(circle at 50% -10%, var(--accent-glow), transparent 60%); color: var(--text-main); padding: 16px; padding-bottom: 60px; min-height: 100vh; overflow-x: hidden; }
         svg { flex-shrink: 0; }
         
-        /* HEADER & AVATAR */
         .header { display: flex; justify-content: space-between; align-items: center; background: var(--surface-glass); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); border: 1px solid rgba(255,255,255,0.1); border-top: 1px solid rgba(255,255,255,0.2); padding: 16px; border-radius: var(--radius-lg); margin-bottom: 24px; box-shadow: 0 10px 40px rgba(0,0,0,0.5); }
         .user-info { display: flex; align-items: center; gap: 14px; }
         .avatar { width: 52px; height: 52px; border-radius: 18px; background: linear-gradient(135deg, #f5a623, #ea580c); display: flex; justify-content: center; align-items: center; font-size: 22px; font-weight: 800; color: #fff; overflow: hidden; border: 2px solid rgba(255,255,255,0.1); animation: avatarPulse 3s infinite alternate, float 4s ease-in-out infinite; }
@@ -89,7 +88,6 @@
         .real-product-name { font-size: 14px; color: #fff; font-weight: 600; margin-bottom: 16px; line-height: 1.5; display: flex; gap: 10px; background: rgba(255,255,255,0.03); padding: 12px; border-radius: var(--radius-sm); border: 1px dashed rgba(255,255,255,0.1);}
         .advance-pay { display: flex; justify-content: space-between; align-items: center; font-size: 14px; background: linear-gradient(90deg, rgba(245, 166, 35, 0.1), rgba(245, 166, 35, 0.05)); border: 1px solid rgba(245, 166, 35, 0.3); padding: 14px; border-radius: var(--radius-md); margin-top: 16px; color: var(--accent); font-weight: 700; box-shadow: inset 0 0 15px rgba(245,166,35,0.05);}
         
-        /* 🔥 BẢN ĐỒ LIVE TRACKING 🔥 */
         .map-wrapper { position: relative; width: 100%; height: 350px; border-radius: var(--radius-md); margin-bottom: 20px; overflow: hidden; border: 1px solid rgba(255,255,255,0.08); box-shadow: inset 0 2px 10px rgba(0,0,0,0.5); z-index: 1; }
         .tracking-map { width: 100%; height: 100%; background: #1a1a1f; }
         .custom-map-marker { background: transparent; border: none; z-index: 10 !important;}
@@ -112,7 +110,6 @@
         .gps-data-item .value { color: #fff; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 160px; }
         .gps-data-item .value-live { color: #f5a623; }
 
-        /* 🔥 GIỮ NGUYÊN TRACKER TOÁN HỌC CŨ TỪ BẢN 9 🔥 */
         .live-tracker { background: rgba(0,0,0,0.6); border-radius: var(--radius-md); padding: 24px 0 24px 0; margin-bottom: 18px; position: relative; border: 1px solid rgba(255,255,255,0.05); box-shadow: inset 0 4px 20px rgba(0,0,0,0.8);}
         .stepper { display: flex; justify-content: space-between; position: relative; margin-bottom: 10px; z-index: 2; padding: 0 14px 24px 14px; }
         .stepper-track { position: absolute; left: 14px; right: 14px; top: 12px; height: 4px; background: #27272a; z-index: -1; border-radius: 4px; box-shadow: inset 0 1px 3px rgba(0,0,0,0.8); }
@@ -304,9 +301,72 @@
         }
 
         // =====================================
-        // LOGIC MAP & ROUTING (THÊM MỚI VÀO)
+        // 1. BỘ LỌC ĐỊA CHỈ NHÀ KHÁCH HÀNG (ĐÍCH ĐẾN)
         // =====================================
-        function initOrderMap(mapId, orderId, statusText, curLat, curLng, recvLat, recvLng) {
+        function cleanDestinationAddress(rawAddress) {
+            if (!rawAddress || rawAddress.includes('---')) return "Trường THPT Tĩnh Gia 2";
+            
+            let parts = rawAddress.split(',').map(p => p.trim()).filter(p => p.length > 0);
+            // Cắt lấy đúng 3 cấp hành chính cuối cùng
+            let finalParts = parts.length > 3 ? parts.slice(-3) : parts;
+            
+            let cleanStr = finalParts.join(', ');
+            // Gọt bỏ sạch sẽ rác (số nhà, ngõ ngách) lỡ còn dính
+            cleanStr = cleanStr.replace(/(nhà số|số nhà|ngõ|ngách|hẻm|kiệt|số|ấp|đường|tòa nhà|lô|phòng)\s*[\w/.\-]+/gi, '').replace(/^[,.\s]+|[,.\s]+$/g, '').trim();
+            cleanStr = cleanStr.replace(/tp\.hcm|tphcm|tp hcm|hcm/gi, 'Hồ Chí Minh').replace(/hn/gi, 'Hà Nội');
+            
+            return cleanStr || "Trường THPT Tĩnh Gia 2";
+        }
+
+        // =====================================
+        // 2. BỘ NHẬN DIỆN VỊ TRÍ HIỆN TẠI TỪ SPX/GHN
+        // =====================================
+        function extractLocationFromStatus(statusText) {
+            if (!statusText) return "Trường THPT Tĩnh Gia 2";
+            let text = statusText.toLowerCase();
+            
+            // Xử lý câu dài ngoằng của Shopee: "Đơn hàng đã đến trạm giao hàng tại khu vực của bạn tại Phường Trang Hạ..."
+            let match = text.match(/(?:khu vực của bạn tại|tại trạm giao hàng|giao hàng tại|đang giao tại|tại)\s+([^.]+)/i);
+            if (match && match[1]) {
+                let loc = match[1].trim();
+                // Cắt bỏ phần râu ria thừa ở đuôi (VD: "...và sẽ được giao trong vòng...")
+                loc = loc.split(' và ')[0].split(' - ')[0]; 
+                return loc;
+            }
+            
+            match = text.match(/(?:đến kho|rời kho phân loại|đến trạm|rời trạm)\s+([^.]+)/i);
+            if (match && match[1]) {
+                return match[1].replace(/(soc|hub|lm hub|\.)/gi, '').trim();
+            }
+            
+            return text.replace(/(soc|hub|lm hub|\.)/gi, '').trim();
+        }
+
+        // =====================================
+        // 3. HÀM GỌI API BẢN ĐỒ
+        // =====================================
+        async function geocodeLocation(queryText) {
+            // Hệ thống ghi đè: Nếu lỗi hoặc thiếu dữ liệu, mặc định trỏ về THPT Tĩnh Gia 2
+            if (!queryText || queryText === 'Trường THPT Tĩnh Gia 2') {
+                return { lat: 19.3833, lng: 105.7833, cleanAddress: "Trường THPT Tĩnh Gia 2" };
+            }
+            try {
+                let res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(queryText)}&countrycodes=vn&limit=1`, {
+                    headers: { 'Accept-Language': 'vi' }
+                });
+                let data = await res.json();
+                if (data && data.length > 0) {
+                    return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon), cleanAddress: queryText };
+                }
+            } catch (err) {}
+            
+            return { lat: 19.3833, lng: 105.7833, cleanAddress: "Trường THPT Tĩnh Gia 2" };
+        }
+
+        // =====================================
+        // 4. KẾT NỐI VÀO MAP & ROUTING
+        // =====================================
+        async function initOrderMap(mapId, orderId, statusText, curLat, curLng, addressText, recvLat, recvLng) {
             if (window.trackingMaps[mapId]) {
                 setTimeout(() => window.trackingMaps[mapId].invalidateSize(), 300);
                 return;
@@ -315,8 +375,19 @@
             const mapElement = document.getElementById(mapId);
             if (!mapElement) return;
 
-            const currentHubLoc = [parseFloat(curLat) || 21.1167, parseFloat(curLng) || 105.9500];
-            const receiverLoc = [parseFloat(recvLat) || 21.0336, parseFloat(recvLng) || 105.8542];
+            // XỬ LÝ VỊ TRÍ ĐÍCH (NHÀ KHÁCH HÀNG)
+            let cleanDest = cleanDestinationAddress(addressText);
+            const geoDataTarget = await geocodeLocation(cleanDest);
+            let receiverLoc = [geoDataTarget.lat, geoDataTarget.lng];
+            addressText = geoDataTarget.cleanAddress;
+
+            // XỬ LÝ VỊ TRÍ HIỆN TẠI TỪ CÂU STATUS CỦA SPX
+            let currentHubLoc = [19.3833, 105.7833]; 
+            let hubText = extractLocationFromStatus(statusText);
+            const geoDataHub = await geocodeLocation(hubText);
+            if (geoDataHub) {
+                currentHubLoc = [geoDataHub.lat, geoDataHub.lng];
+            }
 
             var map = L.map(mapId, { zoomControl: false, attributionControl: false }).setView(currentHubLoc, 13);
             L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { maxZoom: 19 }).addTo(map);
@@ -360,9 +431,9 @@
                 div.innerHTML = `
                     <h4>Dữ liệu GPS thời gian thực</h4>
                     <div class="gps-data-item"><span class="label">ID Đơn hàng:</span> <span class="value">${orderId}</span></div>
-                    <div class="gps-data-item"><span class="label">Loại Cập nhật:</span> <span class="value value-live">Tự động (10s)</span></div>
-                    <div class="gps-data-item"><span class="label">Tọa độ GPS (Lat/Lng):</span> <span class="value" id="coords_${mapId}">-- / --</span></div>
-                    <div class="gps-data-item"><span class="label">Địa chỉ:</span> <span class="value" id="address_${mapId}">Đang phân tích...</span></div>
+                    <div class="gps-data-item"><span class="label">Loại Cập nhật:</span> <span class="value value-live">API Động (10s)</span></div>
+                    <div class="gps-data-item"><span class="label">Tọa độ đích:</span> <span class="value" id="coords_${mapId}">-- / --</span></div>
+                    <div class="gps-data-item"><span class="label">Khu vực đến:</span> <span class="value" id="address_${mapId}">Đang tải...</span></div>
                 `;
                 return div;
             };
@@ -372,7 +443,9 @@
             window.trackingRoutingControls[mapId] = routingControl;
 
             setTimeout(() => map.invalidateSize(), 400);
+            
             startLiveTracking(mapId, orderId);
+            updateGpsPanel(mapId, receiverLoc[0], receiverLoc[1], addressText);
         }
 
         function startLiveTracking(mapId, orderId) {
@@ -384,21 +457,28 @@
                     if (!res.ok) return;
                     const data = await res.json();
                     
-                    if (data && data.lat && data.lng) {
-                        const newLatLng = L.latLng(parseFloat(data.lat), parseFloat(data.lng));
+                    if (data && data.status) {
+                        // KHI CÓ STATUS MỚI TỪ API SPX -> LỌC TÊN KHO -> ĐẨY XE TẢI CHẠY
+                        let hubText = extractLocationFromStatus(data.status);
+                        const geoDataHub = await geocodeLocation(hubText);
                         
-                        const marker = window.trackingMarkers[mapId];
-                        if (marker) marker.setLatLng(newLatLng);
-                        
-                        const labelEl = document.querySelector(`#label_${mapId} span.status-text`);
-                        if (labelEl && data.status) labelEl.innerText = data.status;
+                        const lat = geoDataHub ? geoDataHub.lat : parseFloat(data.lat);
+                        const lng = geoDataHub ? geoDataHub.lng : parseFloat(data.lng);
 
-                        updateGpsPanel(mapId, data.lat, data.lng, data.status_full_address || data.status);
+                        if(lat && lng) {
+                            const newLatLng = L.latLng(lat, lng);
+                            
+                            const marker = window.trackingMarkers[mapId];
+                            if (marker) marker.setLatLng(newLatLng); 
+                            
+                            const labelEl = document.querySelector(`#label_${mapId} span.status-text`);
+                            if (labelEl) labelEl.innerText = data.status;
 
-                        const routingControl = window.trackingRoutingControls[mapId];
-                        if (routingControl) {
-                            const currentWaypoints = routingControl.getWaypoints();
-                            routingControl.setWaypoints([newLatLng, currentWaypoints[1].latLng]);
+                            const routingControl = window.trackingRoutingControls[mapId];
+                            if (routingControl) {
+                                const currentWaypoints = routingControl.getWaypoints();
+                                routingControl.setWaypoints([newLatLng, currentWaypoints[1].latLng]);
+                            }
                         }
                     }
                 } catch (err) {}
@@ -425,6 +505,7 @@
                         el.getAttribute('data-status') || 'Đang vận chuyển',
                         el.getAttribute('data-cur-lat'),
                         el.getAttribute('data-cur-lng'),
+                        el.getAttribute('data-address'),
                         el.getAttribute('data-recv-lat'),
                         el.getAttribute('data-recv-lng')
                     );
@@ -564,14 +645,12 @@
                             realNameHtml = `<a href="#" style="color: #fff; text-decoration: none;">${fallbackName}</a>`;
                         }
 
-                        // =====================================
-                        // CHÈN THẺ BẢN ĐỒ VÀO UI GÓI HÀNG
-                        // =====================================
                         let trackingMapHtml = `
                             <div class="map-wrapper">
                                 <div id="${mapId}" class="tracking-map" 
                                      data-order-id="${o.order_id}"
                                      data-status="${cleanStatus}"
+                                     data-address="${o.address}"
                                      data-cur-lat="${item.current_lat || 0}" data-cur-lng="${item.current_lng || 0}"
                                      data-recv-lat="${item.receiver_lat || 0}" data-recv-lng="${item.receiver_lng || 0}">
                                 </div>
