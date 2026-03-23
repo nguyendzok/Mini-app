@@ -165,6 +165,17 @@
         .skeleton { background: #1f1f22; background: linear-gradient(110deg, #1f1f22 8%, #27272a 18%, #1f1f22 33%); border-radius: 8px; background-size: 200% 100%; animation: 1.5s shine linear infinite; }
         @keyframes shine { to { background-position-x: -200%; } }
         .skel-card { background: var(--surface-glass); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px; display: flex; flex-direction: column; gap: 16px; margin-bottom: 16px;}
+
+        /* CSS POPUP XIN QUYỀN VỊ TRÍ */
+        .loc-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); z-index: 9999; display: none; justify-content: center; align-items: center; opacity: 0; transition: opacity 0.3s ease; }
+        .loc-popup { background: var(--surface); border: 1px solid rgba(255,255,255,0.1); border-radius: var(--radius-lg); padding: 24px; width: 90%; max-width: 320px; text-align: center; box-shadow: 0 15px 40px rgba(0,0,0,0.5); transform: translateY(20px); transition: transform 0.3s ease; }
+        .loc-icon { font-size: 40px; margin-bottom: 16px; text-shadow: 0 0 20px var(--info); }
+        .loc-title { font-size: 18px; font-weight: 800; color: #fff; margin-bottom: 8px; }
+        .loc-desc { font-size: 13px; color: var(--text-sub); line-height: 1.5; margin-bottom: 20px; }
+        .loc-btns { display: flex; gap: 12px; }
+        .loc-btn { flex: 1; padding: 12px; border-radius: var(--radius-md); font-size: 14px; font-weight: 700; cursor: pointer; border: none; }
+        .loc-btn.allow { background: var(--info); color: #fff; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4); }
+        .loc-btn.deny { background: rgba(255,255,255,0.1); color: var(--text-main); }
     </style>
 </head>
 <body>
@@ -181,6 +192,18 @@
         <symbol id="icon-x-circle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></symbol>
         <symbol id="icon-users-group" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><path d="M20 8v6"></path><path d="M23 11h-6"></path></symbol>
     </svg>
+
+    <div class="loc-overlay" id="locOverlay">
+        <div class="loc-popup" id="locPopup">
+            <div class="loc-icon">📍</div>
+            <div class="loc-title">Chia sẻ vị trí</div>
+            <div class="loc-desc">Cho phép ứng dụng sử dụng vị trí GPS hiện tại của bạn để bản đồ trỏ đường giao hàng chính xác hơn.</div>
+            <div class="loc-btns">
+                <button class="loc-btn deny" onclick="denyLocation()">Để sau</button>
+                <button class="loc-btn allow" onclick="allowLocation()">Cho phép</button>
+            </div>
+        </div>
+    </div>
 
     <div class="header">
         <div class="user-info">
@@ -222,20 +245,67 @@
         window.trackingMarkers = {};
         window.trackingIntervals = {};
         window.trackingRoutingControls = {};
-        window.userLiveLocation = null; // BIẾN LƯU TỌA ĐỘ GPS ĐIỆN THOẠI
+        window.userLiveLocation = null; 
+
+        // =====================================
+        // LOGIC QUẢN LÝ QUYỀN VỊ TRÍ
+        // =====================================
+        function checkLocationPermission() {
+            const asked = localStorage.getItem('loc_asked');
+            const granted = localStorage.getItem('loc_granted');
+            
+            if (!asked) {
+                // Lần đầu mở app: Hiện Popup sang trọng
+                const overlay = document.getElementById('locOverlay');
+                const popup = document.getElementById('locPopup');
+                overlay.style.display = 'flex';
+                setTimeout(() => {
+                    overlay.style.opacity = '1';
+                    popup.style.transform = 'translateY(0)';
+                }, 10);
+            } else if (granted === 'true') {
+                // Đã cho phép từ trước: Âm thầm lấy vị trí
+                requestNativeLocation();
+            }
+        }
+
+        function allowLocation() {
+            closePopup();
+            localStorage.setItem('loc_asked', 'true');
+            localStorage.setItem('loc_granted', 'true');
+            requestNativeLocation(); // Trình duyệt sẽ bật thông báo cấp quyền gốc
+        }
+
+        function denyLocation() {
+            closePopup();
+            localStorage.setItem('loc_asked', 'true');
+            localStorage.setItem('loc_granted', 'false');
+        }
+
+        function closePopup() {
+            const overlay = document.getElementById('locOverlay');
+            const popup = document.getElementById('locPopup');
+            overlay.style.opacity = '0';
+            popup.style.transform = 'translateY(20px)';
+            setTimeout(() => overlay.style.display = 'none', 300);
+        }
+
+        function requestNativeLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        window.userLiveLocation = [position.coords.latitude, position.coords.longitude];
+                    },
+                    (error) => { console.log("Lỗi GPS:", error); },
+                    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+                );
+            }
+        }
 
         function initApp() {
             try {
-                // YÊU CẦU QUYỀN TRUY CẬP VỊ TRÍ ĐIỆN THOẠI KHÁCH HÀNG NGAY KHI MỞ
-                if (navigator.geolocation) {
-                    navigator.geolocation.getCurrentPosition(
-                        (position) => {
-                            window.userLiveLocation = [position.coords.latitude, position.coords.longitude];
-                        },
-                        (error) => { console.log("Không thể lấy GPS điện thoại:", error); },
-                        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-                    );
-                }
+                // Chạy kiểm tra vị trí đầu tiên
+                checkLocationPermission();
 
                 const tg = window.Telegram.WebApp;
                 tg.ready(); tg.expand();
@@ -301,13 +371,13 @@
         async function fetchOrders(id) {
             try {
                 const response = await fetch(`${API_BASE}/api/orders?user_id=${id}`);
-                if (!response.ok) throw new Error(`Lỗi server ${response.status} - Code Python đang có Exception không bắt được.`);
+                if (!response.ok) throw new Error(`Lỗi server ${response.status}`);
                 const data = await response.json();
                 document.getElementById('uTotal').innerText = data.length;
                 renderOrders(data);
             } catch (error) {
                 let errorMsg = error.message;
-                if (errorMsg.includes("Failed to fetch")) errorMsg = "Lỗi CORS (Bị chặn) hoặc sai đường dẫn API.";
+                if (errorMsg.includes("Failed to fetch")) errorMsg = "Lỗi mạng hoặc sai đường dẫn API.";
                 document.getElementById('orderList').innerHTML = `
                     <div style="text-align:center; padding: 40px; background: rgba(239, 68, 68, 0.1); border-radius: 16px; border: 1px solid rgba(239, 68, 68, 0.3);">
                         <div style="font-size: 24px; margin-bottom: 10px;">🔌</div>
@@ -364,7 +434,7 @@
             const isDelivered = statusText.toLowerCase().includes('thành công') || statusText.toLowerCase().includes('đã giao');
             let receiverLoc = [19.3833, 105.7833]; 
             
-            // LOGIC ƯU TIÊN VỊ TRÍ: GPS Điện Thoại > Tọa độ Google Map > Nội suy text địa chỉ
+            // XÁC ĐỊNH VỊ TRÍ ĐÍCH: Ưu tiên GPS điện thoại
             if (window.userLiveLocation) {
                 receiverLoc = [...window.userLiveLocation];
                 addressText = "📍 Vị trí GPS hiện tại của bạn";
@@ -384,7 +454,7 @@
 
             let currentHubLoc = [19.3833, 105.7833]; 
             if (isDelivered) {
-                currentHubLoc = [...receiverLoc]; // Đã giao -> Xe tải nằm luôn ở nhà khách!
+                currentHubLoc = [...receiverLoc]; 
             } else {
                 let hubText = extractLocationFromStatus(statusText);
                 const geoDataHub = await geocodeLocation(hubText);
@@ -436,7 +506,7 @@
                 div.innerHTML = `
                     <h4>Dữ liệu GPS thời gian thực</h4>
                     <div class="gps-data-item"><span class="label">Trạng thái:</span> <span class="value value-live" style="color:${isDelivered ? '#10b981' : '#f5a623'}">${isDelivered ? 'Đã hoàn thành' : 'Theo dõi (10s)'}</span></div>
-                    <div class="gps-data-item"><span class="label">Khu vực đích:</span> <span class="value" id="address_${mapId}">Đang tải...</span></div>
+                    <div class="gps-data-item"><span class="label">Khu vực:</span> <span class="value" id="address_${mapId}">Đang tải...</span></div>
                 `;
                 return div;
             };
@@ -485,7 +555,6 @@
                                 labelEl.innerText = data.status;
                                 if (isDelivered) labelEl.previousElementSibling.style.color = '#10b981'; 
                             }
-
                             const routingControl = window.trackingRoutingControls[mapId];
                             if (routingControl) routingControl.setWaypoints([newLatLng, routingControl.getWaypoints()[1].latLng]);
                         }
