@@ -218,7 +218,8 @@
     </div>
 
     <script>
-        // 👉 ĐÂY CHÍNH LÀ ĐƯỜNG DẪN CỨU LỖI MẤT KẾT NỐI
+        // Đường dẫn gọi API (Đã trỏ chính xác về domain của bạn)
+        // Nếu API bạn chạy ở port khác (ví dụ 8000), bạn cần đổi thành: "https://hoangngocnguyen.id.vn:8000"
         const API_BASE = "https://hoangngocnguyen.id.vn";
 
         window.trackingMaps = {};
@@ -274,9 +275,7 @@
                     let title = doc.querySelector("title") ? doc.querySelector("title").innerText : "";
                     if (title) {
                         title = title.replace(/\| Shopee Việt Nam/gi, '').replace(/\| Lazada\.vn/gi, '').replace(/Mua ngay /gi, '').trim();
-                        if (title.length > 8 && !title.toLowerCase().startsWith("shopee") && !title.toLowerCase().startsWith("lazada")) {
-                            return title;
-                        }
+                        if (title.length > 8 && !title.toLowerCase().startsWith("shopee") && !title.toLowerCase().startsWith("lazada")) return title;
                     }
                 }
             } catch (e) {}
@@ -285,7 +284,6 @@
 
         async function fetchWebStats(uid) {
             try {
-                // Sửa gọi fetch có API_BASE
                 const res = await fetch(`${API_BASE}/api/stats?user_id=${uid}`);
                 const data = await res.json();
                 document.getElementById('statOnline').innerText = data.online;
@@ -295,14 +293,25 @@
 
         async function fetchOrders(id) {
             try {
-                // Sửa gọi fetch có API_BASE
                 const response = await fetch(`${API_BASE}/api/orders?user_id=${id}`);
-                if (!response.ok) throw new Error("Mất kết nối");
+                if (!response.ok) throw new Error(`Server báo lỗi ${response.status}`);
+                
                 const data = await response.json();
                 document.getElementById('uTotal').innerText = data.length;
                 renderOrders(data);
             } catch (error) {
-                document.getElementById('orderList').innerHTML = `<div style="text-align:center; padding: 40px; color: var(--danger)">❌ Mất kết nối tới máy chủ API. Vui lòng thử lại.</div>`;
+                let errorMsg = error.message;
+                if (errorMsg.includes("Failed to fetch") || errorMsg.includes("NetworkError")) {
+                    errorMsg = "Bị chặn kết nối (CORS) hoặc link API sai/sập server.";
+                }
+                
+                document.getElementById('orderList').innerHTML = `
+                    <div style="text-align:center; padding: 40px; background: rgba(239, 68, 68, 0.1); border-radius: 16px; border: 1px solid rgba(239, 68, 68, 0.3);">
+                        <div style="font-size: 24px; margin-bottom: 10px;">🔌</div>
+                        <div style="color: var(--danger); font-weight: bold;">LỖI KẾT NỐI API</div>
+                        <div style="color: var(--text-sub); font-size: 12px; margin-top: 8px;">Chi tiết: ${errorMsg}</div>
+                        <div style="color: var(--text-sub); font-size: 11px; margin-top: 8px; opacity: 0.7;">Đang gọi tới: ${API_BASE}/api/orders</div>
+                    </div>`;
             }
         }
 
@@ -356,7 +365,6 @@
             if (!mapElement) return;
 
             const isDelivered = statusText.toLowerCase().includes('thành công') || statusText.toLowerCase().includes('đã giao');
-
             let receiverLoc = [19.3833, 105.7833]; 
             
             if (addressText && addressText.includes('http')) {
@@ -374,7 +382,6 @@
             }
 
             let currentHubLoc = [19.3833, 105.7833]; 
-            
             if (isDelivered) {
                 currentHubLoc = [...receiverLoc];
             } else {
@@ -452,7 +459,6 @@
 
             window.trackingIntervals[mapId] = setInterval(async () => {
                 try {
-                    // Sửa gọi fetch có API_BASE
                     const res = await fetch(`${API_BASE}/api/live_location?order_id=${orderId}`);
                     if (!res.ok) return;
                     const data = await res.json();
@@ -575,7 +581,7 @@
                     o.items.forEach((item, idx) => {
                         let advPay = item.advance_payment > 0 ?
                             `<div class="advance-pay"><span>Thanh toán thêm:</span> <span>${new Intl.NumberFormat('vi-VN').format(item.advance_payment)}đ</span></div>` : '';
-   
+
                         let historyHtml = '<div class="tl-item"><div class="tl-desc" style="color:var(--text-sub)">Đơn hàng đang chờ xử lý...</div></div>';
                         if(item.tracking_history && item.tracking_history.length > 0) {
                             historyHtml = item.tracking_history.slice(0, 4).map((hist, hIdx) => `
