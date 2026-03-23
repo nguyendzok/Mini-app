@@ -173,7 +173,8 @@
         .loc-title { font-size: 18px; font-weight: 800; color: #fff; margin-bottom: 8px; }
         .loc-desc { font-size: 13px; color: var(--text-sub); line-height: 1.5; margin-bottom: 20px; }
         .loc-btns { display: flex; gap: 12px; }
-        .loc-btn { flex: 1; padding: 12px; border-radius: var(--radius-md); font-size: 14px; font-weight: 700; cursor: pointer; border: none; }
+        .loc-btn { flex: 1; padding: 12px; border-radius: var(--radius-md); font-size: 14px; font-weight: 700; cursor: pointer; border: none; transition: transform 0.1s; }
+        .loc-btn:active { transform: scale(0.95); }
         .loc-btn.allow { background: var(--info); color: #fff; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4); }
         .loc-btn.deny { background: rgba(255,255,255,0.1); color: var(--text-main); }
     </style>
@@ -197,7 +198,7 @@
         <div class="loc-popup" id="locPopup">
             <div class="loc-icon">📍</div>
             <div class="loc-title">Chia sẻ vị trí</div>
-            <div class="loc-desc">Cho phép ứng dụng sử dụng vị trí GPS hiện tại của bạn để bản đồ trỏ đường giao hàng chính xác hơn.</div>
+            <div class="loc-desc">Cho phép ứng dụng sử dụng vị trí GPS hiện tại của bạn để hiển thị đường giao hàng chính xác hơn.</div>
             <div class="loc-btns">
                 <button class="loc-btn deny" onclick="denyLocation()">Để sau</button>
                 <button class="loc-btn allow" onclick="allowLocation()">Cho phép</button>
@@ -255,7 +256,7 @@
             const granted = localStorage.getItem('loc_granted');
             
             if (!asked) {
-                // Lần đầu mở app: Hiện Popup sang trọng
+                // Lần đầu mở app: Hiện Popup xin phép
                 const overlay = document.getElementById('locOverlay');
                 const popup = document.getElementById('locPopup');
                 overlay.style.display = 'flex';
@@ -264,7 +265,7 @@
                     popup.style.transform = 'translateY(0)';
                 }, 10);
             } else if (granted === 'true') {
-                // Đã cho phép từ trước: Âm thầm lấy vị trí
+                // Đã cho phép từ lần trước: Tự động lấy vị trí ngầm
                 requestNativeLocation();
             }
         }
@@ -273,7 +274,7 @@
             closePopup();
             localStorage.setItem('loc_asked', 'true');
             localStorage.setItem('loc_granted', 'true');
-            requestNativeLocation(); // Trình duyệt sẽ bật thông báo cấp quyền gốc
+            requestNativeLocation(); // Trình duyệt/Telegram sẽ tự động bật hộp thoại xin cấp quyền gốc
         }
 
         function denyLocation() {
@@ -296,7 +297,7 @@
                     (position) => {
                         window.userLiveLocation = [position.coords.latitude, position.coords.longitude];
                     },
-                    (error) => { console.log("Lỗi GPS:", error); },
+                    (error) => { console.log("Không thể lấy GPS điện thoại:", error); },
                     { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
                 );
             }
@@ -304,7 +305,7 @@
 
         function initApp() {
             try {
-                // Chạy kiểm tra vị trí đầu tiên
+                // Gọi kiểm tra quyền vị trí đầu tiên
                 checkLocationPermission();
 
                 const tg = window.Telegram.WebApp;
@@ -371,13 +372,21 @@
         async function fetchOrders(id) {
             try {
                 const response = await fetch(`${API_BASE}/api/orders?user_id=${id}`);
-                if (!response.ok) throw new Error(`Lỗi server ${response.status}`);
+                
+                // Nếu response lỗi (như lỗi 500 do Python sập), hệ thống sẽ bắt lỗi JSON từ FastAPI (nếu có)
+                if (!response.ok) {
+                    const errData = await response.json().catch(() => ({}));
+                    throw new Error(`Lỗi server ${response.status}: ${errData.detail || 'Code Python bị vấp, hãy xem Log Terminal'}`);
+                }
+                
                 const data = await response.json();
                 document.getElementById('uTotal').innerText = data.length;
                 renderOrders(data);
             } catch (error) {
                 let errorMsg = error.message;
-                if (errorMsg.includes("Failed to fetch")) errorMsg = "Lỗi mạng hoặc sai đường dẫn API.";
+                if (errorMsg.includes("Failed to fetch")) errorMsg = "Lỗi mạng hoặc sai đường dẫn API (CORS).";
+                
+                // Hiển thị nguyên nhân lỗi thẳng lên điện thoại thay vì cái biểu tượng đỏ
                 document.getElementById('orderList').innerHTML = `
                     <div style="text-align:center; padding: 40px; background: rgba(239, 68, 68, 0.1); border-radius: 16px; border: 1px solid rgba(239, 68, 68, 0.3);">
                         <div style="font-size: 24px; margin-bottom: 10px;">🔌</div>
@@ -434,7 +443,7 @@
             const isDelivered = statusText.toLowerCase().includes('thành công') || statusText.toLowerCase().includes('đã giao');
             let receiverLoc = [19.3833, 105.7833]; 
             
-            // XÁC ĐỊNH VỊ TRÍ ĐÍCH: Ưu tiên GPS điện thoại
+            // LOGIC ƯU TIÊN VỊ TRÍ: GPS Điện Thoại > Tọa độ Google Map > Nội suy text địa chỉ
             if (window.userLiveLocation) {
                 receiverLoc = [...window.userLiveLocation];
                 addressText = "📍 Vị trí GPS hiện tại của bạn";
@@ -506,7 +515,7 @@
                 div.innerHTML = `
                     <h4>Dữ liệu GPS thời gian thực</h4>
                     <div class="gps-data-item"><span class="label">Trạng thái:</span> <span class="value value-live" style="color:${isDelivered ? '#10b981' : '#f5a623'}">${isDelivered ? 'Đã hoàn thành' : 'Theo dõi (10s)'}</span></div>
-                    <div class="gps-data-item"><span class="label">Khu vực:</span> <span class="value" id="address_${mapId}">Đang tải...</span></div>
+                    <div class="gps-data-item"><span class="label">Khu vực đích:</span> <span class="value" id="address_${mapId}">Đang tải...</span></div>
                 `;
                 return div;
             };
