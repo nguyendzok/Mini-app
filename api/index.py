@@ -8,7 +8,6 @@ from datetime import datetime, timedelta
 
 app = FastAPI()
 
-# Bật CORS cho phép Mini App truy cập
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -19,12 +18,10 @@ app.add_middleware(
 MONGO_URI = os.environ.get("MONGO_URI")
 client = MongoClient(MONGO_URI) if MONGO_URI else None
 
-# TỪ ĐIỂN TỌA ĐỘ KHO
+# TỪ ĐIỂN TỌA ĐỘ KHO 
 HUB_LOCATIONS = {
     "thâm quyến": {"lat": 22.5431, "lng": 114.0579},
     "nghĩa ô": {"lat": 29.3068, "lng": 120.0750},
-    "bằng tường": {"lat": 22.1150, "lng": 106.7538},
-    "đông quản": {"lat": 22.0403, "lng": 113.7521},
     "bw soc": {"lat": 11.0067, "lng": 106.5139},
     "củ chi soc": {"lat": 11.0067, "lng": 106.5139},
     "hn từ liêm soc": {"lat": 21.0470, "lng": 105.7480},
@@ -39,21 +36,14 @@ HUB_LOCATIONS = {
     "tĩnh gia 2": {"lat": 19.3833, "lng": 105.7833},
 }
 
-@app.get("/")
-def read_root():
-    return {"status": "API đang hoạt động bình thường"}
-
 def extract_gmap_coords(url):
     try:
-        headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'}
+        headers = {'User-Agent': 'Mozilla/5.0'}
         res = requests.get(url, headers=headers, timeout=5, allow_redirects=True)
         final_url = res.url
         match = re.search(r'@(-?\d+\.\d+),(-?\d+\.\d+)', final_url)
         if match: return {"lat": float(match.group(1)), "lng": float(match.group(2))}
-        match_q = re.search(r'[?&]q=(-?\d+\.\d+),(-?\d+\.\d+)', final_url)
-        if match_q: return {"lat": float(match_q.group(1)), "lng": float(match_q.group(2))}
-    except Exception as e:
-        print("Lỗi bóc tách link GG Maps:", e)
+    except: pass
     return None
 
 def guess_coordinates(text, fallback_lat=19.3833, fallback_lng=105.7833):
@@ -74,6 +64,8 @@ def guess_coordinates(text, fallback_lat=19.3833, fallback_lng=105.7833):
 def get_user_orders(user_id: str = Query(...)):
     if not client: return []
     db = client['shop_database']
+    
+    # Ép kiểu an toàn cho user_id (Vì Telegram ID rất lớn)
     try: uid = int(user_id)
     except: uid = user_id
     
@@ -81,51 +73,60 @@ def get_user_orders(user_id: str = Query(...)):
     result = []
     
     for o in orders:
-        receiver_address = o.get("address", "")
-        recv_coords = guess_coordinates(receiver_address)
+        try:
+            receiver_address = o.get("address", "")
+            recv_coords = guess_coordinates(receiver_address)
 
-        raw_items = o.get("items", [])
-        if not raw_items:
-            raw_items = [{
-                "link": o.get("product_link", "Đơn hàng cũ"),
-                "carrier": o.get("carrier", "N/A"),
-                "spx_code": o.get("spx_code", ""),
-                "spx_stage": o.get("spx_stage", o.get("status", "")),
-                "advance_payment": o.get("advance_payment", o.get("cod_amount", 0)),
-                "tracking_history": o.get("tracking_history", [])
-            }]
+            raw_items = o.get("items", [])
+            if not raw_items:
+                raw_items = [{
+                    "link": o.get("product_link", "Đơn hàng cũ"),
+                    "carrier": o.get("carrier", "N/A"),
+                    "spx_code": o.get("spx_code", ""),
+                    "spx_stage": o.get("spx_stage", o.get("status", "")),
+                    "advance_payment": o.get("advance_payment", o.get("cod_amount", 0)),
+                    "tracking_history": o.get("tracking_history", [])
+                }]
 
-        items_data = []
-        for item in raw_items:
-            current_stage = item.get("spx_stage", o.get("status", ""))
-            cur_coords = guess_coordinates(current_stage, fallback_lat=recv_coords["lat"] + 0.05, fallback_lng=recv_coords["lng"] + 0.05)
-            items_data.append({
-                "link": item.get("link", ""),
-                "carrier": item.get("carrier", ""),
-                "spx_code": item.get("spx_code", ""),
-                "spx_stage": current_stage,
-                "advance_payment": item.get("advance_payment", 0),
-                "tracking_history": item.get("tracking_history", []),
-                "current_lat": cur_coords["lat"],
-                "current_lng": cur_coords["lng"],
-                "receiver_lat": recv_coords["lat"],
-                "receiver_lng": recv_coords["lng"],
+            items_data = []
+            for item in raw_items:
+                current_stage = item.get("spx_stage", o.get("status", ""))
+                cur_coords = guess_coordinates(current_stage, fallback_lat=recv_coords["lat"] + 0.05, fallback_lng=recv_coords["lng"] + 0.05)
+                items_data.append({
+                    "link": item.get("link", ""),
+                    "carrier": item.get("carrier", ""),
+                    "spx_code": item.get("spx_code", ""),
+                    "spx_stage": current_stage,
+                    "advance_payment": item.get("advance_payment", 0),
+                    "tracking_history": item.get("tracking_history", []),
+                    "current_lat": cur_coords["lat"],
+                    "current_lng": cur_coords["lng"],
+                    "receiver_lat": recv_coords["lat"],
+                    "receiver_lng": recv_coords["lng"],
+                })
+                
+            # ĐOẠN CODE BỌC THÉP TRÁNH LỖI 500 (Kiểm tra kiểu dữ liệu ngày tháng)
+            dt = o.get("created_at", "")
+            if isinstance(dt, datetime):
+                dt_str = dt.strftime("%d/%m/%Y %H:%M")
+            else:
+                dt_str = str(dt) if dt else "Không rõ"
+                
+            result.append({
+                "order_id": o.get("order_id", ""),
+                "status": o.get("status", ""),
+                "product_name": o.get("product_name", ""),
+                "price": o.get("price", 0),
+                "created_at": dt_str,
+                "receiver_name": o.get("receiver_name", ""),
+                "phone": o.get("phone", ""),
+                "address": receiver_address,
+                "items": items_data
             })
+        except Exception as e:
+            print(f"Lỗi khi parse đơn hàng {o.get('order_id')}: {e}")
+            continue # Lỗi 1 đơn thì bỏ qua đơn đó, không làm sập cả API
             
-        dt = o.get("created_at", "")
-        dt_str = dt.strftime("%d/%m/%Y %H:%M") if isinstance(dt, datetime) else str(dt)
-            
-        result.append({
-            "order_id": o.get("order_id", ""),
-            "status": o.get("status", ""),
-            "product_name": o.get("product_name", ""),
-            "price": o.get("price", 0),
-            "created_at": dt_str,
-            "receiver_name": o.get("receiver_name", ""),
-            "phone": o.get("phone", ""),
-            "address": receiver_address,
-            "items": items_data
-        })
     return result
 
 @app.get("/api/live_location")
