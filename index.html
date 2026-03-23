@@ -216,27 +216,23 @@
     </div>
 
     <script>
-        const API_BASE = "https://hoangngocnguyen.id.vn"; 
+        const API_BASE = "https://hoangngocnguyen.id.vn"; // TRỎ THẲNG API CỦA BẠN
+
         window.trackingMaps = {};
         window.trackingMarkers = {};
         window.trackingIntervals = {};
         window.trackingRoutingControls = {};
-        
-        // BIẾN MỚI LƯU TRỮ TỌA ĐỘ ĐIỆN THOẠI
-        window.userLiveLocation = null;
+        window.userLiveLocation = null; // BIẾN LƯU TỌA ĐỘ GPS ĐIỆN THOẠI
 
         function initApp() {
             try {
-                // XIN QUYỀN LẤY VỊ TRÍ ĐIỆN THOẠI NGAY KHI MỞ APP
+                // YÊU CẦU QUYỀN TRUY CẬP VỊ TRÍ ĐIỆN THOẠI KHÁCH HÀNG NGAY KHI MỞ
                 if (navigator.geolocation) {
                     navigator.geolocation.getCurrentPosition(
                         (position) => {
                             window.userLiveLocation = [position.coords.latitude, position.coords.longitude];
-                            console.log("Đã lấy được vị trí GPS khách hàng:", window.userLiveLocation);
                         },
-                        (error) => {
-                            console.log("Khách từ chối GPS hoặc có lỗi:", error);
-                        },
+                        (error) => { console.log("Không thể lấy GPS điện thoại:", error); },
                         { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
                     );
                 }
@@ -276,6 +272,23 @@
         }
         document.addEventListener("DOMContentLoaded", initApp);
         
+        async function fetchTitleFromUrl(url) {
+            try {
+                const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
+                const response = await fetch(proxyUrl);
+                const data = await response.json();
+                if (data.contents) {
+                    const doc = new DOMParser().parseFromString(data.contents, "text/html");
+                    let title = doc.querySelector("title") ? doc.querySelector("title").innerText : "";
+                    if (title) {
+                        title = title.replace(/\| Shopee Việt Nam/gi, '').replace(/\| Lazada\.vn/gi, '').replace(/Mua ngay /gi, '').trim();
+                        if (title.length > 8 && !title.toLowerCase().startsWith("shopee") && !title.toLowerCase().startsWith("lazada")) return title;
+                    }
+                }
+            } catch (e) {}
+            return null;
+        }
+
         async function fetchWebStats(uid) {
             try {
                 const res = await fetch(`${API_BASE}/api/stats?user_id=${uid}`);
@@ -288,13 +301,13 @@
         async function fetchOrders(id) {
             try {
                 const response = await fetch(`${API_BASE}/api/orders?user_id=${id}`);
-                if (!response.ok) throw new Error(`Lỗi server ${response.status}`);
+                if (!response.ok) throw new Error(`Lỗi server ${response.status} - Code Python đang có Exception không bắt được.`);
                 const data = await response.json();
                 document.getElementById('uTotal').innerText = data.length;
                 renderOrders(data);
             } catch (error) {
                 let errorMsg = error.message;
-                if (errorMsg.includes("Failed to fetch")) errorMsg = "Bị chặn kết nối hoặc link API sai/sập server.";
+                if (errorMsg.includes("Failed to fetch")) errorMsg = "Lỗi CORS (Bị chặn) hoặc sai đường dẫn API.";
                 document.getElementById('orderList').innerHTML = `
                     <div style="text-align:center; padding: 40px; background: rgba(239, 68, 68, 0.1); border-radius: 16px; border: 1px solid rgba(239, 68, 68, 0.3);">
                         <div style="font-size: 24px; margin-bottom: 10px;">🔌</div>
@@ -351,13 +364,13 @@
             const isDelivered = statusText.toLowerCase().includes('thành công') || statusText.toLowerCase().includes('đã giao');
             let receiverLoc = [19.3833, 105.7833]; 
             
-            // XÁC ĐỊNH VỊ TRÍ KHÁCH HÀNG: Ưu tiên GPS điện thoại -> Tọa độ Google Map -> Text địa chỉ
+            // LOGIC ƯU TIÊN VỊ TRÍ: GPS Điện Thoại > Tọa độ Google Map > Nội suy text địa chỉ
             if (window.userLiveLocation) {
                 receiverLoc = [...window.userLiveLocation];
                 addressText = "📍 Vị trí GPS hiện tại của bạn";
             } else if (addressText && addressText.includes('http')) {
                 receiverLoc = [parseFloat(recvLat), parseFloat(recvLng)];
-                addressText = "📍 Vị trí ghim trên bản đồ";
+                addressText = "📍 Vị trí ghim trên Bản đồ";
             } else {
                 let cleanDest = cleanDestinationAddress(addressText);
                 const geoDataTarget = await geocodeLocation(cleanDest);
@@ -371,7 +384,7 @@
 
             let currentHubLoc = [19.3833, 105.7833]; 
             if (isDelivered) {
-                currentHubLoc = [...receiverLoc];
+                currentHubLoc = [...receiverLoc]; // Đã giao -> Xe tải nằm luôn ở nhà khách!
             } else {
                 let hubText = extractLocationFromStatus(statusText);
                 const geoDataHub = await geocodeLocation(hubText);
@@ -382,7 +395,6 @@
                 }
             }
 
-            // DÙNG BẢN ĐỒ TỪ GOOGLE MAPS
             var map = L.map(mapId, { zoomControl: false, attributionControl: false }).setView(currentHubLoc, 13);
             L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', { maxZoom: 19 }).addTo(map);
 
@@ -424,7 +436,7 @@
                 div.innerHTML = `
                     <h4>Dữ liệu GPS thời gian thực</h4>
                     <div class="gps-data-item"><span class="label">Trạng thái:</span> <span class="value value-live" style="color:${isDelivered ? '#10b981' : '#f5a623'}">${isDelivered ? 'Đã hoàn thành' : 'Theo dõi (10s)'}</span></div>
-                    <div class="gps-data-item"><span class="label">Khu vực:</span> <span class="value" id="address_${mapId}">Đang tải...</span></div>
+                    <div class="gps-data-item"><span class="label">Khu vực đích:</span> <span class="value" id="address_${mapId}">Đang tải...</span></div>
                 `;
                 return div;
             };
@@ -473,6 +485,7 @@
                                 labelEl.innerText = data.status;
                                 if (isDelivered) labelEl.previousElementSibling.style.color = '#10b981'; 
                             }
+
                             const routingControl = window.trackingRoutingControls[mapId];
                             if (routingControl) routingControl.setWaypoints([newLatLng, routingControl.getWaypoints()[1].latLng]);
                         }
@@ -519,6 +532,8 @@
             }
 
             let fullHtml = "";
+            let fetchTasks = [];
+
             orders.forEach(o => {
                 let sttClass = 'wait';
                 let sttIcon = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>'; 
@@ -630,6 +645,13 @@
                 `;
             });
             list.innerHTML = fullHtml;
+
+            fetchTasks.forEach(task => {
+                fetchTitleFromUrl(task.url).then(title => {
+                    let el = document.getElementById(task.id);
+                    if(el) el.innerText = title ? title : task.fallback;
+                });
+            });
         }
     </script>
 </body>
