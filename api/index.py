@@ -8,13 +8,37 @@ app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["*", "https://hoangngocnguyen.id.vn"],
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 MONGO_URI = os.environ.get("MONGO_URI")
 client = MongoClient(MONGO_URI) if MONGO_URI else None
+
+# BỘ TỪ ĐIỂN TỌA ĐỘ CÁC TRẠM TRUNG CHUYỂN / ĐỊA PHƯƠNG
+HUB_LOCATIONS = {
+    "từ sơn": {"lat": 21.1167, "lng": 105.9500},
+    "trang hạ": {"lat": 21.1218, "lng": 105.9405},
+    "hà nội": {"lat": 21.0285, "lng": 105.8542},
+    "hoàn kiếm": {"lat": 21.0285, "lng": 105.8542},
+    "mê linh": {"lat": 21.1828, "lng": 105.7142},
+    "thanh hóa": {"lat": 19.8056, "lng": 105.7766},
+    "trường thpt tĩnh gia 2": {"lat": 19.3833, "lng": 105.7833},
+    "tĩnh gia 2": {"lat": 19.3833, "lng": 105.7833},
+    "hồ chí minh": {"lat": 10.8231, "lng": 106.6297},
+    "củ chi": {"lat": 11.0067, "lng": 106.5139},
+    "đà nẵng": {"lat": 16.0471, "lng": 108.2062}
+}
+
+def guess_coordinates(text, fallback_lat=21.0285, fallback_lng=105.8542):
+    if not text:
+        return {"lat": fallback_lat, "lng": fallback_lng}
+    text_lower = str(text).lower()
+    for key, coords in HUB_LOCATIONS.items():
+        if key in text_lower:
+            return coords
+    return {"lat": fallback_lat, "lng": fallback_lng}
 
 @app.get("/api/orders")
 def get_user_orders(user_id: int = Query(..., description="Telegram User ID")):
@@ -29,6 +53,9 @@ def get_user_orders(user_id: int = Query(..., description="Telegram User ID")):
     
     result = []
     for o in orders:
+        receiver_address = o.get("address", "")
+        recv_coords = guess_coordinates(receiver_address)
+
         raw_items = o.get("items", [])
         if not raw_items:
             raw_items = [{
@@ -42,13 +69,26 @@ def get_user_orders(user_id: int = Query(..., description="Telegram User ID")):
 
         items_data = []
         for item in raw_items:
+            current_stage = item.get("spx_stage", o.get("status", ""))
+            
+            # Đoán tọa độ hiện tại
+            cur_coords = guess_coordinates(
+                current_stage, 
+                fallback_lat=recv_coords["lat"] + 0.08, 
+                fallback_lng=recv_coords["lng"] + 0.08
+            )
+
             items_data.append({
                 "link": item.get("link", ""),
                 "carrier": item.get("carrier", ""),
                 "spx_code": item.get("spx_code", ""),
-                "spx_stage": item.get("spx_stage", ""),
+                "spx_stage": current_stage,
                 "advance_payment": item.get("advance_payment", 0),
-                "tracking_history": item.get("tracking_history", [])
+                "tracking_history": item.get("tracking_history", []),
+                "current_lat": cur_coords["lat"],
+                "current_lng": cur_coords["lng"],
+                "receiver_lat": recv_coords["lat"],
+                "receiver_lng": recv_coords["lng"],
             })
             
         result.append({
@@ -59,16 +99,40 @@ def get_user_orders(user_id: int = Query(..., description="Telegram User ID")):
             "created_at": o["created_at"].strftime("%d/%m/%Y %H:%M") if "created_at" in o else "",
             "receiver_name": o.get("receiver_name", ""),
             "phone": o.get("phone", ""),
-            "address": o.get("address", ""),
+            "address": receiver_address,
             "note": o.get("note", ""),
             "items": items_data
         })
         
     return result
 
-# ==========================================
-# API MỚI: THEO DÕI NGƯỜI DÙNG REAL-TIME
-# ==========================================
+@app.get("/api/live_location")
+def get_live_location(order_id: str = Query(...)):
+    if not client:
+        return {"lat": 21.0285, "lng": 105.8542, "status": "Không có kết nối"}
+
+    db = client['shop_database']
+    orders_col = db['orders']
+    
+    order = orders_col.find_one({"order_id": order_id})
+    if not order:
+        return {"error": "Not found"}
+        
+    items = order.get("items", [])
+    if items:
+        current_stage = items[0].get("spx_stage", order.get("status", ""))
+    else:
+        current_stage = order.get("status", "")
+
+    cur_coords = guess_coordinates(current_stage)
+    
+    return {
+        "lat": cur_coords["lat"],
+        "lng": cur_coords["lng"],
+        "status": current_stage,
+        "status_full_address": current_stage
+    }
+
 @app.get("/api/stats")
 def get_web_stats(user_id: int = Query(0, description="Telegram User ID")):
     if not client:
@@ -80,7 +144,6 @@ def get_web_stats(user_id: int = Query(0, description="Telegram User ID")):
     now = datetime.utcnow()
     current_month = now.strftime("%Y-%m")
 
-    # 1. Ghi nhận người dùng đang truy cập
     if user_id != 0:
         stats_col.update_one(
             {"user_id": user_id, "month": current_month},
@@ -88,14 +151,10 @@ def get_web_stats(user_id: int = Query(0, description="Telegram User ID")):
             upsert=True
         )
 
-    # 2. Đếm số người đang online (Có hoạt động trong 3 phút qua)
     three_mins_ago = now - timedelta(minutes=3)
     online_count = stats_col.count_documents({"last_active": {"$gte": three_mins_ago}})
-    
-    # 3. Đếm tổng truy cập duy nhất trong tháng hiện tại
     monthly_count = stats_col.count_documents({"month": current_month})
 
-    # Giữ mức tối thiểu là 1 (chính là user đang xem)
     return {
         "online": max(1, online_count),
         "monthly": max(1, monthly_count)
