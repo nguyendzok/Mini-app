@@ -62,7 +62,6 @@
         .date { font-size: 12px; color: var(--text-sub); display: flex; align-items: center; gap: 6px;}
         .price-row { display: flex; justify-content: space-between; align-items: center; margin-top: 18px; }
         .price { font-size: 20px; font-weight: 800; color: var(--accent); text-shadow: 0 0 20px var(--accent-glow);}
-        
         .btn-expand { width: 36px; height: 36px; border-radius: 50%; background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.3s ease; color: var(--text-sub); border: 1px solid rgba(255,255,255,0.1); box-shadow: inset 0 2px 4px rgba(255,255,255,0.05);}
         .card.expanded .btn-expand { transform: rotate(180deg); background: linear-gradient(135deg, var(--accent), #ea580c); color: #fff; box-shadow: 0 0 15px var(--accent-glow); border-color: transparent;}
         
@@ -74,7 +73,6 @@
         .info-box.full { grid-column: 1 / -1; }
         .info-lbl { font-size: 11px; color: var(--text-sub); font-weight: 600; display: flex; align-items: center; gap: 6px; text-transform: uppercase; letter-spacing: 0.5px;}
         .info-val { font-size: 14px; font-weight: 600; color: #fff; line-height: 1.4; text-shadow: 0 1px 2px rgba(0,0,0,0.8);}
-        
         .section-title { font-size: 13px; color: var(--accent); margin-bottom: 14px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; display: flex; align-items: center; gap: 8px;}
         
         .package { background: linear-gradient(to bottom right, #1a1a1f, #0f0f12); border-radius: var(--radius-lg); padding: 18px; margin-bottom: 16px; border: 1px solid rgba(245, 166, 35, 0.15); border-top: 1px solid rgba(245, 166, 35, 0.4); position: relative; box-shadow: 0 5px 20px rgba(0,0,0,0.5);}
@@ -85,27 +83,27 @@
         .real-product-name { font-size: 14px; color: #fff; font-weight: 600; margin-bottom: 16px; line-height: 1.5; display: flex; gap: 10px; background: rgba(255,255,255,0.03); padding: 12px; border-radius: var(--radius-sm); border: 1px dashed rgba(255,255,255,0.1);}
         .advance-pay { display: flex; justify-content: space-between; align-items: center; font-size: 14px; background: linear-gradient(90deg, rgba(245, 166, 35, 0.1), rgba(245, 166, 35, 0.05)); border: 1px solid rgba(245, 166, 35, 0.3); padding: 14px; border-radius: var(--radius-md); margin-top: 16px; color: var(--accent); font-weight: 700; box-shadow: inset 0 0 15px rgba(245,166,35,0.05);}
         
-        /* BẢN ĐỒ VÀ CÁC ICON MỚI DÙNG CSS */
+        /* BẢN ĐỒ CSS MỚI NHẤT */
         .map-wrapper { position: relative; width: 100%; height: 350px; border-radius: var(--radius-md); margin-bottom: 20px; overflow: hidden; border: 1px solid rgba(255,255,255,0.08); box-shadow: inset 0 2px 10px rgba(0,0,0,0.5); z-index: 1; }
         .tracking-map { width: 100%; height: 100%; background: #0f0f11; }
         .custom-map-marker { background: transparent; border: none; z-index: 10 !important;}
         .leaflet-routing-container { display: none !important; }
 
-        /* ICON ALERT DẤU CHẤM THAN (Lúc Đang lên đơn) */
-        .map-dot-alert { width: 28px; height: 28px; background: #ef4444; border-radius: 50%; border: 3px solid #fff; box-shadow: 0 0 20px #ef4444; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 900; font-size: 16px; animation: pulseAlert 1.5s infinite; position: relative;}
-        .map-dot-alert::after { content: "Đang chờ hàng"; position: absolute; top: 32px; left: 50%; transform: translateX(-50%); font-size: 11px; font-weight: 800; color: #fff; background: #ef4444; padding: 4px 8px; border-radius: 4px; white-space: nowrap; border: 1px solid #b91c1c;}
+        /* ICON ALERT (Lúc Đang lên đơn) */
+        .map-dot-alert { width: 32px; height: 32px; background: #ef4444; border-radius: 50%; border: 3px solid #fff; box-shadow: 0 0 20px rgba(239,68,68,0.8); display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 900; font-size: 18px; animation: pulseAlert 1.5s infinite; position: relative;}
+        .map-dot-alert::after { content: "Đơn đang được lên"; position: absolute; top: 38px; left: 50%; transform: translateX(-50%); font-size: 11px; font-weight: 800; color: #fff; background: #ef4444; padding: 4px 8px; border-radius: 6px; white-space: nowrap; border: 1px solid rgba(255,255,255,0.2); box-shadow: 0 4px 10px rgba(0,0,0,0.5);}
         @keyframes pulseAlert { 0% { box-shadow: 0 0 0 0 rgba(239,68,68,0.7); } 70% { box-shadow: 0 0 0 15px rgba(239,68,68,0); } 100% { box-shadow: 0 0 0 0 rgba(239,68,68,0); } }
 
-        /* ICON KHO HÀNG ĐẦU TIÊN (Điểm xuất phát) */
-        .map-dot-shop { width: 14px; height: 14px; background: #a1a1aa; border-radius: 50%; border: 3px solid #fff; box-shadow: 0 0 10px rgba(255,255,255,0.3); margin-top: -7px; margin-left: -7px; position: relative; }
-        .map-dot-shop::after { content: "Kho xuất phát"; position: absolute; top: 16px; left: 50%; transform: translateX(-50%); font-size: 10px; font-weight: 700; color: #a1a1aa; background: rgba(0,0,0,0.6); padding: 2px 6px; border-radius: 4px; white-space: nowrap;}
+        /* ICON SHOP (Kho xuất phát) */
+        .map-dot-shop { width: 14px; height: 14px; background: #a1a1aa; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 0 10px rgba(255,255,255,0.3); margin-top: -7px; margin-left: -7px; position: relative; }
+        .map-dot-shop::after { content: "Kho xuất phát"; position: absolute; top: 16px; left: 50%; transform: translateX(-50%); font-size: 10px; font-weight: 700; color: #a1a1aa; background: rgba(0,0,0,0.8); padding: 2px 6px; border-radius: 4px; white-space: nowrap;}
 
-        /* ICON KHÁCH HÀNG (Điểm đến) */
-        .map-dot-customer { width: 16px; height: 16px; background: #10b981; border-radius: 50%; border: 3px solid #fff; box-shadow: 0 0 15px #10b981; margin-top: -8px; margin-left: -8px; position: relative; display: flex; align-items: center; justify-content: center; }
+        /* ICON KHÁCH (Điểm đến) */
+        .map-dot-customer { width: 16px; height: 16px; background: #10b981; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 0 15px rgba(16,185,129,0.8); margin-top: -8px; margin-left: -8px; position: relative; display: flex; align-items: center; justify-content: center; }
         .map-dot-customer::before { content: "✓"; color: #fff; font-size: 10px; font-weight: 900; }
-        .map-dot-customer::after { content: "Điểm giao"; position: absolute; top: 18px; left: 50%; transform: translateX(-50%); font-size: 10px; font-weight: 700; color: #10b981; background: rgba(0,0,0,0.6); padding: 2px 6px; border-radius: 4px; white-space: nowrap;}
+        .map-dot-customer::after { content: "Điểm giao"; position: absolute; top: 18px; left: 50%; transform: translateX(-50%); font-size: 10px; font-weight: 700; color: #10b981; background: rgba(0,0,0,0.8); padding: 2px 6px; border-radius: 4px; white-space: nowrap;}
 
-        /* XE TẢI CHẠY (VỊ TRÍ HIỆN TẠI) */
+        /* XE TẢI CHẠY */
         .blue-pulse-container { position: absolute; bottom: 0; left: 50%; transform: translate(-50%, 50%); width: 20px; height: 20px; }
         .blue-pulse { position: absolute; width: 100%; height: 100%; background: rgba(66, 133, 244, 0.4); border-radius: 50%; animation: blue-ring 2s ease-out infinite; z-index: 1; }
         .blue-dot { position: relative; width: 10px; height: 10px; background: #4285F4; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 0 8px rgba(66, 133, 244, 0.8); z-index: 3; }
@@ -122,7 +120,6 @@
         .gps-data-item .value { color: #fff; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 160px; }
         .gps-data-item .value-live { color: #f5a623; }
 
-        /* TIMELINE TRẠNG THÁI */
         .live-tracker { background: rgba(0,0,0,0.6); border-radius: var(--radius-md); padding: 24px 0 24px 0; margin-bottom: 18px; position: relative; border: 1px solid rgba(255,255,255,0.05); box-shadow: inset 0 4px 20px rgba(0,0,0,0.8);}
         .stepper { display: flex; justify-content: space-between; position: relative; margin-bottom: 10px; z-index: 2; padding: 0 14px 24px 14px; }
         .stepper-track { position: absolute; left: 14px; right: 14px; top: 12px; height: 4px; background: #27272a; z-index: -1; border-radius: 4px; box-shadow: inset 0 1px 3px rgba(0,0,0,0.8); }
@@ -164,11 +161,9 @@
     <svg style="display:none">
         <symbol id="icon-user" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></symbol>
         <symbol id="icon-phone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></symbol>
-        <symbol id="icon-map" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></symbol>
         <symbol id="icon-box" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></symbol>
         <symbol id="icon-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 16 14"></polyline></symbol>
         <symbol id="icon-down" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></symbol>
-        <symbol id="icon-check-circle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></symbol>
         <symbol id="icon-users-group" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><path d="M20 8v6"></path><path d="M23 11h-6"></path></symbol>
     </svg>
 
@@ -209,9 +204,28 @@
         window.trackingMaps = {}; window.trackingMarkers = {}; window.trackingIntervals = {}; window.trackingRoutingControls = {};
         window.userLiveLocation = null; 
 
-        // CHECK TỌA ĐỘ PHẢI Ở TRONG VN TRƯỚC KHI CHO PHÉP
-        function isLocationInVietnam(lat, lng) {
-            return (lat >= 8.0 && lat <= 23.5 && lng >= 102.0 && lng <= 110.0);
+        // BỘ TỪ ĐIỂN TỌA ĐỘ CỨNG (KHÔNG BAO GIỜ SAI LỆCH HOẶC ĐI RA NƯỚC NGOÀI)
+        const KNOWN_LOCATIONS = {
+            "hồ chí minh": [10.8231, 106.6297], "hcm": [10.8231, 106.6297], "sài gòn": [10.8231, 106.6297],
+            "hà nội": [21.0285, 105.8542], "hn": [21.0285, 105.8542], "mê linh": [21.1828, 105.7142],
+            "thanh hóa": [19.8056, 105.7766], "nghi sơn": [19.3833, 105.7833], "tĩnh gia": [19.3833, 105.7833],
+            "đà nẵng": [16.0471, 108.2062], "bình dương": [11.063, 106.65], "đồng nai": [11.112, 106.82],
+            "củ chi": [11.0067, 106.5139], "từ sơn": [21.1167, 105.9500],
+            "thâm quyến": [22.5431, 114.0579], "nghĩa ô": [29.3068, 120.0750] // Trạm quốc tế hợp lệ
+        };
+
+        function findKnownLocation(text) {
+            if(!text) return null;
+            let lower = text.toLowerCase();
+            for (let key in KNOWN_LOCATIONS) {
+                if (lower.includes(key)) return KNOWN_LOCATIONS[key];
+            }
+            return null;
+        }
+
+        // CHỈ CHO PHÉP MAP HIỂN THỊ Ở VN HOẶC NAM TRUNG QUỐC (Do SPX)
+        function isLocationValid(lat, lng) {
+            return (lat >= 8.0 && lat <= 30.0 && lng >= 102.0 && lng <= 122.0);
         }
 
         // QUẢN LÝ QUYỀN VỊ TRÍ
@@ -253,10 +267,8 @@
                     (position) => { 
                         let pLat = position.coords.latitude;
                         let pLng = position.coords.longitude;
-                        if(isLocationInVietnam(pLat, pLng)){
+                        if(isLocationValid(pLat, pLng)){
                             window.userLiveLocation = [pLat, pLng]; 
-                        } else {
-                            console.log("Vị trí khách ngoài VN. Bỏ qua.");
                         }
                     },
                     (error) => { console.log("Lỗi GPS:", error); },
@@ -332,15 +344,16 @@
             }
         }
 
-        // TÌM KHO HÀNG ĐẦU TIÊN TỪ TEXT TRẠNG THÁI
+        // BÓC TÁCH VỊ TRÍ TỪ STATUS CHUẨN XÁC
         function extractLocationFromStatus(statusText) {
             if (!statusText) return "Trường THPT Tĩnh Gia 2";
             let text = statusText.toLowerCase();
-            let match = text.match(/(?:đến kho|rời kho phân loại|đến trạm|rời trạm|tại kho|từ kho|từ trạm|đến|tại địa chỉ|tại bưu cục|tại điểm giao dịch|tại)\s+([^.]+)/i);
+            
+            let match = text.match(/(?:đến kho|rời kho|đến trạm|rời trạm|tại kho|từ kho|từ trạm|đến bưu cục|tại bưu cục|giao hàng tại|đang giao tại|đến|tại)\s+([^.]+)/i);
             if (match && match[1]) {
                 let loc = match[1].replace(/(soc|hub|lm hub|\.)/gi, '').trim();
-                loc = loc.replace(/[a-zA-Z0-9]{5,}/g, '').trim(); 
-                return loc.split(' và ')[0].split(' - ')[0];
+                loc = loc.replace(/[a-zA-Z0-9]{5,}/g, '').trim(); // Lọc mã vận đơn rác
+                return loc.split(' và ')[0].split(' - ')[0].trim();
             }
             return text.replace(/(soc|hub|lm hub|\.)/gi, '').trim();
         }
@@ -353,7 +366,7 @@
                 if (data && data.length > 0) {
                     let lat = parseFloat(data[0].lat);
                     let lng = parseFloat(data[0].lon);
-                    if(isLocationInVietnam(lat, lng)) {
+                    if(isLocationValid(lat, lng)) {
                         return { lat: lat, lng: lng };
                     }
                 }
@@ -369,7 +382,7 @@
             return 1; // Chuẩn bị
         }
 
-        // LOGIC MAP: DẤU CHẤM THAN KHI STEP 1 VÀ HAI ĐƯỜNG ROUTING, KHÓA TRONG VN
+        // LOGIC MAP CHÍNH THỨC
         async function initOrderMap(mapId, orderId, statusText, addressText, historyDataStr) {
             if (window.trackingMaps[mapId]) {
                 setTimeout(() => window.trackingMaps[mapId].invalidateSize(), 300);
@@ -383,7 +396,7 @@
             let historyData = [];
             try { historyData = JSON.parse(decodeURIComponent(historyDataStr)); } catch(e) {}
             
-            // 1. TÌM VỊ TRÍ ĐÍCH (KHÁCH HÀNG)
+            // 1. TÌM VỊ TRÍ KHÁCH HÀNG
             let receiverLoc = [19.3833, 105.7833]; 
             if (window.userLiveLocation) {
                 receiverLoc = [...window.userLiveLocation];
@@ -397,15 +410,7 @@
                 else { addressText = "Trường THPT Tĩnh Gia 2 (Mặc định)"; }
             }
 
-            // SET GIỚI HẠN BẢN ĐỒ VIỆT NAM (KHÓA KÉO)
-            var vnBounds = L.latLngBounds(L.latLng(8.0, 102.0), L.latLng(23.5, 110.0));
-            var map = L.map(mapId, { 
-                zoomControl: false, 
-                attributionControl: false,
-                maxBounds: vnBounds,
-                maxBoundsViscosity: 1.0,
-                minZoom: 5
-            });
+            var map = L.map(mapId, { zoomControl: false, attributionControl: false });
             L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { maxZoom: 19 }).addTo(map);
 
             // BẢNG GPS PANEL
@@ -417,7 +422,7 @@
             };
             gpsPanel.addTo(map);
 
-            // TRƯỜNG HỢP 1: ĐƠN VỪA LÊN (STEP 1) -> DẤU CHẤM THAN Ở NHÀ KHÁCH
+            // NẾU ĐƠN VỪA LÊN (STEP 1): CHỈ HIỆN CHẤM THAN TẠI NHÀ KHÁCH
             if (step === 1) {
                 map.setView(receiverLoc, 14);
                 let alertIcon = L.divIcon({ className: '', html: '<div class="map-dot-alert">!</div>', iconSize: [28,28], iconAnchor: [14,14] });
@@ -426,38 +431,38 @@
                 return; 
             }
 
-            // TRƯỜNG HỢP 2: ĐƠN ĐANG CHẠY (STEP > 1) -> VẼ ĐƯỜNG
-            let startHubText = null;
-            if (historyData && historyData.length > 0) {
-                for (let i = historyData.length - 1; i >= 0; i--) {
-                    let desc = historyData[i].description.toLowerCase();
-                    if (desc.match(/(kho|hub|soc|trạm|đến|rời|tại quận|tại huyện|tại thành phố)/)) {
-                        if (!desc.match(/(chuẩn bị|người gửi)/)) {
-                            startHubText = extractLocationFromStatus(desc);
-                            break;
-                        }
-                    }
-                }
-            }
-            if (!startHubText) startHubText = extractLocationFromStatus(statusText);
-            
+            // 2. TÌM KHO GIAO HÀNG ĐẦU TIÊN (NẾU STEP > 1)
             let startLoc = [19.3833, 105.7833];
-            const geoStart = await geocodeLocation(startHubText);
-            if (geoStart) startLoc = [geoStart.lat, geoStart.lng];
+            let startStatus = historyData.length > 0 ? historyData[historyData.length - 1].description : statusText;
+            
+            // Tìm bằng Từ điển cứng trước cho chuẩn 100%
+            let knownStart = findKnownLocation(startStatus);
+            if (knownStart) {
+                startLoc = knownStart;
+            } else {
+                let startHubText = extractLocationFromStatus(startStatus);
+                const geoStart = await geocodeLocation(startHubText);
+                if (geoStart) startLoc = [geoStart.lat, geoStart.lng];
+            }
 
-            let currentHubLoc = [19.3833, 105.7833]; 
+            // 3. TÌM VỊ TRÍ HIỆN TẠI
+            let currentHubLoc = [...startLoc]; 
             if (isDelivered) {
                 currentHubLoc = [...receiverLoc]; 
             } else {
-                let curText = extractLocationFromStatus(statusText);
-                const geoCur = await geocodeLocation(curText);
-                if (geoCur) currentHubLoc = [geoCur.lat, geoCur.lng];
-                else currentHubLoc = [...startLoc];
+                let knownCur = findKnownLocation(statusText);
+                if (knownCur) {
+                    currentHubLoc = knownCur;
+                } else {
+                    let curText = extractLocationFromStatus(statusText);
+                    const geoCur = await geocodeLocation(curText);
+                    if (geoCur) currentHubLoc = [geoCur.lat, geoCur.lng];
+                }
             }
 
             map.setView(currentHubLoc, 12);
 
-            // ĐƯỜNG NÉT ĐỨT QUÁ KHỨ
+            // VẼ ĐƯỜNG NÉT ĐỨT (QUÁ KHỨ): TỪ KHO GỐC -> VỊ TRÍ HIỆN TẠI
             if (!isDelivered && (startLoc[0] !== currentHubLoc[0] || startLoc[1] !== currentHubLoc[1])) {
                 L.Routing.control({
                     waypoints: [ L.latLng(startLoc[0], startLoc[1]), L.latLng(currentHubLoc[0], currentHubLoc[1]) ],
@@ -466,6 +471,7 @@
                     createMarker: function() { return null; }
                 }).addTo(map);
             } else if (isDelivered) {
+                // Giao xong thì đường là nét đứt toàn bộ
                 L.Routing.control({
                     waypoints: [ L.latLng(startLoc[0], startLoc[1]), L.latLng(receiverLoc[0], receiverLoc[1]) ],
                     routeWhileDragging: false, addWaypoints: false, showAlternatives: false, fitSelectedRoutes: true,
@@ -474,7 +480,7 @@
                 }).addTo(map);
             }
 
-            // ĐƯỜNG NÉT LIỀN TƯƠNG LAI
+            // VẼ ĐƯỜNG NÉT LIỀN (TƯƠNG LAI): TỪ VỊ TRÍ HIỆN TẠI -> KHÁCH HÀNG
             if (!isDelivered) {
                 let futureRouting = L.Routing.control({
                     waypoints: [ L.latLng(currentHubLoc[0], currentHubLoc[1]), L.latLng(receiverLoc[0], receiverLoc[1]) ],
@@ -485,9 +491,9 @@
                 window.trackingRoutingControls[mapId] = futureRouting;
             }
 
-            // ICON KHO & KHÁCH
-            L.marker(startLoc, { icon: L.divIcon({ className: '', html: '<div class="map-dot-shop"></div>', iconSize: [0, 0] }) }).addTo(map);
-            L.marker(receiverLoc, { icon: L.divIcon({ className: '', html: '<div class="map-dot-customer"></div>', iconSize: [0, 0] }) }).addTo(map);
+            // GẮN MARKER
+            L.marker(startLoc, { icon: L.divIcon({ className: '', html: '<div class="map-dot-shop"></div>', iconSize: [0, 0], iconAnchor: [0, 0] }) }).addTo(map);
+            L.marker(receiverLoc, { icon: L.divIcon({ className: '', html: '<div class="map-dot-customer"></div>', iconSize: [0, 0], iconAnchor: [0, 0] }) }).addTo(map);
 
             let truckOrCheck = isDelivered ? '✅' : '🚚';
             let pulseHtml = isDelivered ? '' : '<div class="blue-pulse-container"><div class="blue-pulse"></div><div class="blue-dot"></div></div>';
@@ -507,7 +513,7 @@
             window.trackingMaps[mapId] = map;
             setTimeout(() => map.invalidateSize(), 400);
             
-            // THEO DÕI LIVE
+            // TỰ ĐỘNG CẬP NHẬT VỊ TRÍ
             if(!isDelivered) {
                 window.trackingIntervals[mapId] = setInterval(async () => {
                     try {
@@ -523,9 +529,14 @@
                                 newLatLng = L.latLng(receiverLoc[0], receiverLoc[1]);
                                 clearInterval(window.trackingIntervals[mapId]); 
                             } else {
-                                let hText = extractLocationFromStatus(data.status);
-                                const gHub = await geocodeLocation(hText);
-                                if(gHub) newLatLng = L.latLng(gHub.lat, gHub.lng);
+                                let knownCur = findKnownLocation(data.status);
+                                if(knownCur) {
+                                    newLatLng = L.latLng(knownCur[0], knownCur[1]);
+                                } else {
+                                    let hText = extractLocationFromStatus(data.status);
+                                    const gHub = await geocodeLocation(hText);
+                                    if(gHub) newLatLng = L.latLng(gHub.lat, gHub.lng);
+                                }
                             }
 
                             if(newLatLng) {
