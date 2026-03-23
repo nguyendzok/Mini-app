@@ -228,7 +228,7 @@
                 const tg = window.Telegram.WebApp;
                 tg.ready(); tg.expand();
                 let attempts = 0;
- 
+
                 const tryFetchData = () => {
                     const initData = tg.initDataUnsafe || {};
                     const user = initData.user;
@@ -301,55 +301,36 @@
         }
 
         // =====================================
-        // 1. BỘ LỌC ĐỊA CHỈ NHÀ KHÁCH HÀNG (ĐÍCH ĐẾN)
+        // CÁC HÀM XỬ LÝ TEXT & TỌA ĐỘ
         // =====================================
         function cleanDestinationAddress(rawAddress) {
             if (!rawAddress || rawAddress.includes('---')) return "Trường THPT Tĩnh Gia 2";
-            
             let parts = rawAddress.split(',').map(p => p.trim()).filter(p => p.length > 0);
-            // Cắt lấy đúng 3 cấp hành chính cuối cùng
             let finalParts = parts.length > 3 ? parts.slice(-3) : parts;
-            
             let cleanStr = finalParts.join(', ');
-            // Gọt bỏ sạch sẽ rác (số nhà, ngõ ngách) lỡ còn dính
             cleanStr = cleanStr.replace(/(nhà số|số nhà|ngõ|ngách|hẻm|kiệt|số|ấp|đường|tòa nhà|lô|phòng)\s*[\w/.\-]+/gi, '').replace(/^[,.\s]+|[,.\s]+$/g, '').trim();
             cleanStr = cleanStr.replace(/tp\.hcm|tphcm|tp hcm|hcm/gi, 'Hồ Chí Minh').replace(/hn/gi, 'Hà Nội');
-            
             return cleanStr || "Trường THPT Tĩnh Gia 2";
         }
 
-        // =====================================
-        // 2. BỘ NHẬN DIỆN VỊ TRÍ HIỆN TẠI TỪ SPX/GHN
-        // =====================================
         function extractLocationFromStatus(statusText) {
             if (!statusText) return "Trường THPT Tĩnh Gia 2";
             let text = statusText.toLowerCase();
-            
-            // Xử lý câu dài ngoằng của Shopee: "Đơn hàng đã đến trạm giao hàng tại khu vực của bạn tại Phường Trang Hạ..."
             let match = text.match(/(?:khu vực của bạn tại|tại trạm giao hàng|giao hàng tại|đang giao tại|tại)\s+([^.]+)/i);
             if (match && match[1]) {
                 let loc = match[1].trim();
-                // Cắt bỏ phần râu ria thừa ở đuôi (VD: "...và sẽ được giao trong vòng...")
                 loc = loc.split(' và ')[0].split(' - ')[0]; 
                 return loc;
             }
-            
             match = text.match(/(?:đến kho|rời kho phân loại|đến trạm|rời trạm)\s+([^.]+)/i);
             if (match && match[1]) {
                 return match[1].replace(/(soc|hub|lm hub|\.)/gi, '').trim();
             }
-            
             return text.replace(/(soc|hub|lm hub|\.)/gi, '').trim();
         }
 
-        // =====================================
-        // 3. HÀM GỌI API BẢN ĐỒ
-        // =====================================
         async function geocodeLocation(queryText) {
-            // Hệ thống ghi đè: Nếu lỗi hoặc thiếu dữ liệu, mặc định trỏ về THPT Tĩnh Gia 2
-            if (!queryText || queryText === 'Trường THPT Tĩnh Gia 2') {
-                return { lat: 19.3833, lng: 105.7833, cleanAddress: "Trường THPT Tĩnh Gia 2" };
-            }
+            if (!queryText || queryText === 'Trường THPT Tĩnh Gia 2') return null;
             try {
                 let res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(queryText)}&countrycodes=vn&limit=1`, {
                     headers: { 'Accept-Language': 'vi' }
@@ -359,12 +340,11 @@
                     return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon), cleanAddress: queryText };
                 }
             } catch (err) {}
-            
-            return { lat: 19.3833, lng: 105.7833, cleanAddress: "Trường THPT Tĩnh Gia 2" };
+            return null;
         }
 
         // =====================================
-        // 4. KẾT NỐI VÀO MAP & ROUTING
+        // LOGIC MAP CHÍNH THỨC
         // =====================================
         async function initOrderMap(mapId, orderId, statusText, curLat, curLng, addressText, recvLat, recvLng) {
             if (window.trackingMaps[mapId]) {
@@ -375,20 +355,47 @@
             const mapElement = document.getElementById(mapId);
             if (!mapElement) return;
 
-            // XỬ LÝ VỊ TRÍ ĐÍCH (NHÀ KHÁCH HÀNG)
-            let cleanDest = cleanDestinationAddress(addressText);
-            const geoDataTarget = await geocodeLocation(cleanDest);
-            let receiverLoc = [geoDataTarget.lat, geoDataTarget.lng];
-            addressText = geoDataTarget.cleanAddress;
+            // Kiểm tra trạng thái đơn hàng: Nếu hoàn thành/đã giao thì xe tải nằm ngay nhà khách!
+            const isDelivered = statusText.toLowerCase().includes('thành công') || statusText.toLowerCase().includes('đã giao');
 
-            // XỬ LÝ VỊ TRÍ HIỆN TẠI TỪ CÂU STATUS CỦA SPX
-            let currentHubLoc = [19.3833, 105.7833]; 
-            let hubText = extractLocationFromStatus(statusText);
-            const geoDataHub = await geocodeLocation(hubText);
-            if (geoDataHub) {
-                currentHubLoc = [geoDataHub.lat, geoDataHub.lng];
+            // 1. TÌM VỊ TRÍ NHÀ KHÁCH (ĐÍCH ĐẾN)
+            let receiverLoc = [19.3833, 105.7833]; 
+            
+            if (addressText && addressText.includes('http')) {
+                // Khách quăng Link GG Maps -> Backend đã bóc tọa độ chuẩn xác 100% trả vào recvLat, recvLng
+                receiverLoc = [parseFloat(recvLat), parseFloat(recvLng)];
+                addressText = "📍 Vị trí đã ghim từ Google Maps";
+            } else {
+                // Khách gõ chữ -> Gọt chữ để tìm Map miễn phí
+                let cleanDest = cleanDestinationAddress(addressText);
+                const geoDataTarget = await geocodeLocation(cleanDest);
+                if (geoDataTarget) {
+                    receiverLoc = [geoDataTarget.lat, geoDataTarget.lng];
+                    addressText = geoDataTarget.cleanAddress;
+                } else {
+                    addressText = "Trường THPT Tĩnh Gia 2 (Mặc định)";
+                }
             }
 
+            // 2. TÌM VỊ TRÍ XE TẢI HIỆN TẠI
+            let currentHubLoc = [19.3833, 105.7833]; 
+            
+            if (isDelivered) {
+                // NẾU ĐÃ GIAO XONG: Nhập vị trí xe tải trùng khít với nhà khách!
+                currentHubLoc = [...receiverLoc];
+            } else {
+                // NẾU ĐANG CHẠY: Bóc chữ từ SPX để lấy trạm hiện tại
+                let hubText = extractLocationFromStatus(statusText);
+                const geoDataHub = await geocodeLocation(hubText);
+                if (geoDataHub) {
+                    currentHubLoc = [geoDataHub.lat, geoDataHub.lng];
+                } else {
+                    // Nếu k tìm ra kho, dùng tọa độ dự phòng backend ném xuống
+                    currentHubLoc = [parseFloat(curLat) || 19.3833, parseFloat(curLng) || 105.7833];
+                }
+            }
+
+            // 3. VẼ MAP VÀ ROUTING
             var map = L.map(mapId, { zoomControl: false, attributionControl: false }).setView(currentHubLoc, 13);
             L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { maxZoom: 19 }).addTo(map);
 
@@ -401,39 +408,42 @@
                 lineOptions: { styles: [{ color: '#f5a623', opacity: 0.8, weight: 4 }] },
                 createMarker: function(idx, waypoint, n) {
                     if (idx === 0) {
+                        // Icon Xe Tải (Nếu đã giao xong thì đổi icon cái tick xanh)
+                        let truckOrCheck = isDelivered ? '✅' : '🚚';
+                        let pulseHtml = isDelivered ? '' : '<div class="blue-pulse-container"><div class="blue-pulse"></div><div class="blue-dot"></div></div>';
+                        
                         var truckIcon = L.divIcon({
                             className: 'custom-map-marker',
                             html: `
                                 <div class="shopee-marker-label" id="label_${mapId}">
-                                    <span style="color:#ee4d2d">●</span> <span class="status-text">${statusText}</span>
+                                    <span style="color:${isDelivered ? '#10b981' : '#ee4d2d'}">●</span> <span class="status-text">${statusText}</span>
                                 </div>
-                                <div class="shopee-truck-icon-static">🚚</div>
-                                <div class="blue-pulse-container">
-                                    <div class="blue-pulse"></div>
-                                    <div class="blue-dot"></div>
-                                </div>
+                                <div class="shopee-truck-icon-static">${truckOrCheck}</div>
+                                ${pulseHtml}
                             `,
                             iconSize: [0, 0]
                         });
-                        var marker = L.marker(waypoint.latLng, {icon: truckIcon});
+                        var marker = L.marker(waypoint.latLng, {icon: truckIcon, zIndexOffset: 1000});
                         window.trackingMarkers[mapId] = marker;
                         return marker;
                     } else if (idx === n - 1) {
-                        return L.circleMarker(waypoint.latLng, { radius: 5, color: '#fff', fillColor: '#1a1a1f', fillOpacity: 1, weight: 2 });
+                        // Điểm đến
+                        return L.circleMarker(waypoint.latLng, { radius: 6, color: '#fff', fillColor: '#10b981', fillOpacity: 1, weight: 2 });
                     }
                     return null;
                 }
             }).addTo(map);
 
+            // 4. BẢNG GPS
             var gpsPanel = L.control({position: 'bottomright'});
             gpsPanel.onAdd = function (map) {
                 var div = L.DomUtil.create('div', 'gps-data-panel');
                 div.innerHTML = `
                     <h4>Dữ liệu GPS thời gian thực</h4>
                     <div class="gps-data-item"><span class="label">ID Đơn hàng:</span> <span class="value">${orderId}</span></div>
-                    <div class="gps-data-item"><span class="label">Loại Cập nhật:</span> <span class="value value-live">API Động (10s)</span></div>
+                    <div class="gps-data-item"><span class="label">Trạng thái:</span> <span class="value value-live" style="color:${isDelivered ? '#10b981' : '#f5a623'}">${isDelivered ? 'Đã hoàn thành' : 'Đang theo dõi (10s)'}</span></div>
                     <div class="gps-data-item"><span class="label">Tọa độ đích:</span> <span class="value" id="coords_${mapId}">-- / --</span></div>
-                    <div class="gps-data-item"><span class="label">Khu vực đến:</span> <span class="value" id="address_${mapId}">Đang tải...</span></div>
+                    <div class="gps-data-item"><span class="label">Khu vực:</span> <span class="value" id="address_${mapId}">Đang tải...</span></div>
                 `;
                 return div;
             };
@@ -444,12 +454,20 @@
 
             setTimeout(() => map.invalidateSize(), 400);
             
-            startLiveTracking(mapId, orderId);
+            // TRUYỀN BIẾN RECEIVER_LOC VÀ IS_DELIVERED VÀO HÀM TRACKING LIVE
+            startLiveTracking(mapId, orderId, receiverLoc, isDelivered);
             updateGpsPanel(mapId, receiverLoc[0], receiverLoc[1], addressText);
         }
 
-        function startLiveTracking(mapId, orderId) {
+        // =====================================
+        // THEO DÕI LIVE VÀ CẬP NHẬT
+        // =====================================
+        function startLiveTracking(mapId, orderId, destLocArray, isAlreadyDelivered) {
+            // Xóa rác cũ
             if (window.trackingIntervals[mapId]) clearInterval(window.trackingIntervals[mapId]);
+
+            // Nếu đơn hàng đã giao thành công thì khóa tracking luôn để tiết kiệm tài nguyên
+            if (isAlreadyDelivered) return; 
 
             window.trackingIntervals[mapId] = setInterval(async () => {
                 try {
@@ -458,21 +476,31 @@
                     const data = await res.json();
                     
                     if (data && data.status) {
-                        // KHI CÓ STATUS MỚI TỪ API SPX -> LỌC TÊN KHO -> ĐẨY XE TẢI CHẠY
-                        let hubText = extractLocationFromStatus(data.status);
-                        const geoDataHub = await geocodeLocation(hubText);
-                        
-                        const lat = geoDataHub ? geoDataHub.lat : parseFloat(data.lat);
-                        const lng = geoDataHub ? geoDataHub.lng : parseFloat(data.lng);
+                        let isDelivered = data.status.toLowerCase().includes('thành công') || data.status.toLowerCase().includes('đã giao');
+                        let newLatLng;
 
-                        if(lat && lng) {
-                            const newLatLng = L.latLng(lat, lng);
-                            
+                        if (isDelivered) {
+                            // Cập nhật mới: Vừa giao xong! Bê xe tải quăng thẳng vào nhà khách.
+                            newLatLng = L.latLng(destLocArray[0], destLocArray[1]);
+                            clearInterval(window.trackingIntervals[mapId]); // Xong nhiệm vụ, nghỉ!
+                        } else {
+                            // Đang chạy: Dịch câu status ra tọa độ
+                            let hubText = extractLocationFromStatus(data.status);
+                            const geoDataHub = await geocodeLocation(hubText);
+                            const lat = geoDataHub ? geoDataHub.lat : parseFloat(data.lat);
+                            const lng = geoDataHub ? geoDataHub.lng : parseFloat(data.lng);
+                            if(lat && lng) newLatLng = L.latLng(lat, lng);
+                        }
+
+                        if(newLatLng) {
                             const marker = window.trackingMarkers[mapId];
                             if (marker) marker.setLatLng(newLatLng); 
                             
                             const labelEl = document.querySelector(`#label_${mapId} span.status-text`);
-                            if (labelEl) labelEl.innerText = data.status;
+                            if (labelEl) {
+                                labelEl.innerText = data.status;
+                                if (isDelivered) labelEl.previousElementSibling.style.color = '#10b981'; 
+                            }
 
                             const routingControl = window.trackingRoutingControls[mapId];
                             if (routingControl) {
