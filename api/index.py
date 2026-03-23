@@ -1,4 +1,5 @@
 from fastapi import FastAPI, Query
+from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pymongo import MongoClient
 import os
@@ -16,23 +17,15 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-MONGO_URI = os.environ.get("MONGO_URI")
+MONGO_URI = os.environ.get("MONGO_URI", "mongodb+srv://DÁN_LINK_MONGODB_CỦA_BẠN_VÀO_ĐÂY_NẾU_CẦN")
 client = MongoClient(MONGO_URI) if MONGO_URI else None
 
 HUB_LOCATIONS = {
     "thâm quyến": {"lat": 22.5431, "lng": 114.0579},
     "nghĩa ô": {"lat": 29.3068, "lng": 120.0750},
     "bw soc": {"lat": 11.0067, "lng": 106.5139},
-    "củ chi soc": {"lat": 11.0067, "lng": 106.5139},
-    "hn từ liêm soc": {"lat": 21.0470, "lng": 105.7480},
     "hn mê linh soc": {"lat": 21.1828, "lng": 105.7142},
     "từ sơn soc": {"lat": 21.1167, "lng": 105.9500},
-    "đà nẵng soc": {"lat": 16.0471, "lng": 108.2062},
-    "hồ chí minh": {"lat": 10.8231, "lng": 106.6297},
-    "hà nội": {"lat": 21.0285, "lng": 105.8542},
-    "thanh hóa": {"lat": 19.8056, "lng": 105.7766},
-    "trang hạ": {"lat": 21.1218, "lng": 105.9405},
-    "từ sơn": {"lat": 21.1167, "lng": 105.9500},
     "tĩnh gia 2": {"lat": 19.3833, "lng": 105.7833},
 }
 
@@ -63,85 +56,91 @@ def guess_coordinates(text, fallback_lat=19.3833, fallback_lng=105.7833):
 @app.get("/api/orders")
 def get_user_orders(user_id: str = Query(...)):
     try:
-        if not client: return []
+        if not client: 
+            return JSONResponse(status_code=500, content={"detail": "Chưa kết nối được với MongoDB. Hãy kiểm tra lại MONGO_URI."})
+            
         db = client['shop_database']
-        
         try: uid = int(user_id)
         except: uid = user_id
         
-        # Đọc dữ liệu từ MongoDB
         orders = list(db['orders'].find({"$or": [{"user_id": uid}, {"user_id": str(user_id)}]}).sort("created_at", -1).limit(30))
         result = []
         
         for o in orders:
-            try:
-                receiver_address = o.get("address") or ""
-                recv_coords = guess_coordinates(receiver_address)
+            receiver_address = str(o.get("address", ""))
+            recv_coords = guess_coordinates(receiver_address)
 
-                # Fix triệt để lỗi NoneType nếu "items" bị rỗng trong DB
-                raw_items = o.get("items")
-                if not isinstance(raw_items, list): 
-                    raw_items = []
+            raw_items = o.get("items")
+            if not isinstance(raw_items, list): raw_items = []
+            if len(raw_items) == 0:
+                raw_items = [{
+                    "link": o.get("product_link", "Đơn hàng"),
+                    "carrier": o.get("carrier", "N/A"),
+                    "spx_code": o.get("spx_code", ""),
+                    "spx_stage": o.get("spx_stage", o.get("status", "")),
+                    "advance_payment": o.get("advance_payment", 0),
+                    "tracking_history": []
+                }]
 
-                if len(raw_items) == 0:
-                    raw_items = [{
-                        "link": o.get("product_link", "Đơn hàng"),
-                        "carrier": o.get("carrier", "N/A"),
-                        "spx_code": o.get("spx_code", ""),
-                        "spx_stage": o.get("spx_stage", o.get("status", "")),
-                        "advance_payment": o.get("advance_payment", o.get("cod_amount", 0)),
-                        "tracking_history": o.get("tracking_history", [])
-                    }]
+            items_data = []
+            for item in raw_items:
+                if not isinstance(item, dict): continue 
+                
+                current_stage = str(item.get("spx_stage") or o.get("status") or "Đang xử lý")
+                cur_coords = guess_coordinates(current_stage, fallback_lat=recv_coords["lat"] + 0.05, fallback_lng=recv_coords["lng"] + 0.05)
+                
+                # Làm sạch lịch sử tracking để tránh lỗi JSON Serialize
+                t_history = item.get("tracking_history")
+                safe_history = []
+                if isinstance(t_history, list):
+                    for h in t_history:
+                        if isinstance(h, dict):
+                            safe_history.append({
+                                "time": str(h.get("time", "")),
+                                "description": str(h.get("description", ""))
+                            })
+                            
+                try: adv_pay = float(item.get("advance_payment", 0))
+                except: adv_pay = 0
 
-                items_data = []
-                for item in raw_items:
-                    if not isinstance(item, dict): continue 
-                    
-                    current_stage = item.get("spx_stage") or o.get("status") or "Đang xử lý"
-                    cur_coords = guess_coordinates(current_stage, fallback_lat=recv_coords["lat"] + 0.05, fallback_lng=recv_coords["lng"] + 0.05)
-                    
-                    t_history = item.get("tracking_history")
-                    if not isinstance(t_history, list): t_history = []
-
-                    items_data.append({
-                        "link": str(item.get("link", "")),
-                        "carrier": str(item.get("carrier", "")),
-                        "spx_code": str(item.get("spx_code", "")),
-                        "spx_stage": str(current_stage),
-                        "advance_payment": item.get("advance_payment", 0),
-                        "tracking_history": t_history,
-                        "current_lat": float(cur_coords["lat"]),
-                        "current_lng": float(cur_coords["lng"]),
-                        "receiver_lat": float(recv_coords["lat"]),
-                        "receiver_lng": float(recv_coords["lng"]),
-                    })
-                    
-                # Fix triệt để lỗi 500 do ngày tháng (created_at) bị sai định dạng
-                dt = o.get("created_at")
-                if isinstance(dt, datetime):
-                    dt_str = dt.strftime("%d/%m/%Y %H:%M")
-                else:
-                    dt_str = str(dt) if dt else datetime.now().strftime("%d/%m/%Y %H:%M")
-                    
-                result.append({
-                    "order_id": str(o.get("order_id", "")),
-                    "status": str(o.get("status", "Đang xử lý")),
-                    "product_name": str(o.get("product_name", "Đơn hàng mới")),
-                    "price": o.get("price") or 0,
-                    "created_at": dt_str,
-                    "receiver_name": str(o.get("receiver_name", "")),
-                    "phone": str(o.get("phone", "")),
-                    "address": str(receiver_address),
-                    "items": items_data
+                items_data.append({
+                    "link": str(item.get("link", "")),
+                    "carrier": str(item.get("carrier", "")),
+                    "spx_code": str(item.get("spx_code", "")),
+                    "spx_stage": current_stage,
+                    "advance_payment": adv_pay,
+                    "tracking_history": safe_history,
+                    "current_lat": float(cur_coords["lat"]),
+                    "current_lng": float(cur_coords["lng"]),
+                    "receiver_lat": float(recv_coords["lat"]),
+                    "receiver_lng": float(recv_coords["lng"]),
                 })
-            except Exception as inner_e:
-                print(f"Lỗi parse đơn hàng: {inner_e}")
-                continue # Bỏ qua đơn lỗi, không làm sập API
+                
+            dt = o.get("created_at")
+            if isinstance(dt, datetime): dt_str = dt.strftime("%d/%m/%Y %H:%M")
+            else: dt_str = str(dt) if dt else datetime.now().strftime("%d/%m/%Y %H:%M")
+            
+            try: price_val = float(o.get("price", 0))
+            except: price_val = 0
+                
+            result.append({
+                "order_id": str(o.get("order_id", "")),
+                "status": str(o.get("status", "Đang xử lý")),
+                "product_name": str(o.get("product_name", "Đơn hàng mới")),
+                "price": price_val,
+                "created_at": dt_str,
+                "receiver_name": str(o.get("receiver_name", "")),
+                "phone": str(o.get("phone", "")),
+                "address": receiver_address,
+                "items": items_data
+            })
                 
         return result
     except Exception as e:
-        print(f"LỖI NGHIÊM TRỌNG API ORDERS:\n{traceback.format_exc()}")
-        return [] # Sập toàn bộ thì trả về mảng rỗng để App không bị đỏ lòm
+        error_msg = traceback.format_exc()
+        print(f"LỖI NGHIÊM TRỌNG API ORDERS:\n{error_msg}")
+        # TRẢ THẲNG LỖI VỀ CHO MINI APP HIỂN THỊ
+        return JSONResponse(status_code=500, content={"detail": str(e)})
 
 @app.get("/api/live_location")
 def get_live_location(order_id: str = Query(...)):
@@ -153,13 +152,12 @@ def get_live_location(order_id: str = Query(...)):
             
         items = order.get("items") or []
         current_stage = order.get("status", "")
-        
         if isinstance(items, list) and len(items) > 0 and isinstance(items[0], dict):
             current_stage = items[0].get("spx_stage", order.get("status", ""))
             
         cur_coords = guess_coordinates(current_stage)
         return {"lat": cur_coords["lat"], "lng": cur_coords["lng"], "status": current_stage}
-    except Exception as e:
+    except:
         return {"lat": 19.3833, "lng": 105.7833, "status": "Lỗi cập nhật"}
 
 @app.get("/api/stats")
@@ -178,5 +176,5 @@ def get_web_stats(user_id: int = Query(0)):
             "online": max(1, db['web_stats'].count_documents({"last_active": {"$gte": three_mins_ago}})),
             "monthly": max(1, db['web_stats'].count_documents({"month": current_month}))
         }
-    except Exception as e:
+    except:
         return {"online": 1, "monthly": 1}
