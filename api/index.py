@@ -117,12 +117,19 @@ def get_user_orders(user_id: int = Query(..., description="Telegram User ID")):
                 "receiver_lng": recv_coords["lng"],
             })
             
+        # FIX LỖI CRASH KHI NGÀY THÁNG BỊ LƯU DẠNG TEXT TRONG DATABASE
+        created_at_val = o.get("created_at", "")
+        if isinstance(created_at_val, datetime):
+            created_at_str = created_at_val.strftime("%d/%m/%Y %H:%M")
+        else:
+            created_at_str = str(created_at_val)
+            
         result.append({
             "order_id": o.get("order_id", ""),
             "status": o.get("status", ""),
             "product_name": o.get("product_name", ""),
             "price": o.get("price", 0),
-            "created_at": o["created_at"].strftime("%d/%m/%Y %H:%M") if "created_at" in o else "",
+            "created_at": created_at_str,
             "receiver_name": o.get("receiver_name", ""),
             "phone": o.get("phone", ""),
             "address": receiver_address,
