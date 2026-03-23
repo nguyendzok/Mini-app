@@ -8,9 +8,11 @@ from datetime import datetime, timedelta
 
 app = FastAPI()
 
+# FIX CORS: Bắt buộc chỉ để ["*"] để Telegram Web App có thể truy cập thoải mái
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*", "https://hoangngocnguyen.id.vn"],
+    allow_origins=["*"], 
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -18,7 +20,6 @@ app.add_middleware(
 MONGO_URI = os.environ.get("MONGO_URI")
 client = MongoClient(MONGO_URI) if MONGO_URI else None
 
-# TỪ ĐIỂN TỌA ĐỘ KHO (Dùng dự phòng)
 HUB_LOCATIONS = {
     "thâm quyến": {"lat": 22.5431, "lng": 114.0579},
     "nghĩa ô": {"lat": 29.3068, "lng": 120.0750},
@@ -38,50 +39,53 @@ HUB_LOCATIONS = {
     "tĩnh gia 2": {"lat": 19.3833, "lng": 105.7833},
 }
 
+# HÀM KIỂM TRA SERVER SỐNG
+@app.get("/")
+def read_root():
+    return {"status": "API đang chạy bình thường, không bị sập!"}
+
 def extract_gmap_coords(url):
-    """Truy cập link Google Maps và bóc tách tọa độ (lat, lng)"""
     try:
         headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'}
         res = requests.get(url, headers=headers, timeout=5, allow_redirects=True)
         final_url = res.url
-        
         match = re.search(r'@(-?\d+\.\d+),(-?\d+\.\d+)', final_url)
         if match: return {"lat": float(match.group(1)), "lng": float(match.group(2))}
-            
         match_q = re.search(r'[?&]q=(-?\d+\.\d+),(-?\d+\.\d+)', final_url)
         if match_q: return {"lat": float(match_q.group(1)), "lng": float(match_q.group(2))}
-            
         match_s = re.search(r'search/(-?\d+\.\d+),(-?\d+\.\d+)', final_url)
         if match_s: return {"lat": float(match_s.group(1)), "lng": float(match_s.group(2))}
     except Exception as e:
-        print("Lỗi bóc tách link GG Maps:", e)
+        print("Lỗi link GG Maps:", e)
     return None
 
 def guess_coordinates(text, fallback_lat=19.3833, fallback_lng=105.7833):
-    if not text:
-        return {"lat": fallback_lat, "lng": fallback_lng}
-    
+    if not text: return {"lat": fallback_lat, "lng": fallback_lng}
     text_lower = str(text).lower().strip()
     
-    # NẾU CÓ LINK GOOGLE MAPS -> Ưu tiên bóc tách ngay
     if "http" in text_lower and ("maps" in text_lower or "goo.gl" in text_lower or "googleusercontent" in text_lower):
         url_match = re.search(r'(https?://[^\s]+)', text)
         if url_match:
             coords = extract_gmap_coords(url_match.group(1))
             if coords: return coords
 
-    # Dùng từ điển nội suy
     for key, coords in HUB_LOCATIONS.items():
-        if key in text_lower:
-            return coords
+        if key in text_lower: return coords
             
     return {"lat": fallback_lat, "lng": fallback_lng}
 
 @app.get("/api/orders")
-def get_user_orders(user_id: int = Query(..., description="Telegram User ID")):
+def get_user_orders(user_id: str = Query(...)): # Fix lỗi user_id dạng string lớn
     if not client: return []
     db = client['shop_database']
-    orders = list(db['orders'].find({"user_id": user_id}).sort("created_at", -1).limit(30))
+    
+    try:
+        uid_int = int(user_id)
+    except:
+        uid_int = user_id
+
+    # Tìm kiếm an toàn cho cả trường hợp DB lưu user_id dạng int hoặc string
+    orders = list(db['orders'].find({"$or": [{"user_id": uid_int}, {"user_id": str(user_id)}]}).sort("created_at", -1).limit(30))
     
     result = []
     for o in orders:
@@ -117,7 +121,6 @@ def get_user_orders(user_id: int = Query(..., description="Telegram User ID")):
                 "receiver_lng": recv_coords["lng"],
             })
             
-        # FIX LỖI CRASH KHI NGÀY THÁNG BỊ LƯU DẠNG TEXT TRONG DATABASE
         created_at_val = o.get("created_at", "")
         if isinstance(created_at_val, datetime):
             created_at_str = created_at_val.strftime("%d/%m/%Y %H:%M")
