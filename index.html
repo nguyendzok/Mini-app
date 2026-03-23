@@ -84,30 +84,38 @@
         .pkg-name { font-size: 14px; font-weight: 800; display: flex; align-items: center; gap: 8px; color: #fff; text-shadow: 0 2px 4px rgba(0,0,0,0.8);}
         .track-code { font-family: monospace; font-size: 13px; color: #60a5fa; background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.4); padding: 6px 10px; border-radius: 8px; font-weight: 700; box-shadow: inset 0 0 10px rgba(59, 130, 246, 0.1);}
         .real-product-name { font-size: 14px; color: #fff; font-weight: 600; margin-bottom: 16px; line-height: 1.5; display: flex; gap: 10px; background: rgba(255,255,255,0.03); padding: 12px; border-radius: var(--radius-sm); border: 1px dashed rgba(255,255,255,0.1);}
-        .advance-pay { display: flex; justify-content: space-between; align-items: center; font-size: 14px; background: linear-gradient(90deg, rgba(245, 166, 35, 0.1), rgba(245, 166, 35, 0.05)); border: 1px solid rgba(245, 166, 35, 0.3); padding: 14px; border-radius: var(--radius-md); margin-top: 16px; color: var(--accent); font-weight: 700; box-shadow: inset 0 0 15px rgba(245,166,35,0.05);}
         
+        /* BẢN ĐỒ VÀ CÁC ICON MỚI DÙNG CSS */
         .map-wrapper { position: relative; width: 100%; height: 350px; border-radius: var(--radius-md); margin-bottom: 20px; overflow: hidden; border: 1px solid rgba(255,255,255,0.08); box-shadow: inset 0 2px 10px rgba(0,0,0,0.5); z-index: 1; }
-        .tracking-map { width: 100%; height: 100%; background: #1a1a1f; }
+        .tracking-map { width: 100%; height: 100%; background: #0f0f11; }
         .custom-map-marker { background: transparent; border: none; z-index: 10 !important;}
+        .leaflet-routing-container { display: none !important; }
 
+        /* ICON SHOP (ĐIỂM BẮT ĐẦU) */
+        .map-dot-shop { width: 14px; height: 14px; background: #f5a623; border-radius: 50%; border: 3px solid #fff; box-shadow: 0 0 15px #f5a623; margin-top: -7px; margin-left: -7px; position: relative; }
+        .map-dot-shop::after { content: "Shop"; position: absolute; top: 16px; left: 50%; transform: translateX(-50%); font-size: 11px; font-weight: 800; color: #f5a623; text-shadow: 0 1px 3px #000, 0 0 5px #000; background: rgba(0,0,0,0.5); padding: 2px 6px; border-radius: 4px; border: 1px solid rgba(245, 166, 35, 0.3);}
+
+        /* ICON KHÁCH (ĐIỂM ĐẾN) */
+        .map-dot-customer { width: 14px; height: 14px; background: #10b981; border-radius: 50%; border: 3px solid #fff; box-shadow: 0 0 15px #10b981; margin-top: -7px; margin-left: -7px; position: relative; display: flex; align-items: center; justify-content: center; }
+        .map-dot-customer::before { content: "✓"; color: #fff; font-size: 9px; font-weight: 900; }
+        .map-dot-customer::after { content: "Khách"; position: absolute; top: 16px; left: 50%; transform: translateX(-50%); font-size: 11px; font-weight: 800; color: #10b981; text-shadow: 0 1px 3px #000, 0 0 5px #000; background: rgba(0,0,0,0.5); padding: 2px 6px; border-radius: 4px; border: 1px solid rgba(16, 185, 129, 0.3);}
+
+        /* XE TẢI CHẠY (VỊ TRÍ HIỆN TẠI) */
         .blue-pulse-container { position: absolute; bottom: 0; left: 50%; transform: translate(-50%, 50%); width: 20px; height: 20px; }
         .blue-pulse { position: absolute; width: 100%; height: 100%; background: rgba(66, 133, 244, 0.4); border-radius: 50%; animation: blue-ring 2s ease-out infinite; z-index: 1; }
         .blue-dot { position: relative; width: 10px; height: 10px; background: #4285F4; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 0 8px rgba(66, 133, 244, 0.8); z-index: 3; }
         @keyframes blue-ring { 0% { transform: scale(0.3); opacity: 1; } 80% { transform: scale(1.8); opacity: 0; } 100% { transform: scale(2.2); opacity: 0; } }
-
         .shopee-marker-label { background: #fff; color: #ee4d2d; border: 1px solid rgba(238, 77, 45, 0.3); padding: 6px 12px; border-radius: 4px; font-size: 11px; font-weight: 800; white-space: nowrap; box-shadow: 0 4px 10px rgba(0,0,0,0.15); position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 4px; z-index: 10; }
         .shopee-marker-label::after { content: ''; position: absolute; bottom: -6px; left: 50%; transform: translateX(-50%); border-width: 6px 6px 0; border-style: solid; border-color: #fff transparent transparent transparent; }
         .shopee-truck-icon-static { position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); font-size: 16px; z-index: 5; filter: drop-shadow(0 2px 2px rgba(0,0,0,0.4));}
-        
-        .leaflet-routing-container { display: none !important; }
 
         .gps-data-panel { position: absolute; bottom: 10px; right: 10px; background: rgba(20, 20, 24, 0.85); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.08); border-radius: var(--radius-sm); padding: 10px 14px; width: 260px; z-index: 1000; font-size: 11px; color: rgba(255,255,255,0.7); }
         .gps-data-panel h4 { margin: 0 0 8px 0; color: #fff; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
         .gps-data-item { display: flex; justify-content: space-between; margin-bottom: 4px; }
         .gps-data-item .label { font-weight: 600; color: rgba(255,255,255,0.5); }
         .gps-data-item .value { color: #fff; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 160px; }
-        .gps-data-item .value-live { color: #f5a623; }
 
+        /* TIMELINE TRẠNG THÁI */
         .live-tracker { background: rgba(0,0,0,0.6); border-radius: var(--radius-md); padding: 24px 0 24px 0; margin-bottom: 18px; position: relative; border: 1px solid rgba(255,255,255,0.05); box-shadow: inset 0 4px 20px rgba(0,0,0,0.8);}
         .stepper { display: flex; justify-content: space-between; position: relative; margin-bottom: 10px; z-index: 2; padding: 0 14px 24px 14px; }
         .stepper-track { position: absolute; left: 14px; right: 14px; top: 12px; height: 4px; background: #27272a; z-index: -1; border-radius: 4px; box-shadow: inset 0 1px 3px rgba(0,0,0,0.8); }
@@ -115,43 +123,8 @@
         .step { display: flex; flex-direction: column; align-items: center; width: 28px; position: relative; z-index: 3;}
         .step-icon-wrapper { width: 28px; height: 28px; border-radius: 50%; background: #1f1f22; border: 2px solid #3f3f46; display: flex; justify-content: center; align-items: center; transition: all 0.5s ease; box-shadow: 0 4px 6px rgba(0,0,0,0.5);}
         .step.active .step-icon-wrapper { border-color: var(--success); background: rgba(16, 185, 129, 0.2); box-shadow: 0 0 15px var(--success-glow), inset 0 0 8px rgba(16, 185, 129, 0.4); color: #fff;}
-        .step.success-pulse .step-icon-wrapper { background: linear-gradient(135deg, #10b981, #059669); border-color: transparent; color: #fff; box-shadow: 0 0 20px rgba(16, 185, 129, 0.8), inset 0 0 10px rgba(255,255,255,0.4); animation: pulseSuccess 2s infinite; }
-        @keyframes pulseSuccess { 0%, 100% { box-shadow: 0 0 20px rgba(16, 185, 129, 0.8); } 50% { box-shadow: 0 0 35px rgba(16, 185, 129, 1); } }
         .step-label { font-size: 10px; font-weight: 700; color: var(--text-sub); text-align: center; letter-spacing: 0.5px; position: absolute; top: 36px; width: 70px; white-space: nowrap;}
         .step.active .step-label { color: #fff; text-shadow: 0 0 8px rgba(255,255,255,0.6);}
-
-        .anim-container { position: absolute; top: -42px; left: 50%; transform: translateX(-50%); width: 40px; height: 40px; display: flex; justify-content: center; align-items: center; z-index: 10;}
-        .css-box { position: relative; width: 22px; height: 22px; background: linear-gradient(135deg, #f5a623 0%, #ea580c 100%); border-radius: 5px; box-shadow: 0 0 20px rgba(245, 166, 35, 0.8), inset 0 -4px 0 rgba(0,0,0,0.2); animation: boxFloat 1.5s ease-in-out infinite; z-index: 2; }
-        .css-box::before { content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 2px; height: 100%; background: rgba(255,255,255,0.4); }
-        .css-box::after { content: ''; position: absolute; top: 10px; left: 0; width: 100%; height: 2px; background: rgba(0,0,0,0.3); }
-        .shadow-pulse { position: absolute; bottom: -4px; width: 18px; height: 4px; background: rgba(245, 166, 35, 0.7); border-radius: 50%; filter: blur(3px); animation: shadowPulse 1.5s ease-in-out infinite; }
-        @keyframes boxFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
-        @keyframes shadowPulse { 0%, 100% { transform: scale(1); opacity: 0.8; } 50% { transform: scale(0.5); opacity: 0.2; } }
-
-        .css-truck { position: relative; width: 36px; height: 22px; animation: truckMove 0.6s infinite alternate ease-in-out; z-index: 2; filter: drop-shadow(0 0 6px rgba(59, 130, 246, 0.7));}
-        .truck-cab { position: absolute; right: 0; bottom: 2px; width: 12px; height: 16px; background: linear-gradient(to bottom, #3b82f6, #1d4ed8); border-radius: 3px 6px 2px 2px; }
-        .truck-cab::after { content:''; position:absolute; right:2px; top:3px; width:6px; height:6px; background:#bae6fd; border-radius:1px; box-shadow: 0 0 6px #bae6fd;}
-        .truck-trailer { position: absolute; left: 0; bottom: 2px; width: 24px; height: 20px; background: linear-gradient(135deg, #f8fafc, #e2e8f0); border-radius: 4px 0 0 2px; border-left: 2px solid #3b82f6; display:flex; align-items:center; justify-content:center; box-shadow: inset -2px -2px 6px rgba(0,0,0,0.2);}
-        .truck-trailer::after { content: '⚡'; font-size: 11px; color: #f5a623; text-shadow: 0 0 6px rgba(245, 166, 35, 1);}
-        .truck-wheel { position: absolute; bottom: 0; width: 8px; height: 8px; background: #0f172a; border-radius: 50%; border: 1.5px solid #94a3b8; animation: spin 0.3s linear infinite; }
-        .truck-wheel.w1 { left: 4px; } .truck-wheel.w2 { right: 3px; }
-        @keyframes truckMove { 0% { transform: translateY(0px) rotate(0deg); } 100% { transform: translateY(-2px) rotate(-1.5deg); } }
-
-        .css-bike { position: relative; width: 34px; height: 26px; animation: bikeMove 0.5s infinite alternate ease-in-out; z-index: 2; filter: drop-shadow(0 0 6px rgba(245, 166, 35, 0.5));}
-        .bike-body { position: absolute; bottom: 4px; left: 6px; width: 20px; height: 8px; background: linear-gradient(to right, #f5a623, #ea580c); border-radius: 10px; }
-        .bike-handle { position: absolute; right: 5px; bottom: 10px; width: 2.5px; height: 14px; background: #cbd5e1; transform: rotate(25deg); border-radius: 2px;}
-        .bike-headlight { position: absolute; right: -4px; bottom: 13px; width: 6px; height: 6px; background: #fef08a; border-radius: 50%; box-shadow: 6px 0 14px 5px rgba(253, 224, 71, 0.9), inset 0 0 4px #fff; }
-        .bike-box { position: absolute; left: 2px; bottom: 12px; width: 14px; height: 12px; background: #3b82f6; border-radius: 3px; border-top: 2px solid #93c5fd; box-shadow: 0 0 10px rgba(59, 130, 246, 0.7);}
-        .bike-wheel { position: absolute; bottom: 0; width: 10px; height: 10px; background: #0f172a; border-radius: 50%; border: 2px solid #94a3b8; animation: spin 0.2s linear infinite; }
-        .bike-wheel.w1 { left: 2px; } .bike-wheel.w2 { right: 4px; }
-        @keyframes bikeMove { 0% { transform: translateY(0px) rotate(3deg); } 100% { transform: translateY(-3px) rotate(-1deg); } }
-
-        .wind-lines { position: absolute; left: -22px; top: 60%; width: 14px; height: 2px; background: rgba(255,255,255,0.9); border-radius: 2px; animation: wind 0.3s infinite linear; box-shadow: 0 0 5px #fff;}
-        .wind-lines::before { content:''; position: absolute; top: -6px; left: 6px; width: 10px; height: 2px; background: rgba(255,255,255,0.6); border-radius: 2px; }
-        .wind-lines::after { content:''; position: absolute; top: 6px; left: 2px; width: 12px; height: 2px; background: rgba(255,255,255,0.7); border-radius: 2px; }
-        @keyframes wind { 0% { transform: translateX(25px); opacity: 1; } 100% { transform: translateX(-25px); opacity: 0; } }
-        @keyframes spin { 100% { transform: rotate(360deg); } }
-
         .timeline { padding-left: 12px; margin-top: 18px;}
         .tl-item { position: relative; padding-bottom: 18px; padding-left: 24px; }
         .tl-item::before { content: ''; position: absolute; left: 0; top: 5px; width: 10px; height: 10px; border-radius: 50%; background: #3f3f46; border: 2px solid #18181b; box-shadow: 0 0 0 1px #3f3f46; z-index: 2;}
@@ -161,8 +134,7 @@
         .tl-item.latest::before { background: var(--success); box-shadow: 0 0 15px rgba(16, 185, 129, 0.9), inset 0 0 4px #fff; border-color: #000;}
         .tl-time { color: var(--text-sub); font-size: 11px; margin-bottom: 4px; font-weight: 600;}
         .tl-desc { color: #fff; font-size: 13px; font-weight: 500; line-height: 1.5; text-shadow: 0 1px 2px rgba(0,0,0,0.8);}
-        
-        .skeleton { background: #1f1f22; background: linear-gradient(110deg, #1f1f22 8%, #27272a 18%, #1f1f22 33%); border-radius: 8px; background-size: 200% 100%; animation: 1.5s shine linear infinite; }
+        .skeleton { background: linear-gradient(110deg, #1f1f22 8%, #27272a 18%, #1f1f22 33%); border-radius: 8px; background-size: 200% 100%; animation: 1.5s shine linear infinite; }
         @keyframes shine { to { background-position-x: -200%; } }
         .skel-card { background: var(--surface-glass); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px; display: flex; flex-direction: column; gap: 16px; margin-bottom: 16px;}
 
@@ -180,7 +152,6 @@
     </style>
 </head>
 <body>
-
     <svg style="display:none">
         <symbol id="icon-user" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></symbol>
         <symbol id="icon-phone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></symbol>
@@ -189,8 +160,6 @@
         <symbol id="icon-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 16 14"></polyline></symbol>
         <symbol id="icon-down" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></symbol>
         <symbol id="icon-check-circle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></symbol>
-        <symbol id="icon-truck" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></symbol>
-        <symbol id="icon-x-circle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></symbol>
         <symbol id="icon-users-group" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><path d="M20 8v6"></path><path d="M23 11h-6"></path></symbol>
     </svg>
 
@@ -198,7 +167,7 @@
         <div class="loc-popup" id="locPopup">
             <div class="loc-icon">📍</div>
             <div class="loc-title">Chia sẻ vị trí</div>
-            <div class="loc-desc">Cho phép ứng dụng sử dụng vị trí GPS hiện tại của bạn để hiển thị đường giao hàng chính xác hơn.</div>
+            <div class="loc-desc">Cho phép ứng dụng sử dụng vị trí GPS hiện tại của bạn để nhận diện điểm giao hàng tự động.</div>
             <div class="loc-btns">
                 <button class="loc-btn deny" onclick="denyLocation()">Để sau</button>
                 <button class="loc-btn allow" onclick="allowLocation()">Cho phép</button>
@@ -214,58 +183,32 @@
                 <div class="uid" id="uId"><svg width="12" height="12"><use href="#icon-user"></use></svg> --------</div>
             </div>
         </div>
-        <div class="stat">
-            <div class="stat-num" id="uTotal">-</div>
-            <div class="stat-label">Tổng Đơn</div>
-        </div>
+        <div class="stat"><div class="stat-num" id="uTotal">-</div><div class="stat-label">Tổng Đơn</div></div>
     </div>
 
     <div class="metrics-bar">
-        <div class="metric">
-            <span class="live-dot"></span>
-            <div><span class="metric-val" id="statOnline">1</span> Đang xem</div>
-        </div>
-        <div class="metric" style="border-left: 1px solid rgba(255,255,255,0.1); padding-left: 16px; width: auto;">
-            <svg width="16" height="16" stroke="var(--info)"><use href="#icon-users-group"></use></svg>
-            <div><span class="metric-val" id="statMonthly">1</span> Tháng này</div>
-        </div>
+        <div class="metric"><span class="live-dot"></span><div><span class="metric-val" id="statOnline">1</span> Đang xem</div></div>
+        <div class="metric" style="border-left: 1px solid rgba(255,255,255,0.1); padding-left: 16px; width: auto;"><svg width="16" height="16" stroke="var(--info)"><use href="#icon-users-group"></use></svg><div><span class="metric-val" id="statMonthly">1</span> Tháng này</div></div>
     </div>
 
     <div class="order-list" id="orderList">
-        <div class="skel-card">
-            <div style="display:flex; justify-content:space-between;"><div style="width:80px;height:24px;border-radius:12px;" class="skeleton"></div><div style="width:100px;height:24px;border-radius:12px;" class="skeleton"></div></div>
-            <div style="width:80%;height:24px;margin-top:16px;" class="skeleton"></div>
-            <div style="display:flex; justify-content:space-between; margin-top:16px;"><div style="width:80px;height:28px;" class="skeleton"></div><div style="width:36px;height:36px;border-radius:50%;" class="skeleton"></div></div>
-        </div>
+        <div class="skel-card"><div style="display:flex; justify-content:space-between;"><div style="width:80px;height:24px;border-radius:12px;" class="skeleton"></div><div style="width:100px;height:24px;border-radius:12px;" class="skeleton"></div></div><div style="width:80%;height:24px;margin-top:16px;" class="skeleton"></div><div style="display:flex; justify-content:space-between; margin-top:16px;"><div style="width:80px;height:28px;" class="skeleton"></div><div style="width:36px;height:36px;border-radius:50%;" class="skeleton"></div></div></div>
     </div>
 
     <script>
-        const API_BASE = "https://hoangngocnguyen.id.vn"; // TRỎ THẲNG API CỦA BẠN
-
-        window.trackingMaps = {};
-        window.trackingMarkers = {};
-        window.trackingIntervals = {};
-        window.trackingRoutingControls = {};
+        const API_BASE = "https://hoangngocnguyen.id.vn"; 
+        window.trackingMaps = {}; window.trackingMarkers = {}; window.trackingIntervals = {}; window.trackingRoutingControls = {};
         window.userLiveLocation = null; 
 
-        // =====================================
-        // LOGIC QUẢN LÝ QUYỀN VỊ TRÍ
-        // =====================================
         function checkLocationPermission() {
             const asked = localStorage.getItem('loc_asked');
             const granted = localStorage.getItem('loc_granted');
-            
             if (!asked) {
-                // Lần đầu mở app: Hiện Popup xin phép
                 const overlay = document.getElementById('locOverlay');
                 const popup = document.getElementById('locPopup');
                 overlay.style.display = 'flex';
-                setTimeout(() => {
-                    overlay.style.opacity = '1';
-                    popup.style.transform = 'translateY(0)';
-                }, 10);
+                setTimeout(() => { overlay.style.opacity = '1'; popup.style.transform = 'translateY(0)'; }, 10);
             } else if (granted === 'true') {
-                // Đã cho phép từ lần trước: Tự động lấy vị trí ngầm
                 requestNativeLocation();
             }
         }
@@ -274,7 +217,7 @@
             closePopup();
             localStorage.setItem('loc_asked', 'true');
             localStorage.setItem('loc_granted', 'true');
-            requestNativeLocation(); // Trình duyệt/Telegram sẽ tự động bật hộp thoại xin cấp quyền gốc
+            requestNativeLocation();
         }
 
         function denyLocation() {
@@ -284,20 +227,16 @@
         }
 
         function closePopup() {
-            const overlay = document.getElementById('locOverlay');
-            const popup = document.getElementById('locPopup');
-            overlay.style.opacity = '0';
-            popup.style.transform = 'translateY(20px)';
-            setTimeout(() => overlay.style.display = 'none', 300);
+            document.getElementById('locOverlay').style.opacity = '0';
+            document.getElementById('locPopup').style.transform = 'translateY(20px)';
+            setTimeout(() => document.getElementById('locOverlay').style.display = 'none', 300);
         }
 
         function requestNativeLocation() {
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(
-                    (position) => {
-                        window.userLiveLocation = [position.coords.latitude, position.coords.longitude];
-                    },
-                    (error) => { console.log("Không thể lấy GPS điện thoại:", error); },
+                    (position) => { window.userLiveLocation = [position.coords.latitude, position.coords.longitude]; },
+                    (error) => { console.log("Lỗi GPS:", error); },
                     { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
                 );
             }
@@ -305,9 +244,7 @@
 
         function initApp() {
             try {
-                // Gọi kiểm tra quyền vị trí đầu tiên
                 checkLocationPermission();
-
                 const tg = window.Telegram.WebApp;
                 tg.ready(); tg.expand();
                 let attempts = 0;
@@ -325,9 +262,7 @@
                         } else {
                             document.getElementById('uAvatar').innerText = (user.first_name || "K").charAt(0).toUpperCase();
                         }
-                        
-                        fetchOrders(userId);
-                        fetchWebStats(userId);
+                        fetchOrders(userId); fetchWebStats(userId);
                         if (!window.statsInterval) window.statsInterval = setInterval(() => fetchWebStats(userId), 15000); 
                         return true;
                     }
@@ -351,10 +286,7 @@
                 if (data.contents) {
                     const doc = new DOMParser().parseFromString(data.contents, "text/html");
                     let title = doc.querySelector("title") ? doc.querySelector("title").innerText : "";
-                    if (title) {
-                        title = title.replace(/\| Shopee Việt Nam/gi, '').replace(/\| Lazada\.vn/gi, '').replace(/Mua ngay /gi, '').trim();
-                        if (title.length > 8 && !title.toLowerCase().startsWith("shopee") && !title.toLowerCase().startsWith("lazada")) return title;
-                    }
+                    if (title) return title.replace(/\| Shopee Việt Nam/gi, '').replace(/\| Lazada\.vn/gi, '').replace(/Mua ngay /gi, '').trim();
                 }
             } catch (e) {}
             return null;
@@ -372,49 +304,31 @@
         async function fetchOrders(id) {
             try {
                 const response = await fetch(`${API_BASE}/api/orders?user_id=${id}`);
-                
-                // Nếu response lỗi (như lỗi 500 do Python sập), hệ thống sẽ bắt lỗi JSON từ FastAPI (nếu có)
                 if (!response.ok) {
                     const errData = await response.json().catch(() => ({}));
-                    throw new Error(`Lỗi server ${response.status}: ${errData.detail || 'Code Python bị vấp, hãy xem Log Terminal'}`);
+                    throw new Error(errData.detail || `Lỗi server ${response.status}`);
                 }
-                
                 const data = await response.json();
                 document.getElementById('uTotal').innerText = data.length;
                 renderOrders(data);
             } catch (error) {
-                let errorMsg = error.message;
-                if (errorMsg.includes("Failed to fetch")) errorMsg = "Lỗi mạng hoặc sai đường dẫn API (CORS).";
-                
-                // Hiển thị nguyên nhân lỗi thẳng lên điện thoại thay vì cái biểu tượng đỏ
+                let msg = error.message.includes("Failed to fetch") ? "Lỗi kết nối hoặc sai đường dẫn API." : error.message;
                 document.getElementById('orderList').innerHTML = `
                     <div style="text-align:center; padding: 40px; background: rgba(239, 68, 68, 0.1); border-radius: 16px; border: 1px solid rgba(239, 68, 68, 0.3);">
                         <div style="font-size: 24px; margin-bottom: 10px;">🔌</div>
                         <div style="color: var(--danger); font-weight: bold;">LỖI KẾT NỐI API</div>
-                        <div style="color: var(--text-sub); font-size: 12px; margin-top: 8px;">${errorMsg}</div>
+                        <div style="color: var(--text-sub); font-size: 12px; margin-top: 8px;">${msg}</div>
                     </div>`;
             }
-        }
-
-        function cleanDestinationAddress(rawAddress) {
-            if (!rawAddress || rawAddress.includes('---')) return "Trường THPT Tĩnh Gia 2";
-            let parts = rawAddress.split(',').map(p => p.trim()).filter(p => p.length > 0);
-            let finalParts = parts.length > 3 ? parts.slice(-3) : parts;
-            let cleanStr = finalParts.join(', ');
-            cleanStr = cleanStr.replace(/(nhà số|số nhà|ngõ|ngách|hẻm|kiệt|số|ấp|đường|tòa nhà|lô|phòng)\s*[\w/.\-]+/gi, '').replace(/^[,.\s]+|[,.\s]+$/g, '').trim();
-            cleanStr = cleanStr.replace(/tp\.hcm|tphcm|tp hcm|hcm/gi, 'Hồ Chí Minh').replace(/hn/gi, 'Hà Nội');
-            return cleanStr || "Trường THPT Tĩnh Gia 2";
         }
 
         function extractLocationFromStatus(statusText) {
             if (!statusText) return "Trường THPT Tĩnh Gia 2";
             let text = statusText.toLowerCase();
-            let match = text.match(/(?:khu vực của bạn tại|tại trạm giao hàng|giao hàng tại|đang giao tại|tại)\s+([^.]+)/i);
-            if (match && match[1]) {
-                let loc = match[1].trim();
-                return loc.split(' và ')[0].split(' - ')[0]; 
-            }
-            match = text.match(/(?:đến kho|rời kho phân loại|đến trạm|rời trạm)\s+([^.]+)/i);
+            let match = text.match(/(?:khu vực của bạn tại|tại trạm giao hàng|giao hàng tại|đang giao tại|chuẩn bị hàng tại|lấy hàng tại|tại)\s+([^.]+)/i);
+            if (match && match[1]) return match[1].trim().split(' và ')[0].split(' - ')[0].replace(/(soc|hub|lm hub|\.)/gi, '').trim();
+            
+            match = text.match(/(?:đến kho|rời kho phân loại|đến trạm|rời trạm|từ)\s+([^.]+)/i);
             if (match && match[1]) return match[1].replace(/(soc|hub|lm hub|\.)/gi, '').trim();
             return text.replace(/(soc|hub|lm hub|\.)/gi, '').trim();
         }
@@ -422,92 +336,86 @@
         async function geocodeLocation(queryText) {
             if (!queryText || queryText === 'Trường THPT Tĩnh Gia 2') return null;
             try {
-                let res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(queryText)}&countrycodes=vn&limit=1`, {
-                    headers: { 'Accept-Language': 'vi' }
-                });
+                let res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(queryText)}&countrycodes=vn&limit=1`, { headers: { 'Accept-Language': 'vi' } });
                 let data = await res.json();
-                if (data && data.length > 0) return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon), cleanAddress: queryText };
+                if (data && data.length > 0) return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
             } catch (err) {}
             return null;
         }
 
-        async function initOrderMap(mapId, orderId, statusText, curLat, curLng, addressText, recvLat, recvLng) {
+        // TÌM ĐIỂM XUẤT PHÁT (SHOP) DỰA VÀO LỊCH SỬ CŨ NHẤT
+        async function initOrderMap(mapId, orderId, statusText, addressText, shopAddressRaw) {
             if (window.trackingMaps[mapId]) {
                 setTimeout(() => window.trackingMaps[mapId].invalidateSize(), 300);
                 return;
             }
-
             const mapElement = document.getElementById(mapId);
             if (!mapElement) return;
 
             const isDelivered = statusText.toLowerCase().includes('thành công') || statusText.toLowerCase().includes('đã giao');
-            let receiverLoc = [19.3833, 105.7833]; 
             
-            // LOGIC ƯU TIÊN VỊ TRÍ: GPS Điện Thoại > Tọa độ Google Map > Nội suy text địa chỉ
+            // 1. TÌM VỊ TRÍ SHOP (Điểm bắt đầu)
+            let shopLoc = [19.3833, 105.7833]; // Fallback: Tĩnh Gia 2
+            let shopText = extractLocationFromStatus(shopAddressRaw);
+            const geoShop = await geocodeLocation(shopText);
+            if (geoShop) shopLoc = [geoShop.lat, geoShop.lng];
+
+            // 2. TÌM VỊ TRÍ KHÁCH (Điểm đến)
+            let receiverLoc = [19.3833, 105.7833]; 
             if (window.userLiveLocation) {
                 receiverLoc = [...window.userLiveLocation];
                 addressText = "📍 Vị trí GPS hiện tại của bạn";
-            } else if (addressText && addressText.includes('http')) {
-                receiverLoc = [parseFloat(recvLat), parseFloat(recvLng)];
-                addressText = "📍 Vị trí ghim trên Bản đồ";
             } else {
-                let cleanDest = cleanDestinationAddress(addressText);
-                const geoDataTarget = await geocodeLocation(cleanDest);
-                if (geoDataTarget) {
-                    receiverLoc = [geoDataTarget.lat, geoDataTarget.lng];
-                    addressText = geoDataTarget.cleanAddress;
-                } else {
-                    addressText = "Trường THPT Tĩnh Gia 2 (Mặc định)";
-                }
+                let cleanDest = addressText.split(',').map(p => p.trim()).filter(p => p.length > 0).slice(-3).join(', ').replace(/(nhà số|số nhà|ngõ|ngách|hẻm|kiệt|số|ấp|đường|tòa nhà|lô|phòng)\s*[\w/.\-]+/gi, '').trim();
+                const geoTarget = await geocodeLocation(cleanDest);
+                if (geoTarget) { receiverLoc = [geoTarget.lat, geoTarget.lng]; addressText = cleanDest; }
+                else { addressText = "Trường THPT Tĩnh Gia 2 (Mặc định)"; }
             }
 
+            // 3. TÌM VỊ TRÍ XE TẢI (Hiện tại)
             let currentHubLoc = [19.3833, 105.7833]; 
             if (isDelivered) {
                 currentHubLoc = [...receiverLoc]; 
             } else {
                 let hubText = extractLocationFromStatus(statusText);
-                const geoDataHub = await geocodeLocation(hubText);
-                if (geoDataHub) {
-                    currentHubLoc = [geoDataHub.lat, geoDataHub.lng];
-                } else {
-                    currentHubLoc = [parseFloat(curLat) || 19.3833, parseFloat(curLng) || 105.7833];
-                }
+                const geoHub = await geocodeLocation(hubText);
+                if (geoHub) currentHubLoc = [geoHub.lat, geoHub.lng];
+                else currentHubLoc = [...shopLoc]; // Mặc định xe nằm ở shop nếu không check được hub
             }
 
+            // VẼ BẢN ĐỒ TỐI CARTO DB DARK MATTER
             var map = L.map(mapId, { zoomControl: false, attributionControl: false }).setView(currentHubLoc, 13);
-            L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', { maxZoom: 19 }).addTo(map);
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { maxZoom: 19 }).addTo(map);
 
             var routingControl = L.Routing.control({
-                waypoints: [ L.latLng(currentHubLoc[0], currentHubLoc[1]), L.latLng(receiverLoc[0], receiverLoc[1]) ],
-                routeWhileDragging: false,
-                addWaypoints: false,
-                fitSelectedRoutes: true,
-                showAlternatives: false,
-                lineOptions: { styles: [{ color: '#f5a623', opacity: 0.8, weight: 4 }] },
+                waypoints: [ L.latLng(shopLoc[0], shopLoc[1]), L.latLng(receiverLoc[0], receiverLoc[1]) ],
+                routeWhileDragging: false, addWaypoints: false, fitSelectedRoutes: true, showAlternatives: false,
+                lineOptions: { styles: [{ color: '#f5a623', opacity: 0.8, weight: 3, dashArray: '5, 10' }] }, // Nét đứt đẹp mắt
                 createMarker: function(idx, waypoint, n) {
                     if (idx === 0) {
-                        let truckOrCheck = isDelivered ? '✅' : '🚚';
-                        let pulseHtml = isDelivered ? '' : '<div class="blue-pulse-container"><div class="blue-pulse"></div><div class="blue-dot"></div></div>';
-                        var truckIcon = L.divIcon({
-                            className: 'custom-map-marker',
-                            html: `
-                                <div class="shopee-marker-label" id="label_${mapId}">
-                                    <span style="color:${isDelivered ? '#10b981' : '#ee4d2d'}">●</span> <span class="status-text">${statusText}</span>
-                                </div>
-                                <div class="shopee-truck-icon-static">${truckOrCheck}</div>
-                                ${pulseHtml}
-                            `,
-                            iconSize: [0, 0]
-                        });
-                        var marker = L.marker(waypoint.latLng, {icon: truckIcon, zIndexOffset: 1000});
-                        window.trackingMarkers[mapId] = marker;
-                        return marker;
+                        return L.marker(waypoint.latLng, { icon: L.divIcon({ className: '', html: '<div class="map-dot-shop"></div>', iconSize: [0, 0] }) });
                     } else if (idx === n - 1) {
-                        return L.circleMarker(waypoint.latLng, { radius: 6, color: '#fff', fillColor: '#10b981', fillOpacity: 1, weight: 2 });
+                        return L.marker(waypoint.latLng, { icon: L.divIcon({ className: '', html: '<div class="map-dot-customer"></div>', iconSize: [0, 0] }) });
                     }
                     return null;
                 }
             }).addTo(map);
+
+            // THÊM MARKER XE TẢI LÊN VỊ TRÍ HIỆN TẠI
+            let truckOrCheck = isDelivered ? '✅' : '🚚';
+            let pulseHtml = isDelivered ? '' : '<div class="blue-pulse-container"><div class="blue-pulse"></div><div class="blue-dot"></div></div>';
+            var truckIcon = L.divIcon({
+                className: 'custom-map-marker',
+                html: `
+                    <div class="shopee-marker-label" id="label_${mapId}">
+                        <span style="color:${isDelivered ? '#10b981' : '#ee4d2d'}">●</span> <span class="status-text">${statusText}</span>
+                    </div>
+                    <div class="shopee-truck-icon-static">${truckOrCheck}</div>
+                    ${pulseHtml}
+                `, iconSize: [0, 0]
+            });
+            var truckMarker = L.marker(currentHubLoc, {icon: truckIcon, zIndexOffset: 1000}).addTo(map);
+            window.trackingMarkers[mapId] = truckMarker;
 
             var gpsPanel = L.control({position: 'bottomright'});
             gpsPanel.onAdd = function (map) {
@@ -515,7 +423,7 @@
                 div.innerHTML = `
                     <h4>Dữ liệu GPS thời gian thực</h4>
                     <div class="gps-data-item"><span class="label">Trạng thái:</span> <span class="value value-live" style="color:${isDelivered ? '#10b981' : '#f5a623'}">${isDelivered ? 'Đã hoàn thành' : 'Theo dõi (10s)'}</span></div>
-                    <div class="gps-data-item"><span class="label">Khu vực đích:</span> <span class="value" id="address_${mapId}">Đang tải...</span></div>
+                    <div class="gps-data-item"><span class="label">Khu vực:</span> <span class="value" id="address_${mapId}">Đang tải...</span></div>
                 `;
                 return div;
             };
@@ -525,7 +433,6 @@
             window.trackingRoutingControls[mapId] = routingControl;
 
             setTimeout(() => map.invalidateSize(), 400);
-            
             startLiveTracking(mapId, orderId, receiverLoc, isDelivered);
             if(addressText) document.getElementById(`address_${mapId}`).innerText = addressText;
         }
@@ -550,22 +457,17 @@
                         } else {
                             let hubText = extractLocationFromStatus(data.status);
                             const geoDataHub = await geocodeLocation(hubText);
-                            const lat = geoDataHub ? geoDataHub.lat : parseFloat(data.lat);
-                            const lng = geoDataHub ? geoDataHub.lng : parseFloat(data.lng);
-                            if(lat && lng) newLatLng = L.latLng(lat, lng);
+                            if(geoDataHub) newLatLng = L.latLng(geoDataHub.lat, geoDataHub.lng);
                         }
 
                         if(newLatLng) {
                             const marker = window.trackingMarkers[mapId];
                             if (marker) marker.setLatLng(newLatLng); 
-                            
                             const labelEl = document.querySelector(`#label_${mapId} span.status-text`);
                             if (labelEl) {
                                 labelEl.innerText = data.status;
                                 if (isDelivered) labelEl.previousElementSibling.style.color = '#10b981'; 
                             }
-                            const routingControl = window.trackingRoutingControls[mapId];
-                            if (routingControl) routingControl.setWaypoints([newLatLng, routingControl.getWaypoints()[1].latLng]);
                         }
                     }
                 } catch (err) {}
@@ -579,7 +481,7 @@
             if(card.classList.contains('expanded')) {
                 const mapElements = card.querySelectorAll('.tracking-map');
                 mapElements.forEach(el => {
-                    initOrderMap(el.id, el.getAttribute('data-order-id'), el.getAttribute('data-status') || 'Đang vận chuyển', el.getAttribute('data-cur-lat'), el.getAttribute('data-cur-lng'), el.getAttribute('data-address'), el.getAttribute('data-recv-lat'), el.getAttribute('data-recv-lng'));
+                    initOrderMap(el.id, el.getAttribute('data-order-id'), el.getAttribute('data-status'), el.getAttribute('data-address'), el.getAttribute('data-shop-raw'));
                 });
             } else {
                 const mapElements = card.querySelectorAll('.tracking-map');
@@ -637,32 +539,30 @@
                 if(o.items && o.items.length > 0) {
                     o.items.forEach((item, idx) => {
                         let advPay = item.advance_payment > 0 ? `<div class="advance-pay"><span>Thanh toán thêm:</span> <span>${new Intl.NumberFormat('vi-VN').format(item.advance_payment)}đ</span></div>` : '';
+                        
                         let historyHtml = '<div class="tl-item"><div class="tl-desc" style="color:var(--text-sub)">Đơn hàng đang chờ xử lý...</div></div>';
+                        let shopAddressRaw = "Trường THPT Tĩnh Gia 2"; // Mặc định Origin
+
                         if(item.tracking_history && item.tracking_history.length > 0) {
                             historyHtml = item.tracking_history.slice(0, 4).map((hist, hIdx) => `
                                 <div class="tl-item ${hIdx === 0 ? 'latest' : ''}"><div class="tl-time">${hist.time}</div><div class="tl-desc">${hist.description}</div></div>
                              `).join('');
+                             // Lấy lịch sử cũ nhất làm vị trí Shop
+                             shopAddressRaw = item.tracking_history[item.tracking_history.length - 1].description;
                         }
 
                         let current_stage = (item.spx_stage || cleanStatus || 'Đang chờ cập nhật'); 
                         let step = getShippingStep(current_stage);
                         let wPercent = (step === 1) ? "0" : (step === 2) ? "33.33" : (step === 3) ? "66.66" : "100";
                         
-                        let animIcons = [
-                            `<div class="anim-container"><div class="css-box"></div><div class="shadow-pulse"></div></div>`,
-                            `<div class="anim-container"><div class="css-truck"><div class="truck-trailer"></div><div class="truck-cab"></div><div class="truck-wheel w1"></div><div class="truck-wheel w2"></div><div class="wind-lines"></div></div></div>`,
-                            `<div class="anim-container"><div class="css-bike"><div class="bike-body"></div><div class="bike-handle"></div><div class="bike-headlight"></div><div class="bike-box"></div><div class="bike-wheel w1"></div><div class="bike-wheel w2"></div><div class="wind-lines"></div></div></div>`,
-                            `` 
-                        ];
-                        
                         const labels = ["Chuẩn bị", "Vận chuyển", "Đang giao", "Thành công"];
-                        let stepsHtml = animIcons.map((animHtml, i) => {
+                        let stepsHtml = labels.map((lbl, i) => {
                             let isCompleted = step > i+1 || (step === 4 && i === 3);
                             let isActive = step >= i+1;
                             let isCurrent = step === i+1;
                             let innerSvg = isCompleted ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>' : '<svg width="8" height="8" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="12" r="6"></circle></svg>';
                             let extraClass = (isCurrent && i === 3) ? 'success-pulse' : '';
-                            return `<div class="step ${isActive ? 'active' : ''} ${extraClass}">${isCurrent ? animHtml : ''}<div class="step-icon-wrapper">${innerSvg}</div><div class="step-label">${labels[i]}</div></div>`;
+                            return `<div class="step ${isActive ? 'active' : ''} ${extraClass}"><div class="step-icon-wrapper">${innerSvg}</div><div class="step-label">${lbl}</div></div>`;
                         }).join('');
 
                         let stageColor = "var(--text-main)", stageGlow = "none";
@@ -670,13 +570,6 @@
                         else if(step === 3) { stageColor = "var(--info)"; stageGlow = "0 0 10px rgba(59, 130, 246, 0.5)"; }
                         else if(step === 2) { stageColor = "var(--accent)"; stageGlow = "0 0 10px rgba(245, 166, 35, 0.5)"; }
 
-                        let trackerHtml = `
-                            <div class="live-tracker">
-                                <div style="position: relative; padding: 0 14px; margin-bottom: 28px;"><div class="stepper-track"><div class="stepper-line-active" style="width: ${wPercent}%;"></div></div><div class="stepper">${stepsHtml}</div></div>
-                                <div style="text-align:center; font-size:13px; color:${stageColor}; font-weight:800; text-transform:uppercase; letter-spacing: 0.5px; text-shadow: ${stageGlow};">${current_stage}</div>
-                            </div>
-                        `;
-                        
                         let mapId = `map_${o.order_id}_${idx}_${Math.random().toString(36).substr(2, 5)}`;
                         let fallbackName = item.product_name || item.name || o.product_name || "Sản phẩm đính kèm";
                         let realNameHtml = item.link && item.link.startsWith("http") ? `<a href="${item.link}" target="_blank" style="color: #fff; text-decoration: none;">🔗 ${fallbackName}</a>` : `<a href="#" style="color: #fff; text-decoration: none;">${fallbackName}</a>`;
@@ -689,9 +582,12 @@
                                 </div>
                                 <div class="real-product-name"><span style="font-size:16px; text-shadow: 0 0 8px rgba(255,255,255,0.6);">🛒</span> ${realNameHtml}</div>
                                 <div class="map-wrapper">
-                                    <div id="${mapId}" class="tracking-map" data-order-id="${o.order_id}" data-status="${cleanStatus}" data-address="${o.address}" data-cur-lat="${item.current_lat || 0}" data-cur-lng="${item.current_lng || 0}" data-recv-lat="${item.receiver_lat || 0}" data-recv-lng="${item.receiver_lng || 0}"></div>
+                                    <div id="${mapId}" class="tracking-map" data-order-id="${o.order_id}" data-status="${cleanStatus}" data-address="${o.address}" data-shop-raw="${shopAddressRaw}"></div>
                                 </div>
-                                ${trackerHtml}
+                                <div class="live-tracker">
+                                    <div style="position: relative; padding: 0 14px; margin-bottom: 28px;"><div class="stepper-track"><div class="stepper-line-active" style="width: ${wPercent}%;"></div></div><div class="stepper">${stepsHtml}</div></div>
+                                    <div style="text-align:center; font-size:13px; color:${stageColor}; font-weight:800; text-transform:uppercase; letter-spacing: 0.5px; text-shadow: ${stageGlow};">${current_stage}</div>
+                                </div>
                                 <div class="timeline">${historyHtml}</div>
                                 ${advPay}
                             </div>
