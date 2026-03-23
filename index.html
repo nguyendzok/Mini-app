@@ -86,26 +86,32 @@
         .real-product-name { font-size: 14px; color: #fff; font-weight: 600; margin-bottom: 16px; line-height: 1.5; display: flex; gap: 10px; background: rgba(255,255,255,0.03); padding: 12px; border-radius: var(--radius-sm); border: 1px dashed rgba(255,255,255,0.1);}
         .advance-pay { display: flex; justify-content: space-between; align-items: center; font-size: 14px; background: linear-gradient(90deg, rgba(245, 166, 35, 0.1), rgba(245, 166, 35, 0.05)); border: 1px solid rgba(245, 166, 35, 0.3); padding: 14px; border-radius: var(--radius-md); margin-top: 16px; color: var(--accent); font-weight: 700; box-shadow: inset 0 0 15px rgba(245,166,35,0.05);}
         
-        /* BẢN ĐỒ VÀ CÁC ICON MỚI DÙNG CSS */
+        /* 🔥 BẢN ĐỒ VÀ CÁC ICON CSS MỚI 🔥 */
         .map-wrapper { position: relative; width: 100%; height: 350px; border-radius: var(--radius-md); margin-bottom: 20px; overflow: hidden; border: 1px solid rgba(255,255,255,0.08); box-shadow: inset 0 2px 10px rgba(0,0,0,0.5); z-index: 1; }
         .tracking-map { width: 100%; height: 100%; background: #0f0f11; }
         .custom-map-marker { background: transparent; border: none; z-index: 10 !important;}
         .leaflet-routing-container { display: none !important; }
 
-        /* ICON SHOP (ĐIỂM BẮT ĐẦU) */
-        .map-dot-shop { width: 14px; height: 14px; background: #f5a623; border-radius: 50%; border: 3px solid #fff; box-shadow: 0 0 15px #f5a623; margin-top: -7px; margin-left: -7px; position: relative; }
-        .map-dot-shop::after { content: "Shop"; position: absolute; top: 16px; left: 50%; transform: translateX(-50%); font-size: 11px; font-weight: 800; color: #f5a623; text-shadow: 0 1px 3px #000, 0 0 5px #000; background: rgba(0,0,0,0.5); padding: 2px 6px; border-radius: 4px; border: 1px solid rgba(245, 166, 35, 0.3);}
+        /* ICON ALERT DẤU CHẤM THAN (Lúc Đang lên đơn) */
+        .map-dot-alert { width: 28px; height: 28px; background: #ef4444; border-radius: 50%; border: 3px solid #fff; box-shadow: 0 0 20px #ef4444; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 900; font-size: 16px; animation: pulseAlert 1.5s infinite; position: relative;}
+        .map-dot-alert::after { content: "Đơn đang được lên"; position: absolute; top: 32px; left: 50%; transform: translateX(-50%); font-size: 11px; font-weight: 800; color: #fff; background: #ef4444; padding: 4px 8px; border-radius: 4px; white-space: nowrap; border: 1px solid #b91c1c;}
+        @keyframes pulseAlert { 0% { box-shadow: 0 0 0 0 rgba(239,68,68,0.7); } 70% { box-shadow: 0 0 0 15px rgba(239,68,68,0); } 100% { box-shadow: 0 0 0 0 rgba(239,68,68,0); } }
 
-        /* ICON KHÁCH (ĐIỂM ĐẾN) */
-        .map-dot-customer { width: 14px; height: 14px; background: #10b981; border-radius: 50%; border: 3px solid #fff; box-shadow: 0 0 15px #10b981; margin-top: -7px; margin-left: -7px; position: relative; display: flex; align-items: center; justify-content: center; }
-        .map-dot-customer::before { content: "✓"; color: #fff; font-size: 9px; font-weight: 900; }
-        .map-dot-customer::after { content: "Khách"; position: absolute; top: 16px; left: 50%; transform: translateX(-50%); font-size: 11px; font-weight: 800; color: #10b981; text-shadow: 0 1px 3px #000, 0 0 5px #000; background: rgba(0,0,0,0.5); padding: 2px 6px; border-radius: 4px; border: 1px solid rgba(16, 185, 129, 0.3);}
+        /* ICON KHO HÀNG ĐẦU TIÊN (Điểm xuất phát) */
+        .map-dot-shop { width: 14px; height: 14px; background: #a1a1aa; border-radius: 50%; border: 3px solid #fff; box-shadow: 0 0 10px rgba(255,255,255,0.3); margin-top: -7px; margin-left: -7px; position: relative; }
+        .map-dot-shop::after { content: "Kho xuất phát"; position: absolute; top: 16px; left: 50%; transform: translateX(-50%); font-size: 10px; font-weight: 700; color: #a1a1aa; background: rgba(0,0,0,0.6); padding: 2px 6px; border-radius: 4px; white-space: nowrap;}
+
+        /* ICON KHÁCH HÀNG (Điểm đến) */
+        .map-dot-customer { width: 16px; height: 16px; background: #10b981; border-radius: 50%; border: 3px solid #fff; box-shadow: 0 0 15px #10b981; margin-top: -8px; margin-left: -8px; position: relative; display: flex; align-items: center; justify-content: center; }
+        .map-dot-customer::before { content: "✓"; color: #fff; font-size: 10px; font-weight: 900; }
+        .map-dot-customer::after { content: "Điểm giao"; position: absolute; top: 18px; left: 50%; transform: translateX(-50%); font-size: 10px; font-weight: 700; color: #10b981; background: rgba(0,0,0,0.6); padding: 2px 6px; border-radius: 4px; white-space: nowrap;}
 
         /* XE TẢI CHẠY (VỊ TRÍ HIỆN TẠI) */
         .blue-pulse-container { position: absolute; bottom: 0; left: 50%; transform: translate(-50%, 50%); width: 20px; height: 20px; }
         .blue-pulse { position: absolute; width: 100%; height: 100%; background: rgba(66, 133, 244, 0.4); border-radius: 50%; animation: blue-ring 2s ease-out infinite; z-index: 1; }
         .blue-dot { position: relative; width: 10px; height: 10px; background: #4285F4; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 0 8px rgba(66, 133, 244, 0.8); z-index: 3; }
         @keyframes blue-ring { 0% { transform: scale(0.3); opacity: 1; } 80% { transform: scale(1.8); opacity: 0; } 100% { transform: scale(2.2); opacity: 0; } }
+
         .shopee-marker-label { background: #fff; color: #ee4d2d; border: 1px solid rgba(238, 77, 45, 0.3); padding: 6px 12px; border-radius: 4px; font-size: 11px; font-weight: 800; white-space: nowrap; box-shadow: 0 4px 10px rgba(0,0,0,0.15); position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 4px; z-index: 10; }
         .shopee-marker-label::after { content: ''; position: absolute; bottom: -6px; left: 50%; transform: translateX(-50%); border-width: 6px 6px 0; border-style: solid; border-color: #fff transparent transparent transparent; }
         .shopee-truck-icon-static { position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); font-size: 16px; z-index: 5; filter: drop-shadow(0 2px 2px rgba(0,0,0,0.4));}
@@ -115,6 +121,7 @@
         .gps-data-item { display: flex; justify-content: space-between; margin-bottom: 4px; }
         .gps-data-item .label { font-weight: 600; color: rgba(255,255,255,0.5); }
         .gps-data-item .value { color: #fff; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 160px; }
+        .gps-data-item .value-live { color: #f5a623; }
 
         /* TIMELINE TRẠNG THÁI */
         .live-tracker { background: rgba(0,0,0,0.6); border-radius: var(--radius-md); padding: 24px 0 24px 0; margin-bottom: 18px; position: relative; border: 1px solid rgba(255,255,255,0.05); box-shadow: inset 0 4px 20px rgba(0,0,0,0.8);}
@@ -124,8 +131,11 @@
         .step { display: flex; flex-direction: column; align-items: center; width: 28px; position: relative; z-index: 3;}
         .step-icon-wrapper { width: 28px; height: 28px; border-radius: 50%; background: #1f1f22; border: 2px solid #3f3f46; display: flex; justify-content: center; align-items: center; transition: all 0.5s ease; box-shadow: 0 4px 6px rgba(0,0,0,0.5);}
         .step.active .step-icon-wrapper { border-color: var(--success); background: rgba(16, 185, 129, 0.2); box-shadow: 0 0 15px var(--success-glow), inset 0 0 8px rgba(16, 185, 129, 0.4); color: #fff;}
+        .step.success-pulse .step-icon-wrapper { background: linear-gradient(135deg, #10b981, #059669); border-color: transparent; color: #fff; box-shadow: 0 0 20px rgba(16, 185, 129, 0.8), inset 0 0 10px rgba(255,255,255,0.4); animation: pulseSuccess 2s infinite; }
+        @keyframes pulseSuccess { 0%, 100% { box-shadow: 0 0 20px rgba(16, 185, 129, 0.8); } 50% { box-shadow: 0 0 35px rgba(16, 185, 129, 1); } }
         .step-label { font-size: 10px; font-weight: 700; color: var(--text-sub); text-align: center; letter-spacing: 0.5px; position: absolute; top: 36px; width: 70px; white-space: nowrap;}
         .step.active .step-label { color: #fff; text-shadow: 0 0 8px rgba(255,255,255,0.6);}
+
         .timeline { padding-left: 12px; margin-top: 18px;}
         .tl-item { position: relative; padding-bottom: 18px; padding-left: 24px; }
         .tl-item::before { content: ''; position: absolute; left: 0; top: 5px; width: 10px; height: 10px; border-radius: 50%; background: #3f3f46; border: 2px solid #18181b; box-shadow: 0 0 0 1px #3f3f46; z-index: 2;}
@@ -135,10 +145,7 @@
         .tl-item.latest::before { background: var(--success); box-shadow: 0 0 15px rgba(16, 185, 129, 0.9), inset 0 0 4px #fff; border-color: #000;}
         .tl-time { color: var(--text-sub); font-size: 11px; margin-bottom: 4px; font-weight: 600;}
         .tl-desc { color: #fff; font-size: 13px; font-weight: 500; line-height: 1.5; text-shadow: 0 1px 2px rgba(0,0,0,0.8);}
-        .skeleton { background: linear-gradient(110deg, #1f1f22 8%, #27272a 18%, #1f1f22 33%); border-radius: 8px; background-size: 200% 100%; animation: 1.5s shine linear infinite; }
-        @keyframes shine { to { background-position-x: -200%; } }
-        .skel-card { background: var(--surface-glass); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px; display: flex; flex-direction: column; gap: 16px; margin-bottom: 16px;}
-
+        
         /* CSS POPUP XIN QUYỀN VỊ TRÍ */
         .loc-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); z-index: 9999; display: none; justify-content: center; align-items: center; opacity: 0; transition: opacity 0.3s ease; }
         .loc-popup { background: var(--surface); border: 1px solid rgba(255,255,255,0.1); border-radius: var(--radius-lg); padding: 24px; width: 90%; max-width: 320px; text-align: center; box-shadow: 0 15px 40px rgba(0,0,0,0.5); transform: translateY(20px); transition: transform 0.3s ease; }
@@ -161,16 +168,13 @@
         <symbol id="icon-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 16 14"></polyline></symbol>
         <symbol id="icon-down" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></symbol>
         <symbol id="icon-check-circle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></symbol>
-        <symbol id="icon-truck" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></symbol>
-        <symbol id="icon-x-circle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></symbol>
-        <symbol id="icon-users-group" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><path d="M20 8v6"></path><path d="M23 11h-6"></path></symbol>
     </svg>
 
     <div class="loc-overlay" id="locOverlay">
         <div class="loc-popup" id="locPopup">
             <div class="loc-icon">📍</div>
             <div class="loc-title">Chia sẻ vị trí</div>
-            <div class="loc-desc">Cho phép ứng dụng sử dụng vị trí GPS hiện tại của bạn để nhận diện điểm giao hàng tự động.</div>
+            <div class="loc-desc">Cho phép ứng dụng sử dụng vị trí GPS hiện tại của bạn để hiển thị điểm nhận hàng chính xác tuyệt đối.</div>
             <div class="loc-btns">
                 <button class="loc-btn deny" onclick="denyLocation()">Để sau</button>
                 <button class="loc-btn allow" onclick="allowLocation()">Cho phép</button>
@@ -189,13 +193,8 @@
         <div class="stat"><div class="stat-num" id="uTotal">-</div><div class="stat-label">Tổng Đơn</div></div>
     </div>
 
-    <div class="metrics-bar">
-        <div class="metric"><span class="live-dot"></span><div><span class="metric-val" id="statOnline">1</span> Đang xem</div></div>
-        <div class="metric" style="border-left: 1px solid rgba(255,255,255,0.1); padding-left: 16px; width: auto;"><svg width="16" height="16" stroke="var(--info)"><use href="#icon-users-group"></use></svg><div><span class="metric-val" id="statMonthly">1</span> Tháng này</div></div>
-    </div>
-
     <div class="order-list" id="orderList">
-        <div class="skel-card"><div style="display:flex; justify-content:space-between;"><div style="width:80px;height:24px;border-radius:12px;" class="skeleton"></div><div style="width:100px;height:24px;border-radius:12px;" class="skeleton"></div></div><div style="width:80%;height:24px;margin-top:16px;" class="skeleton"></div><div style="display:flex; justify-content:space-between; margin-top:16px;"><div style="width:80px;height:28px;" class="skeleton"></div><div style="width:36px;height:36px;border-radius:50%;" class="skeleton"></div></div></div>
+        <div style="text-align:center; padding: 40px; color: var(--text-sub)">Đang tải dữ liệu đơn hàng...</div>
     </div>
 
     <script>
@@ -203,6 +202,7 @@
         window.trackingMaps = {}; window.trackingMarkers = {}; window.trackingIntervals = {}; window.trackingRoutingControls = {};
         window.userLiveLocation = null; 
 
+        // QUẢN LÝ QUYỀN VỊ TRÍ
         function checkLocationPermission() {
             const asked = localStorage.getItem('loc_asked');
             const granted = localStorage.getItem('loc_granted');
@@ -265,8 +265,7 @@
                         } else {
                             document.getElementById('uAvatar').innerText = (user.first_name || "K").charAt(0).toUpperCase();
                         }
-                        fetchOrders(userId); fetchWebStats(userId);
-                        if (!window.statsInterval) window.statsInterval = setInterval(() => fetchWebStats(userId), 15000); 
+                        fetchOrders(userId); 
                         return true;
                     }
                     return false;
@@ -280,29 +279,6 @@
             } catch (err) {}
         }
         document.addEventListener("DOMContentLoaded", initApp);
-        
-        async function fetchTitleFromUrl(url) {
-            try {
-                const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
-                const response = await fetch(proxyUrl);
-                const data = await response.json();
-                if (data.contents) {
-                    const doc = new DOMParser().parseFromString(data.contents, "text/html");
-                    let title = doc.querySelector("title") ? doc.querySelector("title").innerText : "";
-                    if (title) return title.replace(/\| Shopee Việt Nam/gi, '').replace(/\| Lazada\.vn/gi, '').replace(/Mua ngay /gi, '').trim();
-                }
-            } catch (e) {}
-            return null;
-        }
-
-        async function fetchWebStats(uid) {
-            try {
-                const res = await fetch(`${API_BASE}/api/stats?user_id=${uid}`);
-                const data = await res.json();
-                document.getElementById('statOnline').innerText = data.online;
-                document.getElementById('statMonthly').innerText = data.monthly;
-            } catch (e) {}
-        }
 
         async function fetchOrders(id) {
             try {
@@ -325,19 +301,17 @@
             }
         }
 
-        // HÀM QUÉT VỊ TRÍ SHOP & HUB (CẬP NHẬT ĐỂ BẮT CHỮ "LẤY HÀNG TẠI"...)
+        // TÌM KHO HÀNG ĐẦU TIÊN TỪ TEXT TRẠNG THÁI (BỎ QUA SHOP)
         function extractLocationFromStatus(statusText) {
             if (!statusText) return "Trường THPT Tĩnh Gia 2";
             let text = statusText.toLowerCase();
             
-            // Tìm các cụm từ gắn liền với Shop hoặc người gửi
-            let match = text.match(/(?:người gửi đang chuẩn bị hàng tại|lấy hàng thành công tại|chuẩn bị hàng tại|lấy hàng tại|khu vực của bạn tại|tại trạm giao hàng|giao hàng tại|đang giao tại|tại)\s+([^.]+)/i);
-            if (match && match[1]) return match[1].trim().split(' và ')[0].split(' - ')[0].replace(/(soc|hub|lm hub|\.)/gi, '').trim();
-            
-            // Tìm các cụm từ gắn với Hub trung chuyển
-            match = text.match(/(?:đến kho|rời kho phân loại|đến trạm|rời trạm|từ)\s+([^.]+)/i);
-            if (match && match[1]) return match[1].replace(/(soc|hub|lm hub|\.)/gi, '').trim();
-            
+            // Tìm các cụm từ kho trung chuyển
+            let match = text.match(/(?:đến kho|rời kho phân loại|đến trạm|rời trạm|tại kho|từ kho|từ trạm|đến|tại)\s+([^.]+)/i);
+            if (match && match[1]) {
+                let loc = match[1].replace(/(soc|hub|lm hub|\.)/gi, '').trim();
+                return loc.split(' và ')[0].split(' - ')[0];
+            }
             return text.replace(/(soc|hub|lm hub|\.)/gi, '').trim();
         }
 
@@ -356,11 +330,11 @@
             if (txt.includes('thành công') || txt.includes('đã giao') || txt.includes('hoàn thành')) return 4;
             if (txt.includes('đang giao') || txt.includes('bưu tá') || txt.includes('đang phát')) return 3;
             if (txt.includes('kho') || txt.includes('hub') || txt.includes('soc') || txt.includes('vận chuyển') || txt.includes('lấy hàng') || txt.includes('trung chuyển')) return 2;
-            return 1; // Mặc định là bước 1 (Đã lên đơn/Chuẩn bị hàng)
+            return 1; // Mặc định là bước 1 (Chuẩn bị / Lên đơn)
         }
 
-        // KHỞI TẠO BẢN ĐỒ
-        async function initOrderMap(mapId, orderId, statusText, addressText, shopAddressRaw) {
+        // LOGIC MAP: DẤU CHẤM THAN CHO STEP 1 VÀ NÉT ĐỨT/LIỀN CHO STEP > 1
+        async function initOrderMap(mapId, orderId, statusText, addressText, historyDataStr) {
             if (window.trackingMaps[mapId]) {
                 setTimeout(() => window.trackingMaps[mapId].invalidateSize(), 300);
                 return;
@@ -370,18 +344,17 @@
 
             let step = getShippingStep(statusText);
             const isDelivered = (step === 4);
+            let historyData = [];
+            try { historyData = JSON.parse(decodeURIComponent(historyDataStr)); } catch(e) {}
             
-            // 1. TÌM VỊ TRÍ SHOP (Điểm bắt đầu)
-            let shopLoc = [19.3833, 105.7833]; 
-            let shopText = extractLocationFromStatus(shopAddressRaw);
-            const geoShop = await geocodeLocation(shopText);
-            if (geoShop) shopLoc = [geoShop.lat, geoShop.lng];
-
-            // 2. TÌM VỊ TRÍ KHÁCH (Điểm đến)
+            // 1. TÌM VỊ TRÍ ĐÍCH (KHÁCH HÀNG)
             let receiverLoc = [19.3833, 105.7833]; 
             if (window.userLiveLocation) {
                 receiverLoc = [...window.userLiveLocation];
                 addressText = "📍 Vị trí GPS hiện tại của bạn";
+            } else if (addressText && addressText.includes('http')) {
+                // Address geocode for GG Maps link is handled by backend, but we fallback gracefully
+                addressText = "📍 Vị trí ghim trên Bản đồ";
             } else {
                 let cleanDest = addressText.split(',').map(p => p.trim()).filter(p => p.length > 0).slice(-3).join(', ').replace(/(nhà số|số nhà|ngõ|ngách|hẻm|kiệt|số|ấp|đường|tòa nhà|lô|phòng)\s*[\w/.\-]+/gi, '').trim();
                 const geoTarget = await geocodeLocation(cleanDest);
@@ -389,40 +362,97 @@
                 else { addressText = "Trường THPT Tĩnh Gia 2 (Mặc định)"; }
             }
 
-            // 3. TÌM VỊ TRÍ XE TẢI (Hiện tại)
-            let currentHubLoc = [19.3833, 105.7833]; 
-            if (isDelivered) {
-                currentHubLoc = [...receiverLoc]; // Đã giao xong -> Xe ở nhà khách
-            } else if (step === 1) {
-                currentHubLoc = [...shopLoc]; // Đơn đang "Chuẩn bị" -> Xe nằm im ở nhà người gửi (Shop)
-            } else {
-                let hubText = extractLocationFromStatus(statusText);
-                const geoHub = await geocodeLocation(hubText);
-                if (geoHub) currentHubLoc = [geoHub.lat, geoHub.lng];
-                else currentHubLoc = [...shopLoc]; // Không rõ trạm -> Nằm chờ ở shop
-            }
-
-            // VẼ BẢN ĐỒ TỐI (CARTO DARK MATTER)
-            var map = L.map(mapId, { zoomControl: false, attributionControl: false }).setView(currentHubLoc, 13);
+            var map = L.map(mapId, { zoomControl: false, attributionControl: false });
             L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { maxZoom: 19 }).addTo(map);
 
-            var routingControl = L.Routing.control({
-                waypoints: [ L.latLng(shopLoc[0], shopLoc[1]), L.latLng(receiverLoc[0], receiverLoc[1]) ],
-                routeWhileDragging: false, addWaypoints: false, fitSelectedRoutes: true, showAlternatives: false,
-                lineOptions: { styles: [{ color: '#f5a623', opacity: 0.8, weight: 3, dashArray: '5, 10' }] }, 
-                createMarker: function(idx, waypoint, n) {
-                    if (idx === 0) {
-                        return L.marker(waypoint.latLng, { icon: L.divIcon({ className: '', html: '<div class="map-dot-shop"></div>', iconSize: [0, 0] }) });
-                    } else if (idx === n - 1) {
-                        return L.marker(waypoint.latLng, { icon: L.divIcon({ className: '', html: '<div class="map-dot-customer"></div>', iconSize: [0, 0] }) });
-                    }
-                    return null;
-                }
-            }).addTo(map);
+            // ==========================================
+            // NẾU ĐƠN VỪA LÊN (STEP 1): CHỈ HIỆN 1 DẤU CHẤM THAN Ở NHÀ KHÁCH
+            // ==========================================
+            if (step === 1) {
+                map.setView(receiverLoc, 14);
+                let alertIcon = L.divIcon({ className: '', html: '<div class="map-dot-alert">!</div>', iconSize: [28,28], iconAnchor: [14,14] });
+                L.marker(receiverLoc, {icon: alertIcon}).addTo(map);
 
-            // THÊM MARKER XE TẢI LÊN VỊ TRÍ HIỆN TẠI
+                var gpsPanel = L.control({position: 'bottomright'});
+                gpsPanel.onAdd = function () {
+                    var div = L.DomUtil.create('div', 'gps-data-panel');
+                    div.innerHTML = `<h4>Dữ liệu GPS thời gian thực</h4><div class="gps-data-item"><span class="label">Trạng thái:</span> <span class="value value-live" style="color:#ef4444">Đang lên đơn...</span></div><div class="gps-data-item"><span class="label">Điểm nhận:</span> <span class="value" id="address_${mapId}">${addressText}</span></div>`;
+                    return div;
+                };
+                gpsPanel.addTo(map);
+                window.trackingMaps[mapId] = map;
+                return;
+            }
+
+            // ==========================================
+            // NẾU ĐƠN ĐANG CHẠY (STEP > 1): TÌM KHO ĐẦU TIÊN VÀ VẼ 2 ĐƯỜNG LIỀN/ĐỨT
+            // ==========================================
+            let startHubText = null;
+            if (historyData && historyData.length > 0) {
+                // Quét từ dưới lên để tìm kho trung chuyển đầu tiên (bỏ qua shop)
+                for (let i = historyData.length - 1; i >= 0; i--) {
+                    let desc = historyData[i].description.toLowerCase();
+                    if (desc.match(/(kho|hub|soc|trạm|đến|rời|tại quận|tại huyện|tại thành phố)/)) {
+                        if (!desc.match(/(chuẩn bị|lấy hàng|người gửi)/)) {
+                            startHubText = extractLocationFromStatus(desc);
+                            break;
+                        }
+                    }
+                }
+            }
+            if (!startHubText) startHubText = extractLocationFromStatus(statusText);
+            
+            let startLoc = [19.3833, 105.7833];
+            const geoStart = await geocodeLocation(startHubText);
+            if (geoStart) startLoc = [geoStart.lat, geoStart.lng];
+
+            let currentHubLoc = [19.3833, 105.7833]; 
+            if (isDelivered) {
+                currentHubLoc = [...receiverLoc]; 
+            } else {
+                let curText = extractLocationFromStatus(statusText);
+                const geoCur = await geocodeLocation(curText);
+                if (geoCur) currentHubLoc = [geoCur.lat, geoCur.lng];
+                else currentHubLoc = [...startLoc];
+            }
+
+            map.setView(currentHubLoc, 12);
+
+            // ĐƯỜNG SỐ 1 (QUÁ KHỨ): NÉT ĐỨT (Từ Kho Đầu -> Xe tải)
+            if (!isDelivered && (startLoc[0] !== currentHubLoc[0] || startLoc[1] !== currentHubLoc[1])) {
+                L.Routing.control({
+                    waypoints: [ L.latLng(startLoc[0], startLoc[1]), L.latLng(currentHubLoc[0], currentHubLoc[1]) ],
+                    routeWhileDragging: false, addWaypoints: false, showAlternatives: false, fitSelectedRoutes: false,
+                    lineOptions: { styles: [{ color: '#a1a1aa', opacity: 0.7, weight: 3, dashArray: '5, 8' }] },
+                    createMarker: function() { return null; }
+                }).addTo(map);
+            } else if (isDelivered) {
+                // Nếu giao xong, toàn bộ đoạn đường là quá khứ -> Nét đứt tất cả
+                L.Routing.control({
+                    waypoints: [ L.latLng(startLoc[0], startLoc[1]), L.latLng(receiverLoc[0], receiverLoc[1]) ],
+                    routeWhileDragging: false, addWaypoints: false, showAlternatives: false, fitSelectedRoutes: true,
+                    lineOptions: { styles: [{ color: '#a1a1aa', opacity: 0.8, weight: 3, dashArray: '5, 8' }] },
+                    createMarker: function() { return null; }
+                }).addTo(map);
+            }
+
+            // ĐƯỜNG SỐ 2 (TƯƠNG LAI): NÉT LIỀN (Từ Xe tải -> Khách hàng)
+            if (!isDelivered) {
+                let futureRouting = L.Routing.control({
+                    waypoints: [ L.latLng(currentHubLoc[0], currentHubLoc[1]), L.latLng(receiverLoc[0], receiverLoc[1]) ],
+                    routeWhileDragging: false, addWaypoints: false, showAlternatives: false, fitSelectedRoutes: true,
+                    lineOptions: { styles: [{ color: '#f5a623', opacity: 1, weight: 4 }] },
+                    createMarker: function() { return null; }
+                }).addTo(map);
+                window.trackingRoutingControls[mapId] = futureRouting;
+            }
+
+            // GẮN CÁC MARKER (ICON)
+            L.marker(startLoc, { icon: L.divIcon({ className: '', html: '<div class="map-dot-shop"></div>', iconSize: [0, 0] }) }).addTo(map);
+            L.marker(receiverLoc, { icon: L.divIcon({ className: '', html: '<div class="map-dot-customer"></div>', iconSize: [0, 0] }) }).addTo(map);
+
             let truckOrCheck = isDelivered ? '✅' : '🚚';
-            let pulseHtml = (isDelivered || step === 1) ? '' : '<div class="blue-pulse-container"><div class="blue-pulse"></div><div class="blue-dot"></div></div>';
+            let pulseHtml = isDelivered ? '' : '<div class="blue-pulse-container"><div class="blue-pulse"></div><div class="blue-dot"></div></div>';
             var truckIcon = L.divIcon({
                 className: 'custom-map-marker',
                 html: `
@@ -436,64 +466,59 @@
             var truckMarker = L.marker(currentHubLoc, {icon: truckIcon, zIndexOffset: 1000}).addTo(map);
             window.trackingMarkers[mapId] = truckMarker;
 
+            // BẢNG GPS PANEL
             var gpsPanel = L.control({position: 'bottomright'});
-            gpsPanel.onAdd = function (map) {
+            gpsPanel.onAdd = function () {
                 var div = L.DomUtil.create('div', 'gps-data-panel');
                 div.innerHTML = `
                     <h4>Dữ liệu GPS thời gian thực</h4>
-                    <div class="gps-data-item"><span class="label">Trạng thái:</span> <span class="value value-live" style="color:${isDelivered ? '#10b981' : '#f5a623'}">${isDelivered ? 'Đã hoàn thành' : (step === 1 ? 'Đang tại Kho' : 'Theo dõi (10s)')}</span></div>
-                    <div class="gps-data-item"><span class="label">Khu vực đích:</span> <span class="value" id="address_${mapId}">Đang tải...</span></div>
+                    <div class="gps-data-item"><span class="label">Trạng thái:</span> <span class="value value-live" style="color:${isDelivered ? '#10b981' : '#f5a623'}">${isDelivered ? 'Đã hoàn thành' : 'Theo dõi (10s)'}</span></div>
+                    <div class="gps-data-item"><span class="label">Khu vực đích:</span> <span class="value" id="address_${mapId}">${addressText}</span></div>
                 `;
                 return div;
             };
             gpsPanel.addTo(map);
 
             window.trackingMaps[mapId] = map;
-            window.trackingRoutingControls[mapId] = routingControl;
-
             setTimeout(() => map.invalidateSize(), 400);
-            startLiveTracking(mapId, orderId, receiverLoc, isDelivered, shopLoc);
-            if(addressText) document.getElementById(`address_${mapId}`).innerText = addressText;
-        }
+            
+            // Theo dõi vị trí xe tải ngầm định
+            if(!isDelivered) {
+                window.trackingIntervals[mapId] = setInterval(async () => {
+                    try {
+                        const res = await fetch(`${API_BASE}/api/live_location?order_id=${orderId}`);
+                        if (!res.ok) return;
+                        const data = await res.json();
+                        
+                        if (data && data.status) {
+                            let newStep = getShippingStep(data.status);
+                            let newLatLng;
 
-        function startLiveTracking(mapId, orderId, destLocArray, isAlreadyDelivered, shopLocArray) {
-            if (window.trackingIntervals[mapId]) clearInterval(window.trackingIntervals[mapId]);
-            if (isAlreadyDelivered) return; 
+                            if (newStep === 4) {
+                                newLatLng = L.latLng(receiverLoc[0], receiverLoc[1]);
+                                clearInterval(window.trackingIntervals[mapId]); 
+                            } else {
+                                let hText = extractLocationFromStatus(data.status);
+                                const gHub = await geocodeLocation(hText);
+                                if(gHub) newLatLng = L.latLng(gHub.lat, gHub.lng);
+                            }
 
-            window.trackingIntervals[mapId] = setInterval(async () => {
-                try {
-                    const res = await fetch(`${API_BASE}/api/live_location?order_id=${orderId}`);
-                    if (!res.ok) return;
-                    const data = await res.json();
-                    
-                    if (data && data.status) {
-                        let step = getShippingStep(data.status);
-                        let isDelivered = (step === 4);
-                        let newLatLng;
-
-                        if (isDelivered) {
-                            newLatLng = L.latLng(destLocArray[0], destLocArray[1]);
-                            clearInterval(window.trackingIntervals[mapId]); 
-                        } else if (step === 1) {
-                            newLatLng = L.latLng(shopLocArray[0], shopLocArray[1]); // Vẫn ở điểm 1 -> Ép dính vào shop
-                        } else {
-                            let hubText = extractLocationFromStatus(data.status);
-                            const geoDataHub = await geocodeLocation(hubText);
-                            if(geoDataHub) newLatLng = L.latLng(geoDataHub.lat, geoDataHub.lng);
-                        }
-
-                        if(newLatLng) {
-                            const marker = window.trackingMarkers[mapId];
-                            if (marker) marker.setLatLng(newLatLng); 
-                            const labelEl = document.querySelector(`#label_${mapId} span.status-text`);
-                            if (labelEl) {
-                                labelEl.innerText = data.status;
-                                if (isDelivered) labelEl.previousElementSibling.style.color = '#10b981'; 
+                            if(newLatLng) {
+                                const tMarker = window.trackingMarkers[mapId];
+                                if (tMarker) tMarker.setLatLng(newLatLng); 
+                                
+                                const labelEl = document.querySelector(`#label_${mapId} span.status-text`);
+                                if (labelEl) {
+                                    labelEl.innerText = data.status;
+                                    if (newStep === 4) labelEl.previousElementSibling.style.color = '#10b981'; 
+                                }
+                                const rControl = window.trackingRoutingControls[mapId];
+                                if (rControl) rControl.setWaypoints([newLatLng, rControl.getWaypoints()[1].latLng]);
                             }
                         }
-                    }
-                } catch (err) {}
-            }, 10000);
+                    } catch (err) {}
+                }, 10000);
+            }
         }
 
         function toggleCard(element) {
@@ -503,7 +528,7 @@
             if(card.classList.contains('expanded')) {
                 const mapElements = card.querySelectorAll('.tracking-map');
                 mapElements.forEach(el => {
-                    initOrderMap(el.id, el.getAttribute('data-order-id'), el.getAttribute('data-status'), el.getAttribute('data-address'), el.getAttribute('data-shop-raw'));
+                    initOrderMap(el.id, el.getAttribute('data-order-id'), el.getAttribute('data-status'), el.getAttribute('data-address'), el.getAttribute('data-history'));
                 });
             } else {
                 const mapElements = card.querySelectorAll('.tracking-map');
@@ -526,8 +551,6 @@
             }
 
             let fullHtml = "";
-            let fetchTasks = [];
-
             orders.forEach(o => {
                 let sttClass = 'wait';
                 let sttIcon = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>'; 
@@ -553,18 +576,12 @@
                 if(o.items && o.items.length > 0) {
                     o.items.forEach((item, idx) => {
                         let advPay = item.advance_payment > 0 ? `<div class="advance-pay"><span>Thanh toán thêm:</span> <span>${new Intl.NumberFormat('vi-VN').format(item.advance_payment)}đ</span></div>` : '';
-                        
                         let historyHtml = '<div class="tl-item"><div class="tl-desc" style="color:var(--text-sub)">Đơn hàng đang chờ xử lý...</div></div>';
                         
-                        // LẤY DỮ LIỆU ĐỊA CHỈ SHOP TỪ DÒNG LỊCH SỬ CŨ NHẤT (Dòng cuối cùng của mảng)
-                        let shopAddressRaw = "Trường THPT Tĩnh Gia 2"; 
                         if(item.tracking_history && item.tracking_history.length > 0) {
                             historyHtml = item.tracking_history.slice(0, 4).map((hist, hIdx) => `
                                 <div class="tl-item ${hIdx === 0 ? 'latest' : ''}"><div class="tl-time">${hist.time}</div><div class="tl-desc">${hist.description}</div></div>
                              `).join('');
-                             
-                             let oldestHistory = item.tracking_history[item.tracking_history.length - 1];
-                             if(oldestHistory && oldestHistory.description) shopAddressRaw = oldestHistory.description;
                         }
 
                         let current_stage = (item.spx_stage || cleanStatus || 'Đang chờ cập nhật'); 
@@ -589,6 +606,9 @@
                         let mapId = `map_${o.order_id}_${idx}_${Math.random().toString(36).substr(2, 5)}`;
                         let fallbackName = item.product_name || item.name || o.product_name || "Sản phẩm đính kèm";
                         let realNameHtml = item.link && item.link.startsWith("http") ? `<a href="${item.link}" target="_blank" style="color: #fff; text-decoration: none;">🔗 ${fallbackName}</a>` : `<a href="#" style="color: #fff; text-decoration: none;">${fallbackName}</a>`;
+                        
+                        // Mã hóa history để ném vào map attribute
+                        let histDataStr = encodeURIComponent(JSON.stringify(item.tracking_history || []));
 
                         itemsHtml += `
                             <div class="package">
@@ -598,7 +618,7 @@
                                 </div>
                                 <div class="real-product-name"><span style="font-size:16px; text-shadow: 0 0 8px rgba(255,255,255,0.6);">🛒</span> ${realNameHtml}</div>
                                 <div class="map-wrapper">
-                                    <div id="${mapId}" class="tracking-map" data-order-id="${o.order_id}" data-status="${cleanStatus}" data-address="${o.address}" data-shop-raw="${shopAddressRaw}"></div>
+                                    <div id="${mapId}" class="tracking-map" data-order-id="${o.order_id}" data-status="${cleanStatus}" data-address="${o.address}" data-history="${histDataStr}"></div>
                                 </div>
                                 <div class="live-tracker">
                                     <div style="position: relative; padding: 0 14px; margin-bottom: 28px;"><div class="stepper-track"><div class="stepper-line-active" style="width: ${wPercent}%;"></div></div><div class="stepper">${stepsHtml}</div></div>
@@ -635,13 +655,6 @@
                 `;
             });
             list.innerHTML = fullHtml;
-
-            fetchTasks.forEach(task => {
-                fetchTitleFromUrl(task.url).then(title => {
-                    let el = document.getElementById(task.id);
-                    if(el) el.innerText = title ? title : task.fallback;
-                });
-            });
         }
     </script>
 </body>
