@@ -17,7 +17,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-MONGO_URI = os.environ.get("MONGO_URI", "mongodb+srv://DÁN_LINK_MONGODB_CỦA_BẠN_VÀO_ĐÂY_NẾU_CẦN")
+MONGO_URI = os.environ.get("MONGO_URI", "")
 client = MongoClient(MONGO_URI) if MONGO_URI else None
 
 HUB_LOCATIONS = {
@@ -53,13 +53,16 @@ def guess_coordinates(text, fallback_lat=19.3833, fallback_lng=105.7833):
     except: pass
     return {"lat": fallback_lat, "lng": fallback_lng}
 
+@app.get("/")
+def home():
+    return {"status": "Backend Python đang chạy mượt mà!"}
+
 @app.get("/api/orders")
 def get_user_orders(user_id: str = Query(...)):
     try:
-        if not client: 
-            return JSONResponse(status_code=500, content={"detail": "Chưa kết nối được với MongoDB. Hãy kiểm tra lại MONGO_URI."})
-            
+        if not client: return JSONResponse(status_code=500, content={"detail": "Chưa kết nối MongoDB"})
         db = client['shop_database']
+        
         try: uid = int(user_id)
         except: uid = user_id
         
@@ -89,16 +92,12 @@ def get_user_orders(user_id: str = Query(...)):
                 current_stage = str(item.get("spx_stage") or o.get("status") or "Đang xử lý")
                 cur_coords = guess_coordinates(current_stage, fallback_lat=recv_coords["lat"] + 0.05, fallback_lng=recv_coords["lng"] + 0.05)
                 
-                # Làm sạch lịch sử tracking để tránh lỗi JSON Serialize
                 t_history = item.get("tracking_history")
                 safe_history = []
                 if isinstance(t_history, list):
                     for h in t_history:
                         if isinstance(h, dict):
-                            safe_history.append({
-                                "time": str(h.get("time", "")),
-                                "description": str(h.get("description", ""))
-                            })
+                            safe_history.append({"time": str(h.get("time", "")), "description": str(h.get("description", ""))})
                             
                 try: adv_pay = float(item.get("advance_payment", 0))
                 except: adv_pay = 0
@@ -134,12 +133,9 @@ def get_user_orders(user_id: str = Query(...)):
                 "address": receiver_address,
                 "items": items_data
             })
-                
         return result
     except Exception as e:
-        error_msg = traceback.format_exc()
-        print(f"LỖI NGHIÊM TRỌNG API ORDERS:\n{error_msg}")
-        # TRẢ THẲNG LỖI VỀ CHO MINI APP HIỂN THỊ
+        print(f"ERROR: {e}")
         return JSONResponse(status_code=500, content={"detail": str(e)})
 
 @app.get("/api/live_location")
@@ -149,12 +145,10 @@ def get_live_location(order_id: str = Query(...)):
         db = client['shop_database']
         order = db['orders'].find_one({"order_id": order_id})
         if not order: return {"error": "Not found"}
-            
         items = order.get("items") or []
         current_stage = order.get("status", "")
         if isinstance(items, list) and len(items) > 0 and isinstance(items[0], dict):
             current_stage = items[0].get("spx_stage", order.get("status", ""))
-            
         cur_coords = guess_coordinates(current_stage)
         return {"lat": cur_coords["lat"], "lng": cur_coords["lng"], "status": current_stage}
     except:
@@ -167,10 +161,8 @@ def get_web_stats(user_id: int = Query(0)):
         db = client['shop_database']
         now = datetime.utcnow()
         current_month = now.strftime("%Y-%m")
-
         if user_id != 0:
             db['web_stats'].update_one({"user_id": user_id, "month": current_month}, {"$set": {"last_active": now}}, upsert=True)
-
         three_mins_ago = now - timedelta(minutes=3)
         return {
             "online": max(1, db['web_stats'].count_documents({"last_active": {"$gte": three_mins_ago}})),
