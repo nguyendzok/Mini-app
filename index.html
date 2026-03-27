@@ -85,11 +85,16 @@
         .real-product-name { font-size: 14px; color: #fff; font-weight: 600; margin-bottom: 16px; line-height: 1.5; display: flex; gap: 10px; background: rgba(255,255,255,0.03); padding: 12px; border-radius: var(--radius-sm); border: 1px dashed rgba(255,255,255,0.1);}
         .advance-pay { display: flex; justify-content: space-between; align-items: center; font-size: 14px; background: linear-gradient(90deg, rgba(245, 166, 35, 0.1), rgba(245, 166, 35, 0.05)); border: 1px solid rgba(245, 166, 35, 0.3); padding: 14px; border-radius: var(--radius-md); margin-top: 16px; color: var(--accent); font-weight: 700; box-shadow: inset 0 0 15px rgba(245,166,35,0.05);}
         
-        /* BẢN ĐỒ CSS MỚI NHẤT */
+        /* ---------------------------------------------------- */
+        /* 🔥 BẢN ĐỒ VÀ HIỆU ỨNG XE TẢI + SÓNG RADAR CAO CẤP 🔥 */
+        /* ---------------------------------------------------- */
         .map-wrapper { position: relative; width: 100%; height: 350px; border-radius: var(--radius-md); margin-bottom: 20px; overflow: hidden; border: 1px solid rgba(255,255,255,0.08); box-shadow: inset 0 2px 10px rgba(0,0,0,0.5); z-index: 1; }
         .tracking-map { width: 100%; height: 100%; background: #0f0f11; }
         .custom-map-marker { background: transparent; border: none; z-index: 10 !important;}
         .leaflet-routing-container { display: none !important; }
+        
+        /* LÀM MƯỢT CÁC BƯỚC DI CHUYỂN CỦA ICON XE TẢI TRÊN BẢN ĐỒ */
+        .leaflet-marker-icon { transition: transform 2s ease-in-out !important; }
 
         /* ICON ALERT (Lúc Đang lên đơn) */
         .map-dot-alert { width: 32px; height: 32px; background: #ef4444; border-radius: 50%; border: 3px solid #fff; box-shadow: 0 0 20px rgba(239,68,68,0.8); display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 900; font-size: 18px; animation: pulseAlert 1.5s infinite; position: relative;}
@@ -105,16 +110,22 @@
         .map-dot-customer::before { content: "✓"; color: #fff; font-size: 10px; font-weight: 900; }
         .map-dot-customer::after { content: "Điểm giao"; position: absolute; top: 18px; left: 50%; transform: translateX(-50%); font-size: 10px; font-weight: 700; color: #10b981; background: rgba(0,0,0,0.8); padding: 2px 6px; border-radius: 4px; white-space: nowrap;}
 
-        /* XE TẢI CHẠY */
-        .blue-pulse-container { position: absolute; bottom: 0; left: 50%; transform: translate(-50%, 50%); width: 20px; height: 20px; }
-        .blue-pulse { position: absolute; width: 100%; height: 100%; background: rgba(66, 133, 244, 0.4); border-radius: 50%; animation: blue-ring 2s ease-out infinite; z-index: 1; }
-        .blue-dot { position: relative; width: 10px; height: 10px; background: #4285F4; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 0 8px rgba(66, 133, 244, 0.8); z-index: 3; }
-        @keyframes blue-ring { 0% { transform: scale(0.3); opacity: 1; } 80% { transform: scale(1.8); opacity: 0; } 100% { transform: scale(2.2); opacity: 0; } }
+        /* HIỆU ỨNG SÓNG RADAR QUÉT */
+        .radar-box { position: absolute; bottom: 10px; left: 50%; transform: translate(-50%, 50%); width: 80px; height: 80px; z-index: 1; pointer-events: none; }
+        .radar-beam { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: 50%; background: conic-gradient(from 0deg, transparent 70%, rgba(59, 130, 246, 0.7) 100%); animation: radarSpin 2s linear infinite; box-shadow: inset 0 0 20px rgba(59, 130, 246, 0.2); border: 1px solid rgba(59, 130, 246, 0.4); }
+        .radar-beam::after { content:''; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 8px; height: 8px; background: #3b82f6; border-radius: 50%; box-shadow: 0 0 15px #fff; }
+        @keyframes radarSpin { 100% { transform: rotate(360deg); } }
 
-        .shopee-marker-label { background: #fff; color: #ee4d2d; border: 1px solid rgba(238, 77, 45, 0.3); padding: 6px 12px; border-radius: 4px; font-size: 11px; font-weight: 800; white-space: nowrap; box-shadow: 0 4px 10px rgba(0,0,0,0.15); position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 4px; z-index: 10; }
-        .shopee-marker-label::after { content: ''; position: absolute; bottom: -6px; left: 50%; transform: translateX(-50%); border-width: 6px 6px 0; border-style: solid; border-color: #fff transparent transparent transparent; }
+        /* HIỆU ỨNG XE TẢI CHUYỂN ĐỘNG NẢY NHẸ (ĐANG CHẠY) */
+        .animated-truck-icon { position: absolute; bottom: 25px; left: 50%; transform: translateX(-50%); font-size: 24px; z-index: 5; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.6)); animation: truckDrive 0.3s infinite alternate ease-in-out; }
+        @keyframes truckDrive { 0% { transform: translateX(-50%) translateY(0) rotate(-2deg); } 100% { transform: translateX(-50%) translateY(-4px) rotate(2deg); } }
+        
         .shopee-truck-icon-static { position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); font-size: 16px; z-index: 5; filter: drop-shadow(0 2px 2px rgba(0,0,0,0.4));}
+        
+        .shopee-marker-label { background: #fff; color: #ee4d2d; border: 1px solid rgba(238, 77, 45, 0.3); padding: 6px 12px; border-radius: 4px; font-size: 11px; font-weight: 800; white-space: nowrap; box-shadow: 0 4px 10px rgba(0,0,0,0.15); position: absolute; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 4px; z-index: 10; }
+        .shopee-marker-label::after { content: ''; position: absolute; bottom: -6px; left: 50%; transform: translateX(-50%); border-width: 6px 6px 0; border-style: solid; border-color: #fff transparent transparent transparent; }
 
+        /* GPS PANEL */
         .gps-data-panel { position: absolute; bottom: 10px; right: 10px; background: rgba(20, 20, 24, 0.85); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.08); border-radius: var(--radius-sm); padding: 10px 14px; width: 260px; z-index: 1000; font-size: 11px; color: rgba(255,255,255,0.7); }
         .gps-data-panel h4 { margin: 0 0 8px 0; color: #fff; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
         .gps-data-item { display: flex; justify-content: space-between; margin-bottom: 4px; }
@@ -122,6 +133,7 @@
         .gps-data-item .value { color: #fff; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 160px; }
         .gps-data-item .value-live { color: #f5a623; }
 
+        /* TIMELINE TRẠNG THÁI */
         .live-tracker { background: rgba(0,0,0,0.6); border-radius: var(--radius-md); padding: 24px 0 24px 0; margin-bottom: 18px; position: relative; border: 1px solid rgba(255,255,255,0.05); box-shadow: inset 0 4px 20px rgba(0,0,0,0.8);}
         .stepper { display: flex; justify-content: space-between; position: relative; margin-bottom: 10px; z-index: 2; padding: 0 14px 24px 14px; }
         .stepper-track { position: absolute; left: 14px; right: 14px; top: 12px; height: 4px; background: #27272a; z-index: -1; border-radius: 4px; box-shadow: inset 0 1px 3px rgba(0,0,0,0.8); }
@@ -208,7 +220,7 @@
         window.trackingMaps = {}; window.trackingMarkers = {}; window.trackingIntervals = {}; window.trackingRoutingControls = {};
         window.userLiveLocation = null; 
 
-        // 1. TỪ ĐIỂN TỌA ĐỘ (Cứu cánh cho API khi gặp từ viết tắt của SPX/GHN)
+        // TỪ ĐIỂN TỌA ĐỘ
         const VN_LOCATIONS = {
             "hồ chí minh": [10.8231, 106.6297], "hcm": [10.8231, 106.6297], "sài gòn": [10.8231, 106.6297], "củ chi": [11.0067, 106.5139], "bình chánh": [11.005, 106.52],
             "hà nội": [21.0285, 105.8542], "hn": [21.0285, 105.8542], "mê linh": [21.1828, 105.7142], "từ liêm": [21.0470, 105.7480],
@@ -224,11 +236,7 @@
             "thâm quyến": [22.5431, 114.0579], "nghĩa ô": [29.3068, 120.0750], "bằng tường": [22.1150, 106.7538]
         };
 
-        // 2. HÀNG RÀO BIÊN GIỚI (Chặn hoàn toàn các điểm rơi ra khỏi Đông Nam Á/VN)
-        function isLocationValid(lat, lng) {
-            // Giới hạn Việt Nam + Một phần Trung Quốc (để bao phủ kho SPX)
-            return (lat >= 8.0 && lat <= 30.0 && lng >= 102.0 && lng <= 122.0);
-        }
+        function isLocationValid(lat, lng) { return (lat >= 8.0 && lat <= 30.0 && lng >= 102.0 && lng <= 122.0); }
 
         function findKnownLocation(text) {
             if(!text) return null;
@@ -239,16 +247,13 @@
             return null;
         }
 
-        // BÓC TÁCH LABEL HIỂN THỊ (VD: Lấy "Kho Trung Chuyển Hồ Chí Minh 01")
         function getDisplayLabel(text) {
             if (!text) return "Trạm trung chuyển";
             let lower = text.toLowerCase();
             let keywords = ["kho", "bưu cục", "soc", "hub", "trạm", "điểm giao dịch"];
             for (let kw of keywords) {
                 let idx = lower.indexOf(kw);
-                if (idx !== -1) {
-                    return text.substring(idx).split(/[,\-\.]/)[0].trim();
-                }
+                if (idx !== -1) return text.substring(idx).split(/[,\-\.]/)[0].trim();
             }
             for (let key in VN_LOCATIONS) {
                 if (lower.includes(key)) return key.replace(/(^|\s)\S/g, l => l.toUpperCase());
@@ -256,7 +261,7 @@
             return "Trạm trung chuyển";
         }
 
-        // QUẢN LÝ QUYỀN VỊ TRÍ
+        // QUYỀN VỊ TRÍ
         function checkLocationPermission() {
             const asked = localStorage.getItem('loc_asked');
             const granted = localStorage.getItem('loc_granted');
@@ -372,13 +377,24 @@
             }
         }
 
+        function extractLocationFromStatus(statusText) {
+            if (!statusText) return "Trường THPT Tĩnh Gia 2";
+            let text = statusText.toLowerCase();
+            let match = text.match(/(?:đến kho|rời kho|đến trạm|rời trạm|tại kho|từ kho|từ trạm|đến bưu cục|tại bưu cục|giao hàng tại|đang giao tại|đến|tại)\s+([^.]+)/i);
+            if (match && match[1]) {
+                let loc = match[1].replace(/(soc|hub|lm hub|\.)/gi, '').trim();
+                loc = loc.replace(/[a-zA-Z0-9]{5,}/g, '').trim(); 
+                return loc.split(' và ')[0].split(' - ')[0].trim();
+            }
+            return text.replace(/(soc|hub|lm hub|\.)/gi, '').trim();
+        }
+
         async function geocodeLocation(queryText) {
-            if (!queryText) return null;
+            if (!queryText || queryText === 'Trường THPT Tĩnh Gia 2') return null;
             try {
                 let cleanQuery = queryText.replace(/(kho trung chuyển|bưu cục|soc|hub|trạm)/gi, '').trim();
                 if(cleanQuery.length < 2) cleanQuery = queryText;
 
-                // THÊM CHỮ "VIỆT NAM" VÀO ĐUÔI ĐỂ ÉP API TÌM TRONG LÃNH THỔ
                 let res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(cleanQuery + ', Việt Nam')}&countrycodes=vn&limit=1`, { headers: { 'Accept-Language': 'vi' } });
                 let data = await res.json();
                 if (data && data.length > 0) {
@@ -401,7 +417,7 @@
         }
 
         // ===============================================
-        // LOGIC BẢN ĐỒ SIÊU THÔNG MINH
+        // BẢN ĐỒ
         // ===============================================
         async function initOrderMap(mapId, orderId, statusText, addressText, historyDataStr) {
             if (window.trackingMaps[mapId]) {
@@ -416,7 +432,7 @@
             let historyData = [];
             try { historyData = JSON.parse(decodeURIComponent(historyDataStr)); } catch(e) {}
             
-            // 1. TÌM VỊ TRÍ ĐÍCH (KHÁCH HÀNG)
+            // 1. VỊ TRÍ ĐÍCH
             let receiverLoc = [19.3833, 105.7833]; 
             if (window.userLiveLocation) {
                 receiverLoc = [...window.userLiveLocation];
@@ -430,15 +446,8 @@
                 else { addressText = "Trường THPT Tĩnh Gia 2 (Mặc định)"; }
             }
 
-            // SET GIỚI HẠN BẢN ĐỒ VIỆT NAM (Tránh kéo ra khỏi lãnh thổ)
             var vnBounds = L.latLngBounds(L.latLng(8.0, 102.0), L.latLng(24.0, 110.0));
-            var map = L.map(mapId, { 
-                zoomControl: false, 
-                attributionControl: false,
-                maxBounds: vnBounds,
-                maxBoundsViscosity: 1.0,
-                minZoom: 5
-            });
+            var map = L.map(mapId, { zoomControl: false, attributionControl: false, maxBounds: vnBounds, maxBoundsViscosity: 1.0, minZoom: 5 });
             L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { maxZoom: 19 }).addTo(map);
 
             let mapLabelStatus = getDisplayLabel(statusText);
@@ -451,7 +460,6 @@
             };
             gpsPanel.addTo(map);
 
-            // NẾU ĐƠN VỪA LÊN (STEP 1) -> DẤU CHẤM THAN Ở NHÀ KHÁCH
             if (step === 1) {
                 map.setView(receiverLoc, 14);
                 let alertIcon = L.divIcon({ className: '', html: '<div class="map-dot-alert">!</div>', iconSize: [32,32], iconAnchor: [16,16] });
@@ -460,7 +468,7 @@
                 return; 
             }
 
-            // TÌM KHO XUẤT PHÁT ĐẦU TIÊN (Quét lịch sử từ dưới lên)
+            // 2. KHO XUẤT PHÁT
             let startHubText = null;
             if (historyData && historyData.length > 0) {
                 for (let i = historyData.length - 1; i >= 0; i--) {
@@ -483,8 +491,8 @@
                 if (geoStart) startLoc = [geoStart.lat, geoStart.lng];
             }
 
-            // TÌM VỊ TRÍ XE TẢI HIỆN TẠI
-            let currentHubLoc = [19.3833, 105.7833]; 
+            // 3. VỊ TRÍ HIỆN TẠI (XE TẢI)
+            let currentHubLoc = [...startLoc]; 
             if (isDelivered) {
                 currentHubLoc = [...receiverLoc]; 
             } else {
@@ -499,7 +507,7 @@
 
             map.setView(currentHubLoc, 12);
 
-            // VẼ NÉT ĐỨT (QUÁ KHỨ)
+            // ĐƯỜNG NÉT ĐỨT (QUÁ KHỨ)
             if (!isDelivered && (startLoc[0] !== currentHubLoc[0] || startLoc[1] !== currentHubLoc[1])) {
                 L.Routing.control({
                     waypoints: [ L.latLng(startLoc[0], startLoc[1]), L.latLng(currentHubLoc[0], currentHubLoc[1]) ],
@@ -516,7 +524,7 @@
                 }).addTo(map);
             }
 
-            // VẼ NÉT LIỀN (TƯƠNG LAI)
+            // ĐƯỜNG NÉT LIỀN (TƯƠNG LAI)
             if (!isDelivered) {
                 let futureRouting = L.Routing.control({
                     waypoints: [ L.latLng(currentHubLoc[0], currentHubLoc[1]), L.latLng(receiverLoc[0], receiverLoc[1]) ],
@@ -527,19 +535,20 @@
                 window.trackingRoutingControls[mapId] = futureRouting;
             }
 
-            // GẮN ICON SHOP & KHÁCH
+            // ICON
             L.marker(startLoc, { icon: L.divIcon({ className: '', html: '<div class="map-dot-shop"></div>', iconSize: [0, 0], iconAnchor: [0, 0] }) }).addTo(map);
             L.marker(receiverLoc, { icon: L.divIcon({ className: '', html: '<div class="map-dot-customer"></div>', iconSize: [0, 0], iconAnchor: [0, 0] }) }).addTo(map);
 
             let truckOrCheck = isDelivered ? '✅' : '🚚';
-            let pulseHtml = isDelivered ? '' : '<div class="blue-pulse-container"><div class="blue-pulse"></div><div class="blue-dot"></div></div>';
+            let truckClass = isDelivered ? 'shopee-truck-icon-static' : 'animated-truck-icon';
+            let pulseHtml = isDelivered ? '' : '<div class="radar-box"><div class="radar-beam"></div></div>';
             var truckIcon = L.divIcon({
                 className: 'custom-map-marker',
                 html: `
-                    <div class="shopee-marker-label" id="label_${mapId}">
+                    <div class="shopee-marker-label" id="label_${mapId}" style="bottom: ${isDelivered ? '30px' : '45px'}">
                         <span style="color:${isDelivered ? '#10b981' : '#ee4d2d'}">●</span> <span class="status-text">${mapLabelStatus}</span>
                     </div>
-                    <div class="shopee-truck-icon-static">${truckOrCheck}</div>
+                    <div class="${truckClass}">${truckOrCheck}</div>
                     ${pulseHtml}
                 `, iconSize: [0, 0]
             });
@@ -549,7 +558,7 @@
             window.trackingMaps[mapId] = map;
             setTimeout(() => map.invalidateSize(), 400);
             
-            // TRACKING LIVE THEO TỪ ĐIỂN
+            // TRACKING LIVE
             if(!isDelivered) {
                 window.trackingIntervals[mapId] = setInterval(async () => {
                     try {
@@ -582,7 +591,15 @@
                                 const labelEl = document.querySelector(`#label_${mapId} span.status-text`);
                                 if (labelEl) {
                                     labelEl.innerText = newLabel;
-                                    if (newStep === 4) labelEl.previousElementSibling.style.color = '#10b981'; 
+                                    if (newStep === 4) {
+                                        labelEl.previousElementSibling.style.color = '#10b981';
+                                        labelEl.parentElement.style.bottom = '30px';
+                                        labelEl.parentElement.nextElementSibling.className = 'shopee-truck-icon-static';
+                                        labelEl.parentElement.nextElementSibling.innerText = '✅';
+                                        if (labelEl.parentElement.nextElementSibling.nextElementSibling) {
+                                            labelEl.parentElement.nextElementSibling.nextElementSibling.style.display = 'none';
+                                        }
+                                    } 
                                 }
                                 const rControl = window.trackingRoutingControls[mapId];
                                 if (rControl) rControl.setWaypoints([newLatLng, rControl.getWaypoints()[1].latLng]);
