@@ -7,6 +7,7 @@ from pymongo import MongoClient
 import os
 import re
 import requests
+import asyncio
 from datetime import datetime, timedelta
 
 app = FastAPI()
@@ -56,6 +57,109 @@ def guess_coordinates(text, fallback_lat=19.3833, fallback_lng=105.7833):
             if key in text_lower: return coords
     except: pass
     return {"lat": fallback_lat, "lng": fallback_lng}
+
+# =====================================================================
+# TỰ ĐỘNG CHẠY NGẦM MỖI 1 PHÚT (AUTO SYNC BACKGROUND TASK)
+# =====================================================================
+@app.on_event("startup")
+async def startup_event():
+    # Khi server khởi động, kích hoạt vòng lặp chạy ngầm
+    asyncio.create_task(auto_sync_spx_loop())
+
+async def auto_sync_spx_loop():
+    """Vòng lặp tự động quét Database và Web dodanhvu mỗi 60 giây"""
+    while True:
+        try:
+            if client:
+                print(f"[{datetime.now().strftime('%H:%M:%S')}] Đang tự động lấy dữ liệu SPX...")
+                sync_spx_logic() # Gọi hàm đồng bộ
+        except Exception as e:
+            print(f"Lỗi Auto Sync: {e}")
+        
+        # Ngủ 60 giây rồi chạy lại
+        await asyncio.sleep(60)
+
+def sync_spx_logic():
+    """Hàm xử lý lõi: Lấy mã -> Tra Web -> Lấy TOÀN BỘ Lịch sử -> Lưu DB"""
+    db = client['shop_database']
+    
+    # Chỉ quét các đơn chưa hoàn thành để tiết kiệm tài nguyên
+    # (Lọc bỏ các đơn Đã giao/Thành công/Đã hủy)
+    query = {"status": {"$nin": ["Thành công", "Đã giao", "Đã hủy"]}}
+    orders = list(db['orders'].find(query).sort("created_at", -1).limit(100))
+    
+    trackings_to_check = set()
+    tracking_to_order_map = {}
+    
+    # Rút trích mã SPX/VN từ DB
+    for o in orders:
+        order_id = o.get("order_id")
+        items = o.get("items", [])
+        for idx, item in enumerate(items):
+            spx_code = str(item.get("spx_code", "")).strip().upper()
+            if spx_code.startswith("SPX") or spx_code.startswith("VN"):
+                trackings_to_check.add(spx_code)
+                if spx_code not in tracking_to_order_map:
+                    tracking_to_order_map[spx_code] = []
+                tracking_to_order_map[spx_code].append((order_id, idx))
+
+    if not trackings_to_check:
+        return # Không có mã nào cần kiểm tra
+
+    # Bắn 1 request duy nhất sang web với tất cả các mã
+    target_url = "https://dodanhvu.dpdns.org/api/spx"
+    payload = {"trackings": list(trackings_to_check)}
+    headers = {"Content-Type": "application/json", "User-Agent": "Mozilla/5.0"}
+    
+    try:
+        res = requests.post(target_url, json=payload, headers=headers, timeout=20)
+        if res.status_code == 200:
+            data = res.json()
+            results = data.get("results", [])
+            
+            for r in results:
+                t_code = r.get("tracking")
+                records = r.get("records", []) # Đây là mảng chứa toàn bộ "Lịch sử giao hàng"
+                
+                if not records:
+                    continue
+                
+                # Lấy trạng thái mới nhất từ mảng records
+                latest_record = records[0]
+                new_status = latest_record.get("desc") or r.get("status")
+                
+                # FORMAT TOÀN BỘ LỊCH SỬ GIỐNG Y HỆT TRÊN WEB ĐỂ ĐẨY VÀO DB
+                formatted_history = []
+                for rec in records: # Duyệt qua toàn bộ mốc thời gian (vd: 11 mốc)
+                    time_str = rec.get("time", "")
+                    emoji = rec.get("emoji", "❯")
+                    desc = rec.get("desc", "")
+                    current_loc = rec.get("currentLoc", "")
+                    
+                    # Gộp mô tả và địa chỉ cụ thể vào làm 1 để hiển thị ra App đẹp nhất
+                    full_desc = f"{emoji} {desc}"
+                    if current_loc:
+                        full_desc += f"<br>→ <small style='color:var(--text-sub)'>{current_loc}</small>"
+                        
+                    formatted_history.append({
+                        "time": time_str,
+                        "description": full_desc
+                    })
+                
+                # Cập nhật ngược lại vào MongoDB
+                if t_code in tracking_to_order_map:
+                    for oid, item_idx in tracking_to_order_map[t_code]:
+                        db['orders'].update_one(
+                            {"order_id": oid},
+                            {"$set": {
+                                f"items.{item_idx}.spx_stage": new_status,
+                                f"items.{item_idx}.tracking_history": formatted_history
+                            }}
+                        )
+    except Exception as e:
+        print(f"Lỗi khi tra dữ liệu Web: {e}")
+# =====================================================================
+
 
 @app.get("/")
 def home():
@@ -145,11 +249,6 @@ def get_user_orders(user_id: str = Query(...)):
 
 @app.get("/api/live_location")
 def get_live_location(order_id: str = Query(...)):
-    """
-    API cung cấp vị trí thời gian thực cho bản đồ.
-    - Mã SPX/VN: Gọi thẳng https://dodanhvu.dpdns.org/api/spx để lấy vị trí cụ thể 100%.
-    - Mã khác: Dùng địa chỉ/trạng thái từ Database.
-    """
     try:
         if not client: 
             return {"lat": 19.3833, "lng": 105.7833, "status": "Không có kết nối DB"}
@@ -168,7 +267,6 @@ def get_live_location(order_id: str = Query(...)):
             current_stage = str(items[0].get("spx_stage", current_stage)).strip()
             tracking_code = str(items[0].get("spx_code", "")).strip().upper()
 
-        # LUỒNG 1: MÃ BẮT ĐẦU BẰNG "SPX" HOẶC "VN"
         if tracking_code.startswith("SPX") or tracking_code.startswith("VN"):
             try:
                 target_url = "https://dodanhvu.dpdns.org/api/spx"
@@ -191,7 +289,7 @@ def get_live_location(order_id: str = Query(...)):
                         if latest.get("currentLoc"):
                             exact_location = latest.get("currentLoc")
                         elif records:
-                            for rec in reversed(records):
+                            for rec in records: # API trả records mới nhất nằm đầu tiên
                                 if rec.get("currentLoc"):
                                     exact_location = rec.get("currentLoc")
                                     break
@@ -208,7 +306,6 @@ def get_live_location(order_id: str = Query(...)):
             except Exception as e:
                 print(f"Lỗi kết nối Web API cho mã {tracking_code}: {e}")
 
-        # LUỒNG 2: MÃ KHÁC (HOẶC API WEB BỊ LỖI)
         location_text = db_address if db_address else current_stage
         if not location_text or location_text == "Đang xử lý":
             location_text = db_address
@@ -225,93 +322,6 @@ def get_live_location(order_id: str = Query(...)):
     except Exception as e:
         print(f"Lỗi API live_location: {e}")
         return {"lat": 19.3833, "lng": 105.7833, "status": "Lỗi cập nhật"}
-
-
-@app.post("/api/sync_spx_from_db")
-def sync_spx_from_db(user_id: str = Query(None)):
-    """
-    Quét DB -> lấy SPX -> tra Web -> Cập nhật DB.
-    """
-    try:
-        if not client: return JSONResponse(status_code=500, content={"error": "Chưa kết nối MongoDB"})
-        db = client['shop_database']
-        
-        query = {}
-        if user_id:
-            try: uid = int(user_id)
-            except: uid = user_id
-            query = {"$or": [{"user_id": uid}, {"user_id": str(user_id)}]}
-
-        orders = list(db['orders'].find(query).sort("created_at", -1).limit(50))
-        trackings_to_check = set()
-        tracking_to_order_map = {}
-        
-        for o in orders:
-            order_id = o.get("order_id")
-            items = o.get("items", [])
-            for idx, item in enumerate(items):
-                spx_code = item.get("spx_code", "").strip().upper()
-                if spx_code.startswith("SPX") or spx_code.startswith("VN"):
-                    trackings_to_check.add(spx_code)
-                    if spx_code not in tracking_to_order_map:
-                        tracking_to_order_map[spx_code] = []
-                    tracking_to_order_map[spx_code].append((order_id, idx))
-
-        if not trackings_to_check:
-            return {"message": "Không tìm thấy mã SPX/VN nào cần cập nhật."}
-
-        target_url = "https://dodanhvu.dpdns.org/api/spx"
-        payload = {"trackings": list(trackings_to_check)}
-        headers = {"Content-Type": "application/json", "User-Agent": "Mozilla/5.0"}
-        
-        res = requests.post(target_url, json=payload, headers=headers, timeout=20)
-        
-        if res.status_code == 200:
-            data = res.json()
-            results = data.get("results", [])
-            updated_count = 0
-            
-            for r in results:
-                t_code = r.get("tracking")
-                new_status = r.get("status")
-                records = r.get("records", [])
-                
-                formatted_history = []
-                for rec in records:
-                    desc = f"{rec.get('emoji', '')} {rec.get('desc', '')}".strip()
-                    formatted_history.append({"time": rec.get("time", ""), "description": desc})
-                
-                if t_code in tracking_to_order_map:
-                    for oid, item_idx in tracking_to_order_map[t_code]:
-                        db['orders'].update_one(
-                            {"order_id": oid},
-                            {"$set": {
-                                f"items.{item_idx}.spx_stage": new_status,
-                                f"items.{item_idx}.tracking_history": formatted_history
-                            }}
-                        )
-                    updated_count += 1
-            
-            return {"message": "Đồng bộ hoàn tất!", "scanned": len(trackings_to_check), "updated": updated_count}
-        else:
-            return JSONResponse(status_code=res.status_code, content={"error": "Lỗi từ Web tra cứu"})
-
-    except Exception as e:
-        return JSONResponse(status_code=500, content={"error": f"Lỗi hệ thống: {str(e)}"})
-
-
-@app.post("/api/track_spx")
-def fetch_tracking_from_web(req: TrackingRequest):
-    try:
-        target_url = "https://dodanhvu.dpdns.org/api/spx"
-        payload = {"trackings": req.trackings}
-        headers = {"Content-Type": "application/json"}
-        
-        response = requests.post(target_url, json=payload, headers=headers, timeout=15)
-        if response.status_code == 200: return response.json()
-        else: return JSONResponse(status_code=response.status_code, content={"error": "Lỗi"})
-    except Exception as e:
-        return JSONResponse(status_code=500, content={"error": f"Lỗi: {str(e)}"})
 
 
 @app.get("/api/stats")
