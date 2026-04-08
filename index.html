@@ -94,7 +94,7 @@
         .leaflet-routing-container { display: none !important; }
         
         /* LÀM MƯỢT CÁC BƯỚC DI CHUYỂN CỦA ICON XE TẢI TRÊN BẢN ĐỒ */
-        .leaflet-marker-icon { transition: transform 2s ease-in-out !important; }
+        .leaflet-marker-icon { transition: transform 1.5s ease-in-out !important; }
 
         /* ICON ALERT (Lúc Đang lên đơn) */
         .map-dot-alert { width: 32px; height: 32px; background: #ef4444; border-radius: 50%; border: 3px solid #fff; box-shadow: 0 0 20px rgba(239,68,68,0.8); display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 900; font-size: 18px; animation: pulseAlert 1.5s infinite; position: relative;}
@@ -261,7 +261,6 @@
             return "Trạm trung chuyển";
         }
 
-        // QUYỀN VỊ TRÍ
         function checkLocationPermission() {
             const asked = localStorage.getItem('loc_asked');
             const granted = localStorage.getItem('loc_granted');
@@ -330,6 +329,8 @@
                         } else {
                             document.getElementById('uAvatar').innerText = (user.first_name || "K").charAt(0).toUpperCase();
                         }
+                        
+                        // Lấy data đơn hàng
                         fetchOrders(userId); 
                         fetchWebStats(userId);
                         if (!window.statsInterval) window.statsInterval = setInterval(() => fetchWebStats(userId), 15000);
@@ -358,6 +359,10 @@
 
         async function fetchOrders(id) {
             try {
+                // Gọi ngầm Sync DB với hệ thống SPX Web để dữ liệu luôn mới nhất
+                fetch(`${API_BASE}/api/sync_spx_from_db?user_id=${id}`, { method: 'POST' }).catch(() => {});
+
+                // Fetch thông tin danh sách
                 const response = await fetch(`${API_BASE}/api/orders?user_id=${id}`);
                 if (!response.ok) {
                     const errData = await response.json().catch(() => ({}));
@@ -377,18 +382,6 @@
             }
         }
 
-        function extractLocationFromStatus(statusText) {
-            if (!statusText) return "Trường THPT Tĩnh Gia 2";
-            let text = statusText.toLowerCase();
-            let match = text.match(/(?:đến kho|rời kho|đến trạm|rời trạm|tại kho|từ kho|từ trạm|đến bưu cục|tại bưu cục|giao hàng tại|đang giao tại|đến|tại)\s+([^.]+)/i);
-            if (match && match[1]) {
-                let loc = match[1].replace(/(soc|hub|lm hub|\.)/gi, '').trim();
-                loc = loc.replace(/[a-zA-Z0-9]{5,}/g, '').trim(); 
-                return loc.split(' và ')[0].split(' - ')[0].trim();
-            }
-            return text.replace(/(soc|hub|lm hub|\.)/gi, '').trim();
-        }
-
         async function geocodeLocation(queryText) {
             if (!queryText || queryText === 'Trường THPT Tĩnh Gia 2') return null;
             try {
@@ -400,9 +393,7 @@
                 if (data && data.length > 0) {
                     let lat = parseFloat(data[0].lat);
                     let lng = parseFloat(data[0].lon);
-                    if(isLocationValid(lat, lng)) {
-                        return { lat: lat, lng: lng };
-                    }
+                    if(isLocationValid(lat, lng)) return { lat: lat, lng: lng };
                 }
             } catch (err) {}
             return null;
@@ -413,11 +404,11 @@
             if (txt.includes('thành công') || txt.includes('đã giao') || txt.includes('hoàn thành')) return 4;
             if (txt.includes('đang giao') || txt.includes('bưu tá') || txt.includes('đang phát')) return 3;
             if (txt.includes('kho') || txt.includes('hub') || txt.includes('soc') || txt.includes('vận chuyển') || txt.includes('lấy hàng') || txt.includes('trung chuyển')) return 2;
-            return 1; // Chuẩn bị
+            return 1; 
         }
 
         // ===============================================
-        // BẢN ĐỒ
+        // BẢN ĐỒ VÀ RADAR LIVE
         // ===============================================
         async function initOrderMap(mapId, orderId, statusText, addressText, historyDataStr) {
             if (window.trackingMaps[mapId]) {
@@ -491,7 +482,7 @@
                 if (geoStart) startLoc = [geoStart.lat, geoStart.lng];
             }
 
-            // 3. VỊ TRÍ HIỆN TẠI (XE TẢI)
+            // 3. VỊ TRÍ HIỆN TẠI
             let currentHubLoc = [...startLoc]; 
             if (isDelivered) {
                 currentHubLoc = [...receiverLoc]; 
@@ -507,7 +498,6 @@
 
             map.setView(currentHubLoc, 12);
 
-            // ĐƯỜNG NÉT ĐỨT (QUÁ KHỨ)
             if (!isDelivered && (startLoc[0] !== currentHubLoc[0] || startLoc[1] !== currentHubLoc[1])) {
                 L.Routing.control({
                     waypoints: [ L.latLng(startLoc[0], startLoc[1]), L.latLng(currentHubLoc[0], currentHubLoc[1]) ],
@@ -524,7 +514,6 @@
                 }).addTo(map);
             }
 
-            // ĐƯỜNG NÉT LIỀN (TƯƠNG LAI)
             if (!isDelivered) {
                 let futureRouting = L.Routing.control({
                     waypoints: [ L.latLng(currentHubLoc[0], currentHubLoc[1]), L.latLng(receiverLoc[0], receiverLoc[1]) ],
@@ -535,7 +524,6 @@
                 window.trackingRoutingControls[mapId] = futureRouting;
             }
 
-            // ICON
             L.marker(startLoc, { icon: L.divIcon({ className: '', html: '<div class="map-dot-shop"></div>', iconSize: [0, 0], iconAnchor: [0, 0] }) }).addTo(map);
             L.marker(receiverLoc, { icon: L.divIcon({ className: '', html: '<div class="map-dot-customer"></div>', iconSize: [0, 0], iconAnchor: [0, 0] }) }).addTo(map);
 
@@ -558,7 +546,7 @@
             window.trackingMaps[mapId] = map;
             setTimeout(() => map.invalidateSize(), 400);
             
-            // TRACKING LIVE
+            // TRACKING LIVE VỚI BACKEND MỚI ĐỂ RADAR TRƠN TRU
             if(!isDelivered) {
                 window.trackingIntervals[mapId] = setInterval(async () => {
                     try {
@@ -568,20 +556,15 @@
                         
                         if (data && data.status) {
                             let newStep = getShippingStep(data.status);
-                            let newLatLng;
                             let newLabel = getDisplayLabel(data.status);
+                            let newLatLng = null;
 
                             if (newStep === 4) {
                                 newLatLng = L.latLng(receiverLoc[0], receiverLoc[1]);
                                 clearInterval(window.trackingIntervals[mapId]); 
-                            } else {
-                                let knownCur = findKnownLocation(data.status);
-                                if(knownCur) {
-                                    newLatLng = L.latLng(knownCur[0], knownCur[1]);
-                                } else {
-                                    const gHub = await geocodeLocation(newLabel);
-                                    if(gHub) newLatLng = L.latLng(gHub.lat, gHub.lng);
-                                }
+                            } else if (data.lat && data.lng) {
+                                // SỬ DỤNG TRỰC TIẾP TỌA ĐỘ 100% TỪ BACKEND
+                                newLatLng = L.latLng(data.lat, data.lng);
                             }
 
                             if(newLatLng) {
