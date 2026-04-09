@@ -84,6 +84,7 @@
         .real-product-name { font-size: 14px; color: #fff; font-weight: 600; margin-bottom: 16px; line-height: 1.5; display: flex; gap: 10px; background: rgba(255,255,255,0.03); padding: 12px; border-radius: var(--radius-sm); border: 1px dashed rgba(255,255,255,0.1);}
         .advance-pay { display: flex; justify-content: space-between; align-items: center; font-size: 14px; background: linear-gradient(90deg, rgba(245, 166, 35, 0.1), rgba(245, 166, 35, 0.05)); border: 1px solid rgba(245, 166, 35, 0.3); padding: 14px; border-radius: var(--radius-md); margin-top: 16px; color: var(--accent); font-weight: 700; box-shadow: inset 0 0 15px rgba(245,166,35,0.05);}
         
+        /* BẢN ĐỒ VÀ HIỆU ỨNG XE TẢI CAO CẤP */
         .map-wrapper { position: relative; width: 100%; height: 350px; border-radius: var(--radius-md); margin-bottom: 20px; overflow: hidden; border: 1px solid rgba(255,255,255,0.08); box-shadow: inset 0 2px 10px rgba(0,0,0,0.5); z-index: 1; }
         .tracking-map { width: 100%; height: 100%; background: #0f0f11; }
         .custom-map-marker { background: transparent; border: none; z-index: 10 !important;}
@@ -200,11 +201,12 @@
         window.trackingMaps = {}; window.trackingMarkers = {}; window.trackingIntervals = {}; window.trackingRoutingControls = {};
         window.userLiveLocation = null; 
 
+        // BỘ TỪ ĐIỂN TỌA ĐỘ HUB
         const VN_LOCATIONS = {
             "thâm quyến": [22.5431, 114.0579], "nghĩa ô": [29.3068, 120.0750], "bw soc": [11.0067, 106.5139],
             "hn mê linh": [21.1828, 105.7142], "từ sơn": [21.1167, 105.9500], "bn a mega": [21.0828, 105.9767],
-            "21-hni thanh tri": [20.9634, 105.8156], "30-tha": [19.3833, 105.7833], "tĩnh gia": [19.3833, 105.7833],
-            "nghi sơn": [19.3833, 105.7833], "hải ninh": [19.4167, 105.7833]
+            "hni thanh tri": [20.9634, 105.8156], "30-tha": [19.3833, 105.7833], "tĩnh gia": [19.3833, 105.7833],
+            "nghi sơn": [19.3833, 105.7833], "hải ninh": [19.4167, 105.7833], "long bien": [21.0475, 105.8828],
         };
 
         function isLocationValid(lat, lng) { return (lat >= 8.0 && lat <= 30.0 && lng >= 102.0 && lng <= 122.0); }
@@ -218,15 +220,65 @@
             return null;
         }
 
+        // TÁCH NHÃN NGẮN GỌN CHO RADAR
         function getDisplayLabel(text) {
             if (!text) return "Trạm trung chuyển";
             let lower = text.toLowerCase();
+            if (text.includes('— VN')) {
+                return text.split('— VN')[0].replace(/(kho|bưu cục|soc|hub|trạm)/gi, '').trim();
+            }
             let keywords = ["kho", "bưu cục", "soc", "hub", "trạm"];
             for (let kw of keywords) {
                 let idx = lower.indexOf(kw);
                 if (idx !== -1) return text.substring(idx).split(/[,\-\.]/)[0].trim();
             }
             return text;
+        }
+
+        // TÁCH ĐỊA CHỈ THỰC TẾ CHO GG MAPS
+        async function geocodeLocation(queryText) {
+            if (!queryText) return null;
+            let lower = queryText.toLowerCase();
+
+            for (let key in VN_LOCATIONS) {
+                if (lower.includes(key)) return { lat: VN_LOCATIONS[key][0], lng: VN_LOCATIONS[key][1] };
+            }
+
+            try {
+                let cleanQuery = queryText;
+                if (cleanQuery.includes('— VN')) {
+                    // Cắt lấy phần địa chỉ phía sau "— VN"
+                    let addressPart = cleanQuery.split('— VN')[1];
+                    // Lọc rác (Lô số, Đường số) để bản đồ OpenStreetMap không bị lỗi
+                    cleanQuery = addressPart.replace(/Lô số[\s\S]*?(?=Xã|Phường|Thành phố|Tỉnh)/i, '').trim();
+                } else {
+                    cleanQuery = cleanQuery.replace(/(kho trung chuyển|bưu cục|soc|hub|trạm)/gi, '').trim();
+                }
+
+                let res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(cleanQuery)}&countrycodes=vn&limit=1`);
+                let data = await res.json();
+                if (data && data.length > 0 && isLocationValid(parseFloat(data[0].lat), parseFloat(data[0].lon))) {
+                    return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
+                }
+            } catch (err) {}
+            return null;
+        }
+
+        // LỌC CHẶN LỖI "THÀNH CÔNG GIẢ"
+        function getShippingStep(stageText) {
+            const txt = (stageText || "").toLowerCase();
+            
+            // 4. THÀNH CÔNG (CHỈ áp dụng khi thực sự giao xong)
+            if ((txt.includes('giao hàng thành công') || txt.includes('đã giao thành công') || txt.includes('đơn hàng đã được giao') || txt.includes('hoàn thành')) && !txt.includes('lấy hàng') && !txt.includes('lên đơn')) return 4;
+            
+            // 3. ĐANG GIAO
+            if (txt.includes('đang giao') || txt.includes('bưu tá') || txt.includes('đang phát')) return 3;
+            
+            // 2. VẬN CHUYỂN
+            if (txt.includes('kho') || txt.includes('hub') || txt.includes('soc') || txt.includes('vận chuyển') || txt.includes('trung chuyển') || txt.includes('lấy hàng') || txt.includes('xuất khỏi') || txt.includes('phân loại') || txt.includes('đến trạm')) return 2;
+            
+            // 1. CHUẨN BỊ (Đã lên đơn thành công, chờ lấy hàng, v.v.)
+            return 1; 
         }
 
         function checkLocationPermission() {
@@ -287,11 +339,6 @@
                         
                         fetchOrders(userId); 
                         
-                        // AUTO SYNC MỖI 60 GIÂY
-                        setInterval(() => {
-                            fetch(`${API_BASE}/api/sync_spx_from_db?user_id=${userId}`, { method: 'POST' }).catch(() => {});
-                        }, 60000);
-
                         return true;
                     }
                     return false;
@@ -307,7 +354,6 @@
 
         async function fetchOrders(id) {
             try {
-                fetch(`${API_BASE}/api/sync_spx_from_db?user_id=${id}`, { method: 'POST' }).catch(() => {});
                 const response = await fetch(`${API_BASE}/api/orders?user_id=${id}`);
                 const data = await response.json();
                 document.getElementById('uTotal').innerText = data.length;
@@ -315,40 +361,6 @@
             } catch (error) {
                 document.getElementById('orderList').innerHTML = `<div style="text-align:center; padding: 40px; color: var(--danger);">LỖI KẾT NỐI API</div>`;
             }
-        }
-
-        async function geocodeLocation(queryText) {
-            if (!queryText) return null;
-            try {
-                let cleanQuery = queryText;
-                // BỘ LỌC CẮT ĐỊA CHỈ: Nếu text có "— VN Tỉnh...", chỉ lấy phần địa chỉ phía sau để GG Maps định vị chuẩn
-                if (cleanQuery.includes('— VN')) {
-                    cleanQuery = cleanQuery.split('— VN')[1].trim();
-                } else {
-                    cleanQuery = cleanQuery.replace(/(kho trung chuyển|bưu cục|soc|hub|trạm)/gi, '').trim();
-                }
-
-                let res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(cleanQuery)}&countrycodes=vn&limit=1`);
-                let data = await res.json();
-                if (data && data.length > 0 && isLocationValid(parseFloat(data[0].lat), parseFloat(data[0].lon))) {
-                    return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
-                }
-            } catch (err) {}
-            return null;
-        }
-
-        // BỘ LỌC CHẶN LỖI HIỂN THỊ SAI "THÀNH CÔNG"
-        function getShippingStep(stageText) {
-            const txt = (stageText || "").toLowerCase();
-            // CHỈ 3 từ khóa này mới cho phép xanh lè ✅
-            if (txt.includes('giao hàng thành công') || txt.includes('đã giao') || txt.includes('hoàn thành')) return 4;
-            
-            if (txt.includes('đang giao') || txt.includes('bưu tá') || txt.includes('đang phát')) return 3;
-            
-            // Các từ "thành công" khác (Lấy hàng thành công, lên đơn thành công) đều thuộc nhóm vận chuyển
-            if (txt.includes('kho') || txt.includes('hub') || txt.includes('soc') || txt.includes('vận chuyển') || txt.includes('trung chuyển') || txt.includes('lấy hàng thành công') || txt.includes('đã đến') || txt.includes('xuất khỏi') || txt.includes('phân loại') || txt.includes('thành công')) return 2;
-            
-            return 1; 
         }
 
         // ===============================================
@@ -364,7 +376,10 @@
 
             let step = getShippingStep(statusText);
             const isDelivered = (step === 4);
+            let historyData = [];
+            try { historyData = JSON.parse(decodeURIComponent(historyDataStr)); } catch(e) {}
             
+            // 1. VỊ TRÍ ĐÍCH
             let receiverLoc = [19.3833, 105.7833]; 
             if (window.userLiveLocation) {
                 receiverLoc = [...window.userLiveLocation];
@@ -390,6 +405,7 @@
             };
             gpsPanel.addTo(map);
 
+            // NẾU ĐƠN CHỈ MỚI "LÊN ĐƠN" (STEP 1)
             if (step === 1) {
                 map.setView(receiverLoc, 14);
                 let alertIcon = L.divIcon({ className: '', html: '<div class="map-dot-alert">!</div>', iconSize: [32,32], iconAnchor: [16,16] });
@@ -398,19 +414,54 @@
                 return; 
             }
 
-            let currentHubLoc = [...receiverLoc]; 
-            if (!isDelivered) {
+            // 2. KHO XUẤT PHÁT QUÁ KHỨ (Quét lại từ Lịch sử)
+            let startHubText = null;
+            if (historyData && historyData.length > 0) {
+                for (let i = historyData.length - 1; i >= 0; i--) {
+                    let desc = historyData[i].description.toLowerCase();
+                    if (desc.match(/(kho|hub|soc|trạm)/) && !desc.match(/(chuẩn bị|người gửi)/)) {
+                        startHubText = getDisplayLabel(desc);
+                        break;
+                    }
+                }
+            }
+            if (!startHubText) startHubText = mapLabelStatus;
+            
+            let startLoc = [19.3833, 105.7833];
+            let knownStart = findKnownLocation(startHubText);
+            if (knownStart) startLoc = knownStart;
+            else {
+                const geoStart = await geocodeLocation(startHubText);
+                if (geoStart) startLoc = [geoStart.lat, geoStart.lng];
+            }
+
+            // 3. VỊ TRÍ HIỆN TẠI THỰC TẾ (XE TẢI)
+            let currentHubLoc = [...startLoc]; 
+            if (isDelivered) {
+                currentHubLoc = [...receiverLoc]; 
+            } else {
                 let knownCur = findKnownLocation(statusText);
                 if (knownCur) currentHubLoc = knownCur;
                 else {
                     const geoCur = await geocodeLocation(statusText);
                     if (geoCur) currentHubLoc = [geoCur.lat, geoCur.lng];
-                    else currentHubLoc = [19.3833, 105.7833];
+                    else currentHubLoc = [...startLoc];
                 }
             }
 
             map.setView(currentHubLoc, 12);
 
+            // VẼ ĐƯỜNG NÉT ĐỨT MÀU XANH DƯƠNG (QUÁ KHỨ ĐÃ ĐI)
+            if (!isDelivered && (startLoc[0] !== currentHubLoc[0] || startLoc[1] !== currentHubLoc[1])) {
+                L.Routing.control({
+                    waypoints: [ L.latLng(startLoc[0], startLoc[1]), L.latLng(currentHubLoc[0], currentHubLoc[1]) ],
+                    routeWhileDragging: false, addWaypoints: false, showAlternatives: false, fitSelectedRoutes: false,
+                    lineOptions: { styles: [{ color: '#3b82f6', opacity: 0.8, weight: 4, dashArray: '10, 12' }] },
+                    createMarker: function() { return null; }
+                }).addTo(map);
+            }
+
+            // VẼ ĐƯỜNG NÉT LIỀN MÀU CAM (TƯƠNG LAI SẮP ĐI)
             if (!isDelivered) {
                 let futureRouting = L.Routing.control({
                     waypoints: [ L.latLng(currentHubLoc[0], currentHubLoc[1]), L.latLng(receiverLoc[0], receiverLoc[1]) ],
@@ -419,8 +470,18 @@
                     createMarker: function() { return null; }
                 }).addTo(map);
                 window.trackingRoutingControls[mapId] = futureRouting;
+            } else {
+                // Nếu đã giao thì vẽ 1 đường liền xanh lá từ đầu tới cuối
+                L.Routing.control({
+                    waypoints: [ L.latLng(startLoc[0], startLoc[1]), L.latLng(receiverLoc[0], receiverLoc[1]) ],
+                    routeWhileDragging: false, addWaypoints: false, showAlternatives: false, fitSelectedRoutes: true,
+                    lineOptions: { styles: [{ color: '#10b981', opacity: 0.8, weight: 4 }] },
+                    createMarker: function() { return null; }
+                }).addTo(map);
             }
 
+            // THÊM MARKER ĐẦU/CUỐI
+            L.marker(startLoc, { icon: L.divIcon({ className: '', html: '<div class="map-dot-shop"></div>', iconSize: [0, 0], iconAnchor: [0, 0] }) }).addTo(map);
             L.marker(receiverLoc, { icon: L.divIcon({ className: '', html: '<div class="map-dot-customer"></div>', iconSize: [0, 0], iconAnchor: [0, 0] }) }).addTo(map);
 
             let truckOrCheck = isDelivered ? '✅' : '🚚';
@@ -442,7 +503,7 @@
             window.trackingMaps[mapId] = map;
             setTimeout(() => map.invalidateSize(), 400);
             
-            // TRACKING LIVE ĐỘNG
+            // TRACKING LIVE ĐỘNG LIÊN TỤC TỪ BACKEND
             if(!isDelivered) {
                 window.trackingIntervals[mapId] = setInterval(async () => {
                     try {
@@ -462,6 +523,7 @@
                                 let knownCur = findKnownLocation(data.status);
                                 if(knownCur) newLatLng = L.latLng(knownCur[0], knownCur[1]);
                                 else {
+                                    // Dùng chuỗi full có "— VN" để geocode siêu chính xác
                                     const geocoded = await geocodeLocation(data.status);
                                     if(geocoded) newLatLng = L.latLng(geocoded.lat, geocoded.lng);
                                 }
@@ -531,7 +593,7 @@
                 let cleanStatus = o.status.replace(/[✅🚚🔴⏳📦✓🎉]/g, '').trim(); 
                 cleanStatus = cleanStatus.charAt(0).toUpperCase() + cleanStatus.slice(1);
                 
-                if(sttLower.includes('giao hàng thành công') || sttLower.includes('đã giao')) {
+                if(sttLower.includes('giao hàng thành công') || sttLower.includes('đã giao thành công')) {
                     sttClass = 'success';
                     sttIcon = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>';
                 } else if(sttLower.includes('giao') || sttLower.includes('vận')) {
