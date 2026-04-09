@@ -6,7 +6,6 @@
     <title>Quản Lý Đơn Hàng</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
@@ -25,7 +24,7 @@
         body { background-color: var(--bg); background-image: radial-gradient(circle at 50% -10%, var(--accent-glow), transparent 60%); color: var(--text-main); padding: 16px; padding-bottom: 60px; min-height: 100vh; overflow-x: hidden; }
         svg { flex-shrink: 0; }
         
-        .header { display: flex; justify-content: space-between; align-items: center; background: var(--surface-glass); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); border: 1px solid rgba(255,255,255,0.1); border-top: 1px solid rgba(255,255,255,0.2); padding: 16px; border-radius: var(--radius-lg); margin-bottom: 24px; box-shadow: 0 10px 40px rgba(0,0,0,0.5); }
+        .header { display: flex; justify-content: space-between; align-items: center; background: var(--surface-glass); backdrop-filter: blur(24px); border: 1px solid rgba(255,255,255,0.1); border-top: 1px solid rgba(255,255,255,0.2); padding: 16px; border-radius: var(--radius-lg); margin-bottom: 24px; box-shadow: 0 10px 40px rgba(0,0,0,0.5); }
         .user-info { display: flex; align-items: center; gap: 14px; }
         .avatar { width: 52px; height: 52px; border-radius: 18px; background: linear-gradient(135deg, #f5a623, #ea580c); display: flex; justify-content: center; align-items: center; font-size: 22px; font-weight: 800; color: #fff; overflow: hidden; border: 2px solid rgba(255,255,255,0.1); animation: avatarPulse 3s infinite alternate, float 4s ease-in-out infinite; }
         .avatar img { width: 100%; height: 100%; object-fit: cover; }
@@ -45,11 +44,11 @@
         @keyframes pulseDot { 0% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(1.3); } 100% { opacity: 1; transform: scale(1); } }
         
         .order-list { display: flex; flex-direction: column; gap: 20px; }
-        .card { background: linear-gradient(145deg, rgba(24, 24, 27, 0.8), rgba(15, 15, 18, 0.95)); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.05); border-top: 1px solid rgba(255,255,255,0.1); border-radius: var(--radius-lg); overflow: hidden; transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); box-shadow: 0 8px 20px rgba(0,0,0,0.4); }
+        .card { background: linear-gradient(145deg, rgba(24, 24, 27, 0.8), rgba(15, 15, 18, 0.95)); backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.05); border-top: 1px solid rgba(255,255,255,0.1); border-radius: var(--radius-lg); overflow: hidden; transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); box-shadow: 0 8px 20px rgba(0,0,0,0.4); }
         .card.expanded { border-color: rgba(245, 166, 35, 0.5); box-shadow: 0 15px 40px rgba(0,0,0,0.6), 0 0 20px rgba(245, 166, 35, 0.15); transform: translateY(-2px);}
         .card-main { padding: 20px; position: relative; cursor: pointer; }
         .flex-between { display: flex; justify-content: space-between; align-items: center; }
-        .badge { background: #18181b; padding: 6px 12px; border-radius: var(--radius-sm); font-size: 11px; font-weight: 700; color: var(--text-sub); letter-spacing: 0.5px; border: 1px solid rgba(255,255,255,0.05); box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);}
+        .badge { background: #18181b; padding: 6px 12px; border-radius: var(--radius-sm); font-size: 11px; font-weight: 700; color: var(--text-sub); border: 1px solid rgba(255,255,255,0.05); box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);}
         
         .status { font-size: 12px; font-weight: 700; display: flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 20px; background: rgba(255,255,255,0.05); letter-spacing: 0.3px;}
         .status.wait { color: var(--accent); background: rgba(245, 166, 35, 0.15); border: 1px solid rgba(245, 166, 35, 0.3); box-shadow: 0 0 10px var(--accent-glow);} 
@@ -89,7 +88,7 @@
         .tracking-map { width: 100%; height: 100%; background: #0f0f11; }
         .custom-map-marker { background: transparent; border: none; z-index: 10 !important;}
         .leaflet-routing-container { display: none !important; }
-        .leaflet-marker-icon { transition: transform 1.5s ease-in-out !important; }
+        .leaflet-marker-icon { transition: transform 2s ease-in-out !important; }
 
         .map-dot-alert { width: 32px; height: 32px; background: #ef4444; border-radius: 50%; border: 3px solid #fff; box-shadow: 0 0 20px rgba(239,68,68,0.8); display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 900; font-size: 18px; animation: pulseAlert 1.5s infinite; position: relative;}
         .map-dot-alert::after { content: "Đơn đang được lên"; position: absolute; top: 38px; left: 50%; transform: translateX(-50%); font-size: 11px; font-weight: 800; color: #fff; background: #ef4444; padding: 4px 8px; border-radius: 6px; white-space: nowrap; border: 1px solid rgba(255,255,255,0.2); box-shadow: 0 4px 10px rgba(0,0,0,0.5);}
@@ -115,7 +114,7 @@
         .shopee-marker-label { background: #fff; color: #ee4d2d; border: 1px solid rgba(238, 77, 45, 0.3); padding: 6px 12px; border-radius: 4px; font-size: 11px; font-weight: 800; white-space: nowrap; box-shadow: 0 4px 10px rgba(0,0,0,0.15); position: absolute; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 4px; z-index: 10; }
         .shopee-marker-label::after { content: ''; position: absolute; bottom: -6px; left: 50%; transform: translateX(-50%); border-width: 6px 6px 0; border-style: solid; border-color: #fff transparent transparent transparent; }
 
-        .gps-data-panel { position: absolute; bottom: 10px; right: 10px; background: rgba(20, 20, 24, 0.85); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.08); border-radius: var(--radius-sm); padding: 10px 14px; width: 260px; z-index: 1000; font-size: 11px; color: rgba(255,255,255,0.7); }
+        .gps-data-panel { position: absolute; bottom: 10px; right: 10px; background: rgba(20, 20, 24, 0.85); backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.08); border-radius: var(--radius-sm); padding: 10px 14px; width: 260px; z-index: 1000; font-size: 11px; color: rgba(255,255,255,0.7); }
         .gps-data-panel h4 { margin: 0 0 8px 0; color: #fff; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
         .gps-data-item { display: flex; justify-content: space-between; margin-bottom: 4px; }
         .gps-data-item .label { font-weight: 600; color: rgba(255,255,255,0.5); }
@@ -147,7 +146,7 @@
         @keyframes shine { to { background-position-x: -200%; } }
         .skel-card { background: var(--surface-glass); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px; display: flex; flex-direction: column; gap: 16px; margin-bottom: 16px;}
 
-        .loc-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); z-index: 9999; display: none; justify-content: center; align-items: center; opacity: 0; transition: opacity 0.3s ease; }
+        .loc-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); backdrop-filter: blur(8px); z-index: 9999; display: none; justify-content: center; align-items: center; opacity: 0; transition: opacity 0.3s ease; }
         .loc-popup { background: var(--surface); border: 1px solid rgba(255,255,255,0.1); border-radius: var(--radius-lg); padding: 24px; width: 90%; max-width: 320px; text-align: center; box-shadow: 0 15px 40px rgba(0,0,0,0.5); transform: translateY(20px); transition: transform 0.3s ease; }
         .loc-icon { font-size: 40px; margin-bottom: 16px; text-shadow: 0 0 20px var(--info); }
         .loc-title { font-size: 18px; font-weight: 800; color: #fff; margin-bottom: 8px; }
@@ -197,14 +196,15 @@
     </div>
 
     <script>
-        const API_BASE = "https://hoangngocnguyen.id.vn"; 
+        const API_BASE = ""; 
         window.trackingMaps = {}; window.trackingMarkers = {}; window.trackingIntervals = {}; window.trackingRoutingControls = {};
         window.userLiveLocation = null; 
 
         const VN_LOCATIONS = {
             "thâm quyến": [22.5431, 114.0579], "nghĩa ô": [29.3068, 120.0750], "bw soc": [11.0067, 106.5139],
             "hn mê linh": [21.1828, 105.7142], "từ sơn": [21.1167, 105.9500], "bn a mega": [21.0828, 105.9767],
-            "21-hni thanh tri": [20.9634, 105.8156], "30-tha": [19.3833, 105.7833], "tĩnh gia": [19.3833, 105.7833]
+            "21-hni thanh tri": [20.9634, 105.8156], "30-tha": [19.3833, 105.7833], "tĩnh gia": [19.3833, 105.7833],
+            "nghi sơn": [19.3833, 105.7833], "hải ninh": [19.4167, 105.7833]
         };
 
         function isLocationValid(lat, lng) { return (lat >= 8.0 && lat <= 30.0 && lng >= 102.0 && lng <= 122.0); }
@@ -284,7 +284,14 @@
                         } else {
                             document.getElementById('uAvatar').innerText = (user.first_name || "K").charAt(0).toUpperCase();
                         }
+                        
                         fetchOrders(userId); 
+                        
+                        // AUTO SYNC MỖI 60 GIÂY
+                        setInterval(() => {
+                            fetch(`${API_BASE}/api/sync_spx_from_db?user_id=${userId}`, { method: 'POST' }).catch(() => {});
+                        }, 60000);
+
                         return true;
                     }
                     return false;
@@ -313,8 +320,15 @@
         async function geocodeLocation(queryText) {
             if (!queryText) return null;
             try {
-                let cleanQuery = queryText.replace(/(kho|soc|hub|trạm)/gi, '').trim();
-                let res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(cleanQuery + ', Việt Nam')}&countrycodes=vn&limit=1`);
+                let cleanQuery = queryText;
+                // BỘ LỌC CẮT ĐỊA CHỈ: Nếu text có "— VN Tỉnh...", chỉ lấy phần địa chỉ phía sau để GG Maps định vị chuẩn
+                if (cleanQuery.includes('— VN')) {
+                    cleanQuery = cleanQuery.split('— VN')[1].trim();
+                } else {
+                    cleanQuery = cleanQuery.replace(/(kho trung chuyển|bưu cục|soc|hub|trạm)/gi, '').trim();
+                }
+
+                let res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(cleanQuery)}&countrycodes=vn&limit=1`);
                 let data = await res.json();
                 if (data && data.length > 0 && isLocationValid(parseFloat(data[0].lat), parseFloat(data[0].lon))) {
                     return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
@@ -323,11 +337,17 @@
             return null;
         }
 
+        // BỘ LỌC CHẶN LỖI HIỂN THỊ SAI "THÀNH CÔNG"
         function getShippingStep(stageText) {
             const txt = (stageText || "").toLowerCase();
-            if (txt.includes('thành công') || txt.includes('đã giao') || txt.includes('hoàn thành')) return 4;
+            // CHỈ 3 từ khóa này mới cho phép xanh lè ✅
+            if (txt.includes('giao hàng thành công') || txt.includes('đã giao') || txt.includes('hoàn thành')) return 4;
+            
             if (txt.includes('đang giao') || txt.includes('bưu tá') || txt.includes('đang phát')) return 3;
-            if (txt.includes('kho') || txt.includes('hub') || txt.includes('soc') || txt.includes('vận chuyển') || txt.includes('lấy hàng') || txt.includes('trung chuyển')) return 2;
+            
+            // Các từ "thành công" khác (Lấy hàng thành công, lên đơn thành công) đều thuộc nhóm vận chuyển
+            if (txt.includes('kho') || txt.includes('hub') || txt.includes('soc') || txt.includes('vận chuyển') || txt.includes('trung chuyển') || txt.includes('lấy hàng thành công') || txt.includes('đã đến') || txt.includes('xuất khỏi') || txt.includes('phân loại') || txt.includes('thành công')) return 2;
+            
             return 1; 
         }
 
@@ -345,7 +365,6 @@
             let step = getShippingStep(statusText);
             const isDelivered = (step === 4);
             
-            // 1. VỊ TRÍ ĐÍCH
             let receiverLoc = [19.3833, 105.7833]; 
             if (window.userLiveLocation) {
                 receiverLoc = [...window.userLiveLocation];
@@ -366,7 +385,7 @@
             var gpsPanel = L.control({position: 'bottomright'});
             gpsPanel.onAdd = function () {
                 var div = L.DomUtil.create('div', 'gps-data-panel');
-                div.innerHTML = `<h4>Dữ liệu GPS thời gian thực</h4><div class="gps-data-item"><span class="label">Trạng thái:</span> <span class="value value-live" style="color:${isDelivered ? '#10b981' : (step === 1 ? '#ef4444' : '#f5a623')}">${isDelivered ? 'Đã hoàn thành' : (step === 1 ? 'Đang lên đơn...' : 'Theo dõi (10s)')}</span></div><div class="gps-data-item"><span class="label">Điểm nhận:</span> <span class="value" id="address_${mapId}">${addressText}</span></div>`;
+                div.innerHTML = `<h4>Dữ liệu GPS thời gian thực</h4><div class="gps-data-item"><span class="label">Trạng thái:</span> <span class="value value-live" style="color:${isDelivered ? '#10b981' : (step === 1 ? '#ef4444' : '#f5a623')}">${isDelivered ? 'Đã hoàn thành' : (step === 1 ? 'Đang lên đơn...' : 'Đang vận chuyển')}</span></div><div class="gps-data-item"><span class="label">Điểm nhận:</span> <span class="value" id="address_${mapId}">${addressText}</span></div>`;
                 return div;
             };
             gpsPanel.addTo(map);
@@ -379,13 +398,12 @@
                 return; 
             }
 
-            // Lấy vị trí từ Database/History
             let currentHubLoc = [...receiverLoc]; 
             if (!isDelivered) {
                 let knownCur = findKnownLocation(statusText);
                 if (knownCur) currentHubLoc = knownCur;
                 else {
-                    const geoCur = await geocodeLocation(mapLabelStatus);
+                    const geoCur = await geocodeLocation(statusText);
                     if (geoCur) currentHubLoc = [geoCur.lat, geoCur.lng];
                     else currentHubLoc = [19.3833, 105.7833];
                 }
@@ -424,7 +442,7 @@
             window.trackingMaps[mapId] = map;
             setTimeout(() => map.invalidateSize(), 400);
             
-            // TRACKING LIVE VỚI BACKEND CHỐNG NHẦM LẪN
+            // TRACKING LIVE ĐỘNG
             if(!isDelivered) {
                 window.trackingIntervals[mapId] = setInterval(async () => {
                     try {
@@ -440,8 +458,13 @@
                             if (newStep === 4) {
                                 newLatLng = L.latLng(receiverLoc[0], receiverLoc[1]);
                                 clearInterval(window.trackingIntervals[mapId]); 
-                            } else if (data.lat && data.lng) {
-                                newLatLng = L.latLng(data.lat, data.lng); // CHỈ CHỌN CURRENT LOC TỪ PYTHON
+                            } else {
+                                let knownCur = findKnownLocation(data.status);
+                                if(knownCur) newLatLng = L.latLng(knownCur[0], knownCur[1]);
+                                else {
+                                    const geocoded = await geocodeLocation(data.status);
+                                    if(geocoded) newLatLng = L.latLng(geocoded.lat, geocoded.lng);
+                                }
                             }
 
                             if(newLatLng) {
@@ -508,7 +531,7 @@
                 let cleanStatus = o.status.replace(/[✅🚚🔴⏳📦✓🎉]/g, '').trim(); 
                 cleanStatus = cleanStatus.charAt(0).toUpperCase() + cleanStatus.slice(1);
                 
-                if(sttLower.includes('thành công') || sttLower.includes('đã giao')) {
+                if(sttLower.includes('giao hàng thành công') || sttLower.includes('đã giao')) {
                     sttClass = 'success';
                     sttIcon = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>';
                 } else if(sttLower.includes('giao') || sttLower.includes('vận')) {
@@ -527,7 +550,6 @@
                         let advPay = item.advance_payment > 0 ? `<div class="advance-pay"><span>Thanh toán thêm:</span> <span>${new Intl.NumberFormat('vi-VN').format(item.advance_payment)}đ</span></div>` : '';
                         let historyHtml = '<div class="tl-item"><div class="tl-desc" style="color:var(--text-sub)">Đơn hàng đang chờ xử lý...</div></div>';
                         
-                        // KẾT NỐI VỚI LỊCH SỬ ĐÃ ĐƯỢC FORMAT TỪ PYTHON
                         if(item.tracking_history && item.tracking_history.length > 0) {
                             historyHtml = item.tracking_history.map((hist, hIdx) => `
                                 <div class="tl-item ${hIdx === 0 ? 'latest' : ''}">
