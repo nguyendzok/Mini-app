@@ -142,7 +142,6 @@
         .tl-item.latest::before { background: var(--success); box-shadow: 0 0 15px rgba(16, 185, 129, 0.9), inset 0 0 4px #fff; border-color: #000;}
         .tl-time { color: #10b981; font-size: 11px; margin-bottom: 4px; font-weight: 700;}
         .tl-desc { color: #fff; font-size: 13px; font-weight: 500; line-height: 1.5; text-shadow: 0 1px 2px rgba(0,0,0,0.8);}
-        
         .skeleton { background: linear-gradient(110deg, #1f1f22 8%, #27272a 18%, #1f1f22 33%); border-radius: 8px; background-size: 200% 100%; animation: 1.5s shine linear infinite; }
         @keyframes shine { to { background-position-x: -200%; } }
         .skel-card { background: var(--surface-glass); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px; display: flex; flex-direction: column; gap: 16px; margin-bottom: 16px;}
@@ -204,9 +203,11 @@
         // BỘ TỪ ĐIỂN TỌA ĐỘ HUB
         const VN_LOCATIONS = {
             "thâm quyến": [22.5431, 114.0579], "nghĩa ô": [29.3068, 120.0750], "bw soc": [11.0067, 106.5139],
-            "hn mê linh": [21.1828, 105.7142], "từ sơn": [21.1167, 105.9500], "bn a mega": [21.0828, 105.9767],
-            "hni thanh tri": [20.9634, 105.8156], "30-tha": [19.3833, 105.7833], "tĩnh gia": [19.3833, 105.7833],
-            "nghi sơn": [19.3833, 105.7833], "hải ninh": [19.4167, 105.7833], "long bien": [21.0475, 105.8828],
+            "hn mê linh": [21.1828, 105.7142], "mê linh soc": [21.1828, 105.7142], "từ sơn": [21.1167, 105.9500],
+            "bn a mega": [21.0828, 105.9767], "hni thanh tri": [20.9634, 105.8156], "30-tha": [19.3833, 105.7833], 
+            "tĩnh gia": [19.3833, 105.7833], "nghi sơn": [19.3833, 105.7833], "hải ninh": [19.4167, 105.7833], 
+            "long bien": [21.0475, 105.8828], "củ chi": [11.0067, 106.5139], "bình chánh": [11.005, 106.52], 
+            "hà nội": [21.0285, 105.8542], "đà nẵng": [16.0471, 108.2062], "hồ chí minh": [10.8231, 106.6297]
         };
 
         function isLocationValid(lat, lng) { return (lat >= 8.0 && lat <= 30.0 && lng >= 102.0 && lng <= 122.0); }
@@ -223,39 +224,36 @@
         // TÁCH NHÃN NGẮN GỌN CHO RADAR
         function getDisplayLabel(text) {
             if (!text) return "Trạm trung chuyển";
-            let lower = text.toLowerCase();
-            if (text.includes('— VN')) {
-                return text.split('— VN')[0].replace(/(kho|bưu cục|soc|hub|trạm)/gi, '').trim();
-            }
-            let keywords = ["kho", "bưu cục", "soc", "hub", "trạm"];
-            for (let kw of keywords) {
-                let idx = lower.indexOf(kw);
-                if (idx !== -1) return text.substring(idx).split(/[,\-\.]/)[0].trim();
-            }
-            return text;
+            let tmp = text.split('—')[0].trim();
+            tmp = tmp.replace(/[\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF]/g, '');
+            tmp = tmp.replace(/<[^>]*>?/gm, '');
+            return tmp.trim();
         }
 
         // TÁCH ĐỊA CHỈ THỰC TẾ CHO GG MAPS
         async function geocodeLocation(queryText) {
             if (!queryText) return null;
-            let lower = queryText.toLowerCase();
+            
+            // 1. Kiểm tra từ điển trước để phản hồi ngay lập tức
+            let known = findKnownLocation(queryText);
+            if (known) return { lat: known[0], lng: known[1] };
 
-            for (let key in VN_LOCATIONS) {
-                if (lower.includes(key)) return { lat: VN_LOCATIONS[key][0], lng: VN_LOCATIONS[key][1] };
-            }
-
+            // 2. Dùng GG Map (Nominatim) bóc tách chuỗi
             try {
                 let cleanQuery = queryText;
                 if (cleanQuery.includes('— VN')) {
                     // Cắt lấy phần địa chỉ phía sau "— VN"
                     let addressPart = cleanQuery.split('— VN')[1];
-                    // Lọc rác (Lô số, Đường số) để bản đồ OpenStreetMap không bị lỗi
-                    cleanQuery = addressPart.replace(/Lô số[\s\S]*?(?=Xã|Phường|Thành phố|Tỉnh)/i, '').trim();
+                    // Chỉ lấy 3 thành phần cuối cùng (Xã, Huyện, Tỉnh) để tìm kiếm
+                    let parts = addressPart.split(',').map(p => p.trim());
+                    cleanQuery = parts.slice(-3).join(', ').replace(/Việt Nam/gi, '').trim();
                 } else {
                     cleanQuery = cleanQuery.replace(/(kho trung chuyển|bưu cục|soc|hub|trạm)/gi, '').trim();
                 }
 
-                let res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(cleanQuery)}&countrycodes=vn&limit=1`);
+                if(cleanQuery.length < 3) return null;
+
+                let res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(cleanQuery + ', Việt Nam')}&countrycodes=vn&limit=1`);
                 let data = await res.json();
                 if (data && data.length > 0 && isLocationValid(parseFloat(data[0].lat), parseFloat(data[0].lon))) {
                     return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
@@ -264,12 +262,12 @@
             return null;
         }
 
-        // LỌC CHẶN LỖI "THÀNH CÔNG GIẢ"
+        // BỘ LỌC CHẶN LỖI "THÀNH CÔNG GIẢ"
         function getShippingStep(stageText) {
             const txt = (stageText || "").toLowerCase();
             
             // 4. THÀNH CÔNG (CHỈ áp dụng khi thực sự giao xong)
-            if ((txt.includes('giao hàng thành công') || txt.includes('đã giao thành công') || txt.includes('đơn hàng đã được giao') || txt.includes('hoàn thành')) && !txt.includes('lấy hàng') && !txt.includes('lên đơn')) return 4;
+            if ((txt.includes('giao hàng thành công') || txt.includes('đã giao thành công') || txt.includes('đơn hàng đã được giao')) && !txt.includes('lấy hàng') && !txt.includes('lên đơn')) return 4;
             
             // 3. ĐANG GIAO
             if (txt.includes('đang giao') || txt.includes('bưu tá') || txt.includes('đang phát')) return 3;
@@ -428,25 +426,29 @@
             if (!startHubText) startHubText = mapLabelStatus;
             
             let startLoc = [19.3833, 105.7833];
-            let knownStart = findKnownLocation(startHubText);
-            if (knownStart) startLoc = knownStart;
-            else {
-                const geoStart = await geocodeLocation(startHubText);
-                if (geoStart) startLoc = [geoStart.lat, geoStart.lng];
-            }
+            const geoStart = await geocodeLocation(startHubText);
+            if (geoStart) startLoc = [geoStart.lat, geoStart.lng];
 
             // 3. VỊ TRÍ HIỆN TẠI THỰC TẾ (XE TẢI)
             let currentHubLoc = [...startLoc]; 
             if (isDelivered) {
                 currentHubLoc = [...receiverLoc]; 
             } else {
-                let knownCur = findKnownLocation(statusText);
-                if (knownCur) currentHubLoc = knownCur;
-                else {
-                    const geoCur = await geocodeLocation(statusText);
-                    if (geoCur) currentHubLoc = [geoCur.lat, geoCur.lng];
-                    else currentHubLoc = [...startLoc];
+                // Đọc trộm Lịch sử để moi ra vị trí có gắn cờ 📍
+                let curSearchQuery = statusText;
+                if (historyData && historyData.length > 0) {
+                    for(let i=0; i<historyData.length; i++) {
+                        if (historyData[i].description.includes('📍')) {
+                            let match = historyData[i].description.match(/📍\s*([^<]+)/);
+                            if(match && match[1]) {
+                                curSearchQuery = match[1].trim();
+                                break;
+                            }
+                        }
+                    }
                 }
+                const geoCur = await geocodeLocation(curSearchQuery);
+                if (geoCur) currentHubLoc = [geoCur.lat, geoCur.lng];
             }
 
             map.setView(currentHubLoc, 12);
@@ -503,7 +505,7 @@
             window.trackingMaps[mapId] = map;
             setTimeout(() => map.invalidateSize(), 400);
             
-            // TRACKING LIVE ĐỘNG LIÊN TỤC TỪ BACKEND
+            // TRACKING LIVE ĐỘNG
             if(!isDelivered) {
                 window.trackingIntervals[mapId] = setInterval(async () => {
                     try {
@@ -520,13 +522,10 @@
                                 newLatLng = L.latLng(receiverLoc[0], receiverLoc[1]);
                                 clearInterval(window.trackingIntervals[mapId]); 
                             } else {
-                                let knownCur = findKnownLocation(data.status);
-                                if(knownCur) newLatLng = L.latLng(knownCur[0], knownCur[1]);
-                                else {
-                                    // Dùng chuỗi full có "— VN" để geocode siêu chính xác
-                                    const geocoded = await geocodeLocation(data.status);
-                                    if(geocoded) newLatLng = L.latLng(geocoded.lat, geocoded.lng);
-                                }
+                                // Lấy location_str từ Python trả về để dò tọa độ
+                                let searchStr = data.location_str || data.status;
+                                const geoCur = await geocodeLocation(searchStr);
+                                if(geoCur) newLatLng = L.latLng(geoCur.lat, geoCur.lng);
                             }
 
                             if(newLatLng) {
@@ -589,21 +588,9 @@
                 let sttClass = 'wait';
                 let sttIcon = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>'; 
         
-                let sttLower = o.status.toLowerCase();
                 let cleanStatus = o.status.replace(/[✅🚚🔴⏳📦✓🎉]/g, '').trim(); 
                 cleanStatus = cleanStatus.charAt(0).toUpperCase() + cleanStatus.slice(1);
                 
-                if(sttLower.includes('giao hàng thành công') || sttLower.includes('đã giao thành công')) {
-                    sttClass = 'success';
-                    sttIcon = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>';
-                } else if(sttLower.includes('giao') || sttLower.includes('vận')) {
-                    sttClass = 'deliv';
-                    sttIcon = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg>';
-                } else if(sttLower.includes('hủy')) {
-                    sttClass = 'danger';
-                    sttIcon = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>';
-                }
-
                 let priceFmt = new Intl.NumberFormat('vi-VN').format(o.price) + 'đ';
                 let itemsHtml = '';
                 
@@ -621,6 +608,7 @@
                              `).join('');
                         }
 
+                        // LỖI DATA-STATUS NẰM CHÍNH TẠI ĐÂY: Truyền đúng biến current_stage cho map vẽ
                         let current_stage = (item.spx_stage || cleanStatus || 'Đang chờ cập nhật'); 
                         let step = getShippingStep(current_stage);
                         let wPercent = (step === 1) ? "0" : (step === 2) ? "33.33" : (step === 3) ? "66.66" : "100";
@@ -654,7 +642,7 @@
                                 </div>
                                 <div class="real-product-name"><span style="font-size:16px; text-shadow: 0 0 8px rgba(255,255,255,0.6);">🛒</span> ${realNameHtml}</div>
                                 <div class="map-wrapper">
-                                    <div id="${mapId}" class="tracking-map" data-order-id="${o.order_id}" data-status="${cleanStatus}" data-address="${o.address}" data-history="${histDataStr}"></div>
+                                    <div id="${mapId}" class="tracking-map" data-order-id="${o.order_id}" data-status="${current_stage}" data-address="${o.address}" data-history="${histDataStr}"></div>
                                 </div>
                                 <div class="live-tracker">
                                     <div style="position: relative; padding: 0 14px; margin-bottom: 28px;"><div class="stepper-track"><div class="stepper-line-active" style="width: ${wPercent}%;"></div></div><div class="stepper">${stepsHtml}</div></div>
@@ -666,6 +654,11 @@
                         `;
                     });
                 }
+
+                let finalCardStatus = getShippingStep(cleanStatus);
+                if(finalCardStatus === 4) { sttClass = 'success'; sttIcon = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>'; }
+                else if(finalCardStatus === 3 || finalCardStatus === 2) { sttClass = 'deliv'; sttIcon = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg>'; }
+                else if(cleanStatus.toLowerCase().includes('hủy')) { sttClass = 'danger'; sttIcon = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>'; }
 
                 fullHtml += `
                     <div class="card">
