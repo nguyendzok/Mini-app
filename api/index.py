@@ -27,11 +27,12 @@ HUB_LOCATIONS = {
     "nghĩa ô": {"lat": 29.3068, "lng": 120.0750},
     "bw soc": {"lat": 11.0067, "lng": 106.5139},
     "hn mê linh": {"lat": 21.1828, "lng": 105.7142},
+    "mê linh soc": {"lat": 21.1828, "lng": 105.7142},
     "từ sơn": {"lat": 21.1167, "lng": 105.9500},
     "bn a mega": {"lat": 21.0828, "lng": 105.9767}, 
     "hni thanh tri": {"lat": 20.9634, "lng": 105.8156}, 
     "30-tha": {"lat": 19.3833, "lng": 105.7833}, 
-    "tĩnh gia 2": {"lat": 19.3833, "lng": 105.7833},
+    "tĩnh gia": {"lat": 19.3833, "lng": 105.7833},
     "nghi sơn": {"lat": 19.3833, "lng": 105.7833},
     "hải ninh": {"lat": 19.4167, "lng": 105.7833},
     "long bien": {"lat": 21.0475, "lng": 105.8828},
@@ -65,7 +66,7 @@ def guess_coordinates(text, fallback_lat=19.3833, fallback_lng=105.7833):
     return {"lat": fallback_lat, "lng": fallback_lng}
 
 # ==========================================
-# HÀM ĐỒNG BỘ SPX CHUẨN VERCEL
+# HÀM ĐỒNG BỘ SPX CHUẨN VERCEL SERVERLESS
 # ==========================================
 def sync_spx_logic():
     if not client: return
@@ -116,6 +117,7 @@ def sync_spx_logic():
                     next_loc = rec.get("nextLoc", "")
                     
                     full_desc = f"<strong style='color:#fff;'>{emoji} {desc}</strong>"
+                    # Lưu ý: Ký tự 📍 được nhúng vào đây để lát nữa Frontend bóc tách tọa độ Map
                     if current_loc:
                         full_desc += f"<br><span style='color:#9ca3af;font-size:11.5px;display:inline-block;margin-top:3px'>📍 {current_loc}</span>"
                     if next_loc:
@@ -199,7 +201,7 @@ def get_user_orders(user_id: str = Query(...), background_tasks: BackgroundTasks
 
 @app.get("/api/live_location")
 def get_live_location(order_id: str = Query(...)):
-    """Trả về CHÍNH XÁC chuỗi currentLoc để Frontend có thể lấy địa chỉ quét Map"""
+    """API Bản đồ trả về 2 trường: status (Trạng thái ngắn) và location_str (Chuỗi địa chỉ dài để quét)"""
     try:
         if not client: return {"lat": 19.3833, "lng": 105.7833, "status": "Không kết nối"}
         
@@ -229,12 +231,15 @@ def get_live_location(order_id: str = Query(...)):
                     if results and len(results) > 0:
                         spx_data = results[0]
                         records = spx_data.get("records", [])
-                        exact_location = ""
                         
-                        # CHỈ LẤY "currentLoc" - Chặn đứng việc lấy điểm Đến
+                        exact_location = ""
+                        status_desc = spx_data.get("status", "")
+                        
+                        # Trích xuất địa chỉ thực tế từ mảng lịch sử
                         for rec in records:
                             if rec.get("currentLoc"):
                                 exact_location = rec.get("currentLoc")
+                                status_desc = rec.get("desc", status_desc)
                                 break
                         
                         if not exact_location:
@@ -242,12 +247,18 @@ def get_live_location(order_id: str = Query(...)):
                                 desc = rec.get("desc", "").lower()
                                 if "đến kho" in desc or "tại" in desc or "xuất khỏi" in desc or "lấy hàng" in desc:
                                     exact_location = rec.get("desc")
+                                    status_desc = rec.get("desc", status_desc)
                                     break
                                     
-                        final_status = exact_location if exact_location else spx_data.get("status")
-                        cur_coords = guess_coordinates(final_status)
+                        cur_coords = guess_coordinates(exact_location if exact_location else status_desc)
                         
-                        return {"lat": cur_coords["lat"], "lng": cur_coords["lng"], "status": final_status, "source": "WEB_API"}
+                        return {
+                            "lat": cur_coords["lat"], 
+                            "lng": cur_coords["lng"], 
+                            "status": status_desc, 
+                            "location_str": exact_location,
+                            "source": "WEB_API"
+                        }
             except Exception as e:
                 pass
 
@@ -256,7 +267,7 @@ def get_live_location(order_id: str = Query(...)):
             location_text = db_address
 
         cur_coords = guess_coordinates(location_text)
-        return {"lat": cur_coords["lat"], "lng": cur_coords["lng"], "status": location_text, "source": "DATABASE"}
+        return {"lat": cur_coords["lat"], "lng": cur_coords["lng"], "status": location_text, "location_str": location_text, "source": "DATABASE"}
 
     except Exception as e:
         return {"lat": 19.3833, "lng": 105.7833, "status": "Lỗi"}
