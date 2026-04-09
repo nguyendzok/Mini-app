@@ -11,7 +11,6 @@ from datetime import datetime, timedelta
 
 app = FastAPI()
 
-# Cấu hình CORS để frontend web gọi được API
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -19,7 +18,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Kết nối MongoDB
 MONGO_URI = os.environ.get("MONGO_URI", "")
 client = MongoClient(MONGO_URI) if MONGO_URI else None
 
@@ -34,6 +32,8 @@ HUB_LOCATIONS = {
     "21-hni thanh tri": {"lat": 20.9634, "lng": 105.8156}, 
     "30-tha": {"lat": 19.3833, "lng": 105.7833}, 
     "tĩnh gia 2": {"lat": 19.3833, "lng": 105.7833},
+    "nghi sơn": {"lat": 19.3833, "lng": 105.7833},
+    "hải ninh": {"lat": 19.4167, "lng": 105.7833},
 }
 
 class TrackingRequest(BaseModel):
@@ -63,22 +63,16 @@ def guess_coordinates(text, fallback_lat=19.3833, fallback_lng=105.7833):
     except: pass
     return {"lat": fallback_lat, "lng": fallback_lng}
 
-# ==========================================
-# HÀM ĐỒNG BỘ SPX CHUẨN VERCEL SERVERLESS
-# ==========================================
 def sync_spx_logic():
-    """Hàm chạy ngầm: Quét DB lấy mã SPX -> Gọi Web dodanhvu -> Format Lịch sử -> Lưu ngược về DB"""
     if not client: return
     db = client['shop_database']
     
-    # Chỉ quét các đơn chưa hoàn thành
     query = {"status": {"$nin": ["Thành công", "Đã giao", "Đã hủy"]}}
     orders = list(db['orders'].find(query).sort("created_at", -1).limit(100))
     
     trackings_to_check = set()
     tracking_to_order_map = {}
     
-    # Lọc lấy tất cả các mã SPX và VN
     for o in orders:
         order_id = o.get("order_id")
         items = o.get("items", [])
@@ -111,7 +105,6 @@ def sync_spx_logic():
                 latest_record = records[0]
                 new_status = latest_record.get("desc") or r.get("status")
                 
-                # Format lại toàn bộ mốc lịch sử giao hàng
                 formatted_history = []
                 for rec in records:
                     time_str = rec.get("time", "")
@@ -128,7 +121,6 @@ def sync_spx_logic():
                         
                     formatted_history.append({"time": time_str, "description": full_desc})
                 
-                # Cập nhật ngược lại vào MongoDB
                 if t_code in tracking_to_order_map:
                     for oid, item_idx in tracking_to_order_map[t_code]:
                         db['orders'].update_one(
@@ -139,11 +131,7 @@ def sync_spx_logic():
                             }}
                         )
     except Exception as e:
-        print(f"Lỗi khi tra dữ liệu Web: {e}")
-
-# ==========================================
-# CÁC API ENDPOINTS
-# ==========================================
+        print(f"Lỗi tra dữ liệu: {e}")
 
 @app.get("/")
 def home():
@@ -152,7 +140,6 @@ def home():
 @app.get("/api/orders")
 def get_user_orders(user_id: str = Query(...), background_tasks: BackgroundTasks = BackgroundTasks()):
     try:
-        # Kích hoạt Sync dữ liệu SPX ngầm mỗi khi tải danh sách đơn (Chuẩn Vercel)
         background_tasks.add_task(sync_spx_logic)
 
         if not client: return JSONResponse(status_code=500, content={"detail": "Chưa kết nối MongoDB"})
@@ -171,14 +158,7 @@ def get_user_orders(user_id: str = Query(...), background_tasks: BackgroundTasks
             raw_items = o.get("items")
             if not isinstance(raw_items, list): raw_items = []
             if len(raw_items) == 0:
-                raw_items = [{
-                    "link": o.get("product_link", "Đơn hàng"),
-                    "carrier": o.get("carrier", "N/A"),
-                    "spx_code": o.get("spx_code", ""),
-                    "spx_stage": o.get("spx_stage", o.get("status", "")),
-                    "advance_payment": o.get("advance_payment", 0),
-                    "tracking_history": []
-                }]
+                raw_items = [{"link": o.get("product_link", "Đơn hàng"), "carrier": o.get("carrier", "N/A"), "spx_code": o.get("spx_code", ""), "spx_stage": o.get("spx_stage", o.get("status", "")), "advance_payment": o.get("advance_payment", 0), "tracking_history": []}]
 
             items_data = []
             for item in raw_items:
@@ -191,23 +171,16 @@ def get_user_orders(user_id: str = Query(...), background_tasks: BackgroundTasks
                 safe_history = []
                 if isinstance(t_history, list):
                     for h in t_history:
-                        if isinstance(h, dict):
-                            safe_history.append({"time": str(h.get("time", "")), "description": str(h.get("description", ""))})
+                        if isinstance(h, dict): safe_history.append({"time": str(h.get("time", "")), "description": str(h.get("description", ""))})
                             
                 try: adv_pay = float(item.get("advance_payment", 0))
                 except: adv_pay = 0
 
                 items_data.append({
-                    "link": str(item.get("link", "")),
-                    "carrier": str(item.get("carrier", "")),
-                    "spx_code": str(item.get("spx_code", "")),
-                    "spx_stage": current_stage,
-                    "advance_payment": adv_pay,
-                    "tracking_history": safe_history,
-                    "current_lat": float(cur_coords["lat"]),
-                    "current_lng": float(cur_coords["lng"]),
-                    "receiver_lat": float(recv_coords["lat"]),
-                    "receiver_lng": float(recv_coords["lng"]),
+                    "link": str(item.get("link", "")), "carrier": str(item.get("carrier", "")), "spx_code": str(item.get("spx_code", "")),
+                    "spx_stage": current_stage, "advance_payment": adv_pay, "tracking_history": safe_history,
+                    "current_lat": float(cur_coords["lat"]), "current_lng": float(cur_coords["lng"]),
+                    "receiver_lat": float(recv_coords["lat"]), "receiver_lng": float(recv_coords["lng"]),
                 })
                 
             dt = o.get("created_at")
@@ -217,25 +190,14 @@ def get_user_orders(user_id: str = Query(...), background_tasks: BackgroundTasks
             try: price_val = float(o.get("price", 0))
             except: price_val = 0
                 
-            result.append({
-                "order_id": str(o.get("order_id", "")),
-                "status": str(o.get("status", "Đang xử lý")),
-                "product_name": str(o.get("product_name", "Đơn hàng mới")),
-                "price": price_val,
-                "created_at": dt_str,
-                "receiver_name": str(o.get("receiver_name", "")),
-                "phone": str(o.get("phone", "")),
-                "address": receiver_address,
-                "items": items_data
-            })
+            result.append({"order_id": str(o.get("order_id", "")), "status": str(o.get("status", "Đang xử lý")), "product_name": str(o.get("product_name", "Đơn hàng mới")), "price": price_val, "created_at": dt_str, "receiver_name": str(o.get("receiver_name", "")), "phone": str(o.get("phone", "")), "address": receiver_address, "items": items_data})
         return result
     except Exception as e:
-        print(f"ERROR: {e}")
         return JSONResponse(status_code=500, content={"detail": str(e)})
 
 @app.get("/api/live_location")
 def get_live_location(order_id: str = Query(...)):
-    """API cung cấp vị trí Radar Live cho Frontend"""
+    """Trả về CHÍNH XÁC chuỗi currentLoc để Frontend có thể lấy địa chỉ quét Map"""
     try:
         if not client: return {"lat": 19.3833, "lng": 105.7833, "status": "Không kết nối"}
         
@@ -267,7 +229,7 @@ def get_live_location(order_id: str = Query(...)):
                         records = spx_data.get("records", [])
                         exact_location = ""
                         
-                        # CHỈ LẤY ĐỊA CHỈ "currentLoc" ĐỂ TRÁNH NHẦM LẪN VỚI ĐIỂM ĐẾN
+                        # CHỈ LẤY "currentLoc"
                         for rec in records:
                             if rec.get("currentLoc"):
                                 exact_location = rec.get("currentLoc")
@@ -297,12 +259,10 @@ def get_live_location(order_id: str = Query(...)):
     except Exception as e:
         return {"lat": 19.3833, "lng": 105.7833, "status": "Lỗi"}
 
-
 @app.post("/api/sync_spx_from_db")
 def sync_spx_from_db(user_id: str = Query(None)):
     sync_spx_logic()
     return {"message": "Đã sync thủ công xong"}
-
 
 @app.get("/api/stats")
 def get_web_stats(user_id: int = Query(0)):
