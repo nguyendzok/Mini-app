@@ -230,15 +230,13 @@
             return tmp.trim();
         }
 
-        // TÁCH ĐỊA CHỈ THỰC TẾ CHO GG MAPS
+        // TÁCH ĐỊA CHỈ THỰC TẾ CHO GG MAPS (SIÊU CẤP)
         async function geocodeLocation(queryText) {
             if (!queryText) return null;
             
-            // 1. Kiểm tra từ điển trước để phản hồi ngay lập tức
             let known = findKnownLocation(queryText);
             if (known) return { lat: known[0], lng: known[1] };
 
-            // 2. Dùng GG Map (Nominatim) bóc tách chuỗi
             try {
                 let cleanQuery = queryText;
                 if (cleanQuery.includes('— VN')) {
@@ -337,6 +335,11 @@
                         
                         fetchOrders(userId); 
                         
+                        // AUTO SYNC MỖI 60 GIÂY
+                        setInterval(() => {
+                            fetch(`${API_BASE}/api/sync_spx_from_db?user_id=${userId}`, { method: 'POST' }).catch(() => {});
+                        }, 60000);
+
                         return true;
                     }
                     return false;
@@ -352,6 +355,7 @@
 
         async function fetchOrders(id) {
             try {
+                fetch(`${API_BASE}/api/sync_spx_from_db?user_id=${id}`, { method: 'POST' }).catch(() => {});
                 const response = await fetch(`${API_BASE}/api/orders?user_id=${id}`);
                 const data = await response.json();
                 document.getElementById('uTotal').innerText = data.length;
@@ -378,7 +382,7 @@
             try { historyData = JSON.parse(decodeURIComponent(historyDataStr)); } catch(e) {}
             
             // 1. VỊ TRÍ ĐÍCH
-            let receiverLoc = [19.3833, 105.7833]; 
+            let receiverLoc = null; 
             if (window.userLiveLocation) {
                 receiverLoc = [...window.userLiveLocation];
                 addressText = "📍 Vị trí GPS hiện tại của bạn";
@@ -386,7 +390,12 @@
                 let cleanDest = addressText.split(',').map(p => p.trim()).filter(p => p.length > 0).slice(-3).join(', ').replace(/(nhà số|đường|lô|phòng)\s*[\w/.\-]+/gi, '').trim();
                 const geoTarget = await geocodeLocation(cleanDest);
                 if (geoTarget) { receiverLoc = [geoTarget.lat, geoTarget.lng]; addressText = cleanDest; }
-                else { addressText = "Trường THPT Tĩnh Gia 2 (Mặc định)"; }
+            }
+
+            // Nếu vẫn không có điểm đích, ẩn bản đồ
+            if (!receiverLoc) {
+                mapElement.innerHTML = `<div style="text-align:center; padding-top: 150px; color: var(--text-sub);">Đang chờ cập nhật tọa độ...</div>`;
+                return;
             }
 
             var vnBounds = L.latLngBounds(L.latLng(8.0, 102.0), L.latLng(24.0, 110.0));
@@ -412,44 +421,48 @@
                 return; 
             }
 
-            // 2. KHO XUẤT PHÁT QUÁ KHỨ (Quét lại từ Lịch sử)
-            let startHubText = null;
-            if (historyData && historyData.length > 0) {
-                for (let i = historyData.length - 1; i >= 0; i--) {
-                    let desc = historyData[i].description.toLowerCase();
-                    if (desc.match(/(kho|hub|soc|trạm)/) && !desc.match(/(chuẩn bị|người gửi)/)) {
-                        startHubText = getDisplayLabel(desc);
-                        break;
-                    }
-                }
-            }
-            if (!startHubText) startHubText = mapLabelStatus;
-            
-            let startLoc = [19.3833, 105.7833];
-            const geoStart = await geocodeLocation(startHubText);
-            if (geoStart) startLoc = [geoStart.lat, geoStart.lng];
+            // 2. TÌM KHO XUẤT PHÁT QUÁ KHỨ
+            let startLoc = null;
+            let currentHubLoc = null;
 
-            // 3. VỊ TRÍ HIỆN TẠI THỰC TẾ (XE TẢI)
-            let currentHubLoc = [...startLoc]; 
-            if (isDelivered) {
-                currentHubLoc = [...receiverLoc]; 
-            } else {
-                // Đọc trộm Lịch sử để moi ra vị trí có gắn cờ 📍
-                let curSearchQuery = statusText;
-                if (historyData && historyData.length > 0) {
-                    for(let i=0; i<historyData.length; i++) {
-                        if (historyData[i].description.includes('📍')) {
-                            let match = historyData[i].description.match(/📍\s*([^<]+)/);
-                            if(match && match[1]) {
-                                curSearchQuery = match[1].trim();
-                                break;
-                            }
-                        }
+            // Lọc ra MỌI địa điểm từng được ghi nhận trong lịch sử (dựa vào data-loc)
+            let allLocs = [];
+            if (historyData && historyData.length > 0) {
+                for(let i=0; i<historyData.length; i++) {
+                    if (historyData[i].description.includes('data-loc=')) {
+                        let match = historyData[i].description.match(/data-loc='([^']+)'/);
+                        if(match && match[1]) allLocs.push(match[1]);
                     }
                 }
-                const geoCur = await geocodeLocation(curSearchQuery);
-                if (geoCur) currentHubLoc = [geoCur.lat, geoCur.lng];
             }
+
+            if (allLocs.length > 0) {
+                // Điểm cũ nhất = Kho xuất phát
+                let oldestLocStr = allLocs[allLocs.length - 1];
+                const geoStart = await geocodeLocation(oldestLocStr);
+                if (geoStart) startLoc = [geoStart.lat, geoStart.lng];
+
+                // Điểm mới nhất = Vị trí hiện tại (Nếu chưa giao)
+                let newestLocStr = allLocs[0];
+                const geoCur = await geocodeLocation(newestLocStr);
+                if (geoCur) currentHubLoc = [geoCur.lat, geoCur.lng];
+            } else {
+                // Nếu chưa có lịch sử (hoặc API bị chậm), tạm lấy statusText
+                const geoCur = await geocodeLocation(statusText);
+                if (geoCur) {
+                    currentHubLoc = [geoCur.lat, geoCur.lng];
+                    startLoc = [geoCur.lat, geoCur.lng];
+                }
+            }
+
+            // NẾU HOÀN TOÀN KHÔNG LẤY ĐƯỢC TỌA ĐỘ HIỆN TẠI TỪ DOANHVU -> Ẩn bản đồ
+            if (!currentHubLoc) {
+                 mapElement.innerHTML = `<div style="text-align:center; padding-top: 150px; color: var(--text-sub);">Đang xác định tọa độ từ SPX...</div>`;
+                 return;
+            }
+            if (!startLoc) startLoc = currentHubLoc;
+
+            if (isDelivered) currentHubLoc = [...receiverLoc]; 
 
             map.setView(currentHubLoc, 12);
 
@@ -505,7 +518,7 @@
             window.trackingMaps[mapId] = map;
             setTimeout(() => map.invalidateSize(), 400);
             
-            // TRACKING LIVE ĐỘNG
+            // TRACKING LIVE ĐỘNG 10 GIÂY
             if(!isDelivered) {
                 window.trackingIntervals[mapId] = setInterval(async () => {
                     try {
@@ -522,7 +535,7 @@
                                 newLatLng = L.latLng(receiverLoc[0], receiverLoc[1]);
                                 clearInterval(window.trackingIntervals[mapId]); 
                             } else {
-                                // Lấy location_str từ Python trả về để dò tọa độ
+                                // Lấy chính xác chuỗi location_str từ Backend trả về
                                 let searchStr = data.location_str || data.status;
                                 const geoCur = await geocodeLocation(searchStr);
                                 if(geoCur) newLatLng = L.latLng(geoCur.lat, geoCur.lng);
@@ -608,7 +621,7 @@
                              `).join('');
                         }
 
-                        // LỖI DATA-STATUS NẰM CHÍNH TẠI ĐÂY: Truyền đúng biến current_stage cho map vẽ
+                        // SỬA LỖI NGHIÊM TRỌNG TRƯỚC ĐÂY: Truyền ĐÚNG biến current_stage của kiện hàng
                         let current_stage = (item.spx_stage || cleanStatus || 'Đang chờ cập nhật'); 
                         let step = getShippingStep(current_stage);
                         let wPercent = (step === 1) ? "0" : (step === 2) ? "33.33" : (step === 3) ? "66.66" : "100";
