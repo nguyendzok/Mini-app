@@ -21,19 +21,20 @@ app.add_middleware(
 MONGO_URI = os.environ.get("MONGO_URI", "")
 client = MongoClient(MONGO_URI) if MONGO_URI else None
 
-# TỪ ĐIỂN TỌA ĐỘ CHUẨN XÁC
+# TỪ ĐIỂN TỌA ĐỘ CHUẨN XÁC ĐẾN TỪNG HUB
 HUB_LOCATIONS = {
     "thâm quyến": {"lat": 22.5431, "lng": 114.0579},
     "nghĩa ô": {"lat": 29.3068, "lng": 120.0750},
     "bw soc": {"lat": 11.0067, "lng": 106.5139},
-    "hn mê linh soc": {"lat": 21.1828, "lng": 105.7142},
-    "từ sơn soc": {"lat": 21.1167, "lng": 105.9500},
+    "hn mê linh": {"lat": 21.1828, "lng": 105.7142},
+    "từ sơn": {"lat": 21.1167, "lng": 105.9500},
     "bn a mega": {"lat": 21.0828, "lng": 105.9767}, 
-    "21-hni thanh tri": {"lat": 20.9634, "lng": 105.8156}, 
+    "hni thanh tri": {"lat": 20.9634, "lng": 105.8156}, 
     "30-tha": {"lat": 19.3833, "lng": 105.7833}, 
     "tĩnh gia 2": {"lat": 19.3833, "lng": 105.7833},
     "nghi sơn": {"lat": 19.3833, "lng": 105.7833},
     "hải ninh": {"lat": 19.4167, "lng": 105.7833},
+    "long bien": {"lat": 21.0475, "lng": 105.8828},
 }
 
 class TrackingRequest(BaseModel):
@@ -63,10 +64,12 @@ def guess_coordinates(text, fallback_lat=19.3833, fallback_lng=105.7833):
     except: pass
     return {"lat": fallback_lat, "lng": fallback_lng}
 
+# ==========================================
+# HÀM ĐỒNG BỘ SPX CHUẨN VERCEL
+# ==========================================
 def sync_spx_logic():
     if not client: return
     db = client['shop_database']
-    
     query = {"status": {"$nin": ["Thành công", "Đã giao", "Đã hủy"]}}
     orders = list(db['orders'].find(query).sort("created_at", -1).limit(100))
     
@@ -99,7 +102,6 @@ def sync_spx_logic():
             for r in results:
                 t_code = r.get("tracking")
                 records = r.get("records", []) 
-                
                 if not records: continue
                 
                 latest_record = records[0]
@@ -131,7 +133,7 @@ def sync_spx_logic():
                             }}
                         )
     except Exception as e:
-        print(f"Lỗi tra dữ liệu: {e}")
+        print(f"Lỗi Web: {e}")
 
 @app.get("/")
 def home():
@@ -229,7 +231,7 @@ def get_live_location(order_id: str = Query(...)):
                         records = spx_data.get("records", [])
                         exact_location = ""
                         
-                        # CHỈ LẤY "currentLoc"
+                        # CHỈ LẤY "currentLoc" - Chặn đứng việc lấy điểm Đến
                         for rec in records:
                             if rec.get("currentLoc"):
                                 exact_location = rec.get("currentLoc")
