@@ -187,7 +187,6 @@
     <script>
         const API_BASE = ""; 
         const VIETMAP_API_KEY = "8916492a97574bcf7a1fd2465932ccdb2c40a48cef2a8447"; // Thay thế chuỗi này bằng Vietmap API Key của bạn
-        const GOOGLE_MAPS_API_KEY = ""; // Bổ sung Google Maps API Key tại đây (dành cho Geocoding)
         window.trackingMaps = {}; window.trackingMarkers = {}; window.trackingIntervals = {}; window.trackingRoutingControls = {};
         window.userLiveLocation = null; 
 
@@ -238,17 +237,18 @@
             }
             if(cleanQuery.length < 3) return null;
 
-            // 1. Thử Google Maps Geocoding (Nếu có API KEY)
-            if (GOOGLE_MAPS_API_KEY && GOOGLE_MAPS_API_KEY.length > 5) {
-                try {
-                    let ggRes = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(cleanQuery + ', Việt Nam')}&key=${GOOGLE_MAPS_API_KEY}`);
-                    let ggData = await ggRes.json();
-                    if (ggData.results && ggData.results.length > 0) {
-                        let loc = ggData.results[0].geometry.location;
-                        if (isLocationValid(loc.lat, loc.lng)) return { lat: loc.lat, lng: loc.lng };
-                    }
-                } catch(e) {}
-            }
+            // 1. Dùng OpenStreetMap (Nominatim) MIỄN PHÍ - Không cần API Key
+            try {
+                let osmRes = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(cleanQuery + ', Việt Nam')}&format=json&limit=1`, {
+                    headers: { 'Accept-Language': 'vi' }
+                });
+                let osmData = await osmRes.json();
+                if (osmData && osmData.length > 0) {
+                    let lat = parseFloat(osmData[0].lat);
+                    let lng = parseFloat(osmData[0].lon);
+                    if (isLocationValid(lat, lng)) return { lat, lng };
+                }
+            } catch(e) {}
 
             // 2. Dự phòng bằng Vietmap Geocoding
             try {
