@@ -87,6 +87,7 @@
         /* BẢN ĐỒ VÀ HIỆU ỨNG XE TẢI CAO CẤP */
         .map-wrapper { position: relative; width: 100%; height: 350px; border-radius: var(--radius-md); margin-bottom: 20px; overflow: hidden; border: 1px solid rgba(255,255,255,0.08); box-shadow: inset 0 2px 10px rgba(0,0,0,0.5); z-index: 1; }
         .tracking-map { width: 100%; height: 100%; background: #0f0f11; }
+        .leaflet-tile { filter: invert(1) hue-rotate(180deg) brightness(95%) contrast(90%); }
         .custom-map-marker { background: transparent; border: none; z-index: 10 !important;}
         .leaflet-routing-container { display: none !important; }
         .leaflet-marker-icon { transition: transform 2s ease-in-out !important; }
@@ -197,6 +198,7 @@
 
     <script>
         const API_BASE = ""; 
+        const VIETMAP_API_KEY = "YOUR_VIETMAP_API_KEY"; // Thay thế chuỗi này bằng Vietmap API Key của bạn
         window.trackingMaps = {}; window.trackingMarkers = {}; window.trackingIntervals = {}; window.trackingRoutingControls = {};
         window.userLiveLocation = null; 
 
@@ -251,10 +253,10 @@
 
                 if(cleanQuery.length < 3) return null;
 
-                let res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(cleanQuery + ', Việt Nam')}&countrycodes=vn&limit=1`);
+                let res = await fetch(`https://maps.vietmap.vn/api/search/v3?api-version=1.1&apikey=${VIETMAP_API_KEY}&text=${encodeURIComponent(cleanQuery + ', Việt Nam')}`);
                 let data = await res.json();
-                if (data && data.length > 0 && isLocationValid(parseFloat(data[0].lat), parseFloat(data[0].lon))) {
-                    return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
+                if (Array.isArray(data) && data.length > 0 && data[0].lat !== undefined && isLocationValid(parseFloat(data[0].lat), parseFloat(data[0].lng))) {
+                    return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lng) };
                 }
             } catch (err) {}
             return null;
@@ -409,7 +411,7 @@
 
             var vnBounds = L.latLngBounds(L.latLng(8.0, 102.0), L.latLng(24.0, 110.0));
             var map = L.map(mapId, { zoomControl: false, attributionControl: false, maxBounds: vnBounds, maxBoundsViscosity: 1.0, minZoom: 5 });
-            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { maxZoom: 19 }).addTo(map);
+            L.tileLayer('https://maps.vietmap.vn/api/maps/light/{z}/{x}/{y}.png?apikey=' + VIETMAP_API_KEY, { maxZoom: 20, attribution: '© Vietmap' }).addTo(map);
 
             let mapLabelStatus = getDisplayLabel(statusText);
 
