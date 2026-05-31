@@ -383,17 +383,55 @@
             let historyData = [];
             try { historyData = JSON.parse(decodeURIComponent(historyDataStr)); } catch(e) {}
             
-            // 1. VỊ TRÍ ĐÍCH LẤY CHUẨN TỪ ĐỊA CHỈ NHẬN HÀNG
-            let receiverLoc = null; 
-            let cleanDest = addressText.split(',').map(p => p.trim()).filter(p => p.length > 0).slice(-3).join(', ').replace(/(nhà số|đường|lô|phòng)\s*[\w/.\-]+/gi, '').trim();
-            const geoTarget = await geocodeLocation(cleanDest);
-            if (geoTarget) { receiverLoc = [geoTarget.lat, geoTarget.lng]; addressText = cleanDest; }
+            // 1. TÌM KHO XUẤT PHÁT VÀ HIỆN TẠI TỪ LỊCH SỬ (data-loc)
+            let startLoc = null;
+            let currentHubLoc = null;
 
-            // Nếu vẫn không có điểm đích, ẩn bản đồ
-            if (!receiverLoc) {
-                mapElement.innerHTML = `<div style="text-align:center; padding-top: 150px; color: var(--text-sub);">Đang chờ cập nhật tọa độ...</div>`;
-                return;
+            let allLocs = [];
+            if (historyData && historyData.length > 0) {
+                for(let i=0; i<historyData.length; i++) {
+                    if (historyData[i].description.includes('data-loc=')) {
+                        let match = historyData[i].description.match(/data-loc='([^']+)'/);
+                        if(match && match[1]) allLocs.push(match[1]);
+                    }
+                }
             }
+
+            if (allLocs.length > 0) {
+                let oldestLocStr = allLocs[allLocs.length - 1];
+                const geoStart = await geocodeLocation(oldestLocStr);
+                if (geoStart) startLoc = [geoStart.lat, geoStart.lng];
+
+                let newestLocStr = allLocs[0];
+                const geoCur = await geocodeLocation(newestLocStr);
+                if (geoCur) currentHubLoc = [geoCur.lat, geoCur.lng];
+            } else {
+                const geoCur = await geocodeLocation(statusText);
+                if (geoCur) {
+                    currentHubLoc = [geoCur.lat, geoCur.lng];
+                    startLoc = [geoCur.lat, geoCur.lng];
+                }
+            }
+
+            // 2. VỊ TRÍ ĐÍCH LẤY TỪ ĐỊA CHỈ NHẬN HÀNG
+            let receiverLoc = null; 
+            if (addressText && addressText !== "undefined") {
+                let cleanDest = addressText.split(',').map(p => p.trim()).filter(p => p.length > 0).slice(-3).join(', ').replace(/(nhà số|đường|lô|phòng)\s*[\w/.\-]+/gi, '').trim();
+                const geoTarget = await geocodeLocation(cleanDest);
+                if (geoTarget) { receiverLoc = [geoTarget.lat, geoTarget.lng]; addressText = cleanDest; }
+            } else {
+                addressText = "Chưa có địa chỉ nhận";
+            }
+
+            // ẨN BẢN ĐỒ NẾU KHÔNG CÓ BẤT KỲ TỌA ĐỘ NÀO
+            if (!currentHubLoc && !receiverLoc) {
+                 mapElement.innerHTML = `<div style="text-align:center; padding-top: 150px; color: var(--text-sub);">Đang xác định tọa độ từ SPX...</div>`;
+                 return;
+            }
+
+            if (!startLoc) startLoc = currentHubLoc || receiverLoc;
+            if (!currentHubLoc) currentHubLoc = startLoc || receiverLoc;
+            if (isDelivered && receiverLoc) currentHubLoc = [...receiverLoc]; 
 
             var vnBounds = L.latLngBounds(L.latLng(8.0, 102.0), L.latLng(24.0, 110.0));
             var map = L.map(mapId, { zoomControl: false, attributionControl: false, maxBounds: vnBounds, maxBoundsViscosity: 1.0, minZoom: 5 });
@@ -409,84 +447,42 @@
             };
             gpsPanel.addTo(map);
 
-            // NẾU ĐƠN CHỈ MỚI "LÊN ĐƠN" (STEP 1)
             if (step === 1) {
-                map.setView(receiverLoc, 14);
+                map.setView(receiverLoc || currentHubLoc, 14);
                 let alertIcon = L.divIcon({ className: '', html: '<div class="map-dot-alert">!</div>', iconSize: [32,32], iconAnchor: [16,16] });
-                L.marker(receiverLoc, {icon: alertIcon}).addTo(map);
+                L.marker(receiverLoc || currentHubLoc, {icon: alertIcon}).addTo(map);
                 window.trackingMaps[mapId] = map;
                 return; 
             }
 
-            // 2. TÌM KHO XUẤT PHÁT QUÁ KHỨ
-            let startLoc = null;
-            let currentHubLoc = null;
-
-            // Lọc ra MỌI địa điểm từng được ghi nhận trong lịch sử (dựa vào data-loc)
-            let allLocs = [];
-            if (historyData && historyData.length > 0) {
-                for(let i=0; i<historyData.length; i++) {
-                    if (historyData[i].description.includes('data-loc=')) {
-                        let match = historyData[i].description.match(/data-loc='([^']+)'/);
-                        if(match && match[1]) allLocs.push(match[1]);
-                    }
-                }
-            }
-
-            if (allLocs.length > 0) {
-                // Điểm cũ nhất = Kho xuất phát
-                let oldestLocStr = allLocs[allLocs.length - 1];
-                const geoStart = await geocodeLocation(oldestLocStr);
-                if (geoStart) startLoc = [geoStart.lat, geoStart.lng];
-
-                // Điểm mới nhất = Vị trí hiện tại (Nếu chưa giao)
-                let newestLocStr = allLocs[0];
-                const geoCur = await geocodeLocation(newestLocStr);
-                if (geoCur) currentHubLoc = [geoCur.lat, geoCur.lng];
-            } else {
-                // Nếu chưa có lịch sử (hoặc API bị chậm), tạm lấy statusText
-                const geoCur = await geocodeLocation(statusText);
-                if (geoCur) {
-                    currentHubLoc = [geoCur.lat, geoCur.lng];
-                    startLoc = [geoCur.lat, geoCur.lng];
-                }
-            }
-
-            // NẾU HOÀN TOÀN KHÔNG LẤY ĐƯỢC TỌA ĐỘ HIỆN TẠI TỪ DOANHVU -> Ẩn bản đồ
-            if (!currentHubLoc) {
-                 mapElement.innerHTML = `<div style="text-align:center; padding-top: 150px; color: var(--text-sub);">Đang xác định tọa độ từ SPX...</div>`;
-                 return;
-            }
-            if (!startLoc) startLoc = currentHubLoc;
-
-            if (isDelivered) currentHubLoc = [...receiverLoc]; 
-
-            // VẼ ĐƯỜNG NÉT ĐỨT MÀU XANH DƯƠNG (QUÁ KHỨ ĐÃ ĐI) DỰA THEO ĐƯỜNG BỘ
             if (!isDelivered && (startLoc[0] !== currentHubLoc[0] || startLoc[1] !== currentHubLoc[1])) {
                 drawRoute(map, startLoc, currentHubLoc, { color: '#3b82f6', opacity: 0.8, weight: 4, dashArray: '10, 12' });
             }
 
-            // VẼ ĐƯỜNG NÉT LIỀN MÀU CAM (TƯƠNG LAI SẮP ĐI) DỰA THEO ĐƯỜNG BỘ
             if (!isDelivered) {
-                drawRoute(map, currentHubLoc, receiverLoc, { color: '#f5a623', opacity: 1, weight: 4 }).then(layer => {
-                    window.trackingRoutingControls[mapId] = layer;
-                });
+                if (receiverLoc && (currentHubLoc[0] !== receiverLoc[0] || currentHubLoc[1] !== receiverLoc[1])) {
+                    drawRoute(map, currentHubLoc, receiverLoc, { color: '#f5a623', opacity: 1, weight: 4 }).then(layer => {
+                        window.trackingRoutingControls[mapId] = layer;
+                    });
+                }
             } else {
-                // Nếu đã giao thì vẽ 1 đường liền xanh lá từ đầu tới cuối
-                drawRoute(map, startLoc, receiverLoc, { color: '#10b981', opacity: 0.8, weight: 4 });
+                if (receiverLoc && (startLoc[0] !== receiverLoc[0] || startLoc[1] !== receiverLoc[1])) {
+                    drawRoute(map, startLoc, receiverLoc, { color: '#10b981', opacity: 0.8, weight: 4 });
+                }
             }
             
-            // CĂN CHỈNH BẢN ĐỒ VỪA VẶN MÀ KHÔNG BỊ LỆCH
-            let bounds = L.latLngBounds([startLoc, currentHubLoc, receiverLoc]);
+            let boundsArr = [startLoc, currentHubLoc];
+            if (receiverLoc) boundsArr.push(receiverLoc);
+            let bounds = L.latLngBounds(boundsArr);
+            
             if (bounds.getNorthEast().equals(bounds.getSouthWest())) {
                 map.setView(currentHubLoc, 14);
             } else {
                 map.fitBounds(bounds, { padding: [40, 40], maxZoom: 14 });
             }
 
-            // THÊM MARKER ĐẦU/CUỐI
             L.marker(startLoc, { icon: L.divIcon({ className: '', html: '<div class="map-dot-shop"></div>', iconSize: [0, 0], iconAnchor: [0, 0] }) }).addTo(map);
-            L.marker(receiverLoc, { icon: L.divIcon({ className: '', html: '<div class="map-dot-customer"></div>', iconSize: [0, 0], iconAnchor: [0, 0] }) }).addTo(map);
+            if (receiverLoc) L.marker(receiverLoc, { icon: L.divIcon({ className: '', html: '<div class="map-dot-customer"></div>', iconSize: [0, 0], iconAnchor: [0, 0] }) }).addTo(map);
 
             let truckOrCheck = isDelivered ? '✅' : '🚚';
             let truckClass = isDelivered ? 'shopee-truck-icon-static' : 'animated-truck-icon';
