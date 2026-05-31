@@ -189,27 +189,9 @@
         const VIETMAP_API_KEY = "8916492a97574bcf7a1fd2465932ccdb2c40a48cef2a8447"; // Thay thế chuỗi này bằng Vietmap API Key của bạn
         window.trackingMaps = {}; window.trackingMarkers = {}; window.trackingIntervals = {}; window.trackingRoutingControls = {};
         window.userLiveLocation = null; 
-
-        // BỘ TỪ ĐIỂN TỌA ĐỘ HUB
-        const VN_LOCATIONS = {
-            "thâm quyến": [22.5431, 114.0579], "nghĩa ô": [29.3068, 120.0750], "bw soc": [11.0067, 106.5139],
-            "hn mê linh": [21.1828, 105.7142], "mê linh soc": [21.1828, 105.7142], "từ sơn": [21.1167, 105.9500],
-            "bn a mega": [21.0828, 105.9767], "hni thanh tri": [20.9634, 105.8156], "30-tha": [19.3833, 105.7833], 
-            "tĩnh gia": [19.3833, 105.7833], "nghi sơn": [19.3833, 105.7833], "hải ninh": [19.4167, 105.7833], 
-            "long bien": [21.0475, 105.8828], "củ chi": [11.0067, 106.5139], "bình chánh": [11.005, 106.52], 
-            "hà nội": [21.0285, 105.8542], "đà nẵng": [16.0471, 108.2062], "hồ chí minh": [10.8231, 106.6297]
-        };
+        const GOOGLE_MAPS_API_KEY = ""; // Bổ sung Google Maps API Key tại đây (dành cho Geocoding)
 
         function isLocationValid(lat, lng) { return (lat >= 8.0 && lat <= 30.0 && lng >= 102.0 && lng <= 122.0); }
-
-        function findKnownLocation(text) {
-            if(!text) return null;
-            let lower = text.toLowerCase();
-            for (let key in VN_LOCATIONS) {
-                if (lower.includes(key)) return VN_LOCATIONS[key];
-            }
-            return null;
-        }
 
         // TÁCH NHÃN NGẮN GỌN CHO RADAR
         function getDisplayLabel(text) {
@@ -223,9 +205,6 @@
         // TÁCH ĐỊA CHỈ THỰC TẾ CHO GG MAPS (SIÊU CẤP)
         async function geocodeLocation(queryText) {
             if (!queryText) return null;
-            
-            let known = findKnownLocation(queryText);
-            if (known) return { lat: known[0], lng: known[1] };
 
             let cleanQuery = queryText;
             if (cleanQuery.includes('— VN')) {
@@ -237,18 +216,17 @@
             }
             if(cleanQuery.length < 3) return null;
 
-            // 1. Dùng OpenStreetMap (Nominatim) MIỄN PHÍ - Không cần API Key
-            try {
-                let osmRes = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(cleanQuery + ', Việt Nam')}&format=json&limit=1`, {
-                    headers: { 'Accept-Language': 'vi' }
-                });
-                let osmData = await osmRes.json();
-                if (osmData && osmData.length > 0) {
-                    let lat = parseFloat(osmData[0].lat);
-                    let lng = parseFloat(osmData[0].lon);
-                    if (isLocationValid(lat, lng)) return { lat, lng };
-                }
-            } catch(e) {}
+            // 1. Dùng Google Maps Geocoding (Nếu có API KEY)
+            if (GOOGLE_MAPS_API_KEY && GOOGLE_MAPS_API_KEY.length > 5) {
+                try {
+                    let ggRes = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(cleanQuery + ', Việt Nam')}&key=${GOOGLE_MAPS_API_KEY}`);
+                    let ggData = await ggRes.json();
+                    if (ggData.results && ggData.results.length > 0) {
+                        let loc = ggData.results[0].geometry.location;
+                        if (isLocationValid(loc.lat, loc.lng)) return { lat: loc.lat, lng: loc.lng };
+                    }
+                } catch(e) {}
+            }
 
             // 2. Dự phòng bằng Vietmap Geocoding
             try {
