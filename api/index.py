@@ -7,6 +7,7 @@ from pymongo import MongoClient
 import os
 import re
 import requests
+import concurrent.futures
 from datetime import datetime, timedelta
 
 app = FastAPI()
@@ -45,58 +46,95 @@ class TrackingRequest(BaseModel):
 # API LẤY THÔNG TIN TỪ DODANHVU VÀ LƯU MONGODB 
 # (Dùng cho cả Nút Tra Cứu và Auto-Sync)
 # ==========================================
+def parse_jina_text(text):
+    lines = text.split('\n')
+    records = []
+    current_record = None
+    time_pattern = re.compile(r'^\s*(\d{2}:\d{2}\s\d{1,2}/\d{1,2}/\d{4})\s*$')
+    
+    for line in lines:
+        line = line.strip()
+        if not line: continue
+        
+        time_match = time_pattern.match(line)
+        if time_match:
+            if current_record: records.append(current_record)
+            current_record = {"time": time_match.group(1), "desc": "", "currentLoc": "", "nextLoc": "", "emoji": "›"}
+        elif current_record:
+            if line.startswith('📍'):
+                current_record["currentLoc"] = line.replace('📍', '').replace('[Định vị ↗]', '').strip()
+            elif line.startswith('➡️'):
+                current_record["nextLoc"] = line.replace('➡️', '').strip()
+            elif not current_record["desc"]:
+                current_record["desc"] = line
+                
+    if current_record: records.append(current_record)
+    return records
+
+def fetch_jina_tracking(t_code):
+    url = f"https://r.jina.ai/https://tramavandon.com/spx/?tracking_number={t_code}"
+    headers = {
+        "Authorization": "Bearer jina_00cf8ad6eb9f4dbd9c6ad1ad23333bd5pnDu1Dx3MCjzPvZwtBKnatLo3x5d",
+        "X-Return-Format": "text"
+    }
+    try:
+        res = requests.get(url, headers=headers, timeout=20)
+        if res.status_code == 200:
+            return t_code, parse_jina_text(res.text)
+    except Exception:
+        pass
+    return t_code, []
+
 @app.post("/api/spx")
 def proxy_spx_and_save(req: TrackingRequest):
-    target_url = "https://dodanhvu.dpdns.org/api/spx"
-    payload = {"trackings": req.trackings}
-    headers = {"Content-Type": "application/json", "User-Agent": "Mozilla/5.0"}
+    trackings = list(set(req.trackings))
+    results = []
     
     try:
-        res = requests.post(target_url, json=payload, headers=headers, timeout=20)
-        if res.status_code == 200:
-            data = res.json()
-            
-            # Cập nhật ngược lên MongoDB ngay lập tức
-            if client:
-                db = client['shop_database']
-                for r in data.get("results", []):
-                    t_code = r.get("tracking")
-                    records = r.get("records", [])
-                    if not records: continue
+        with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
+            future_to_tcode = {executor.submit(fetch_jina_tracking, t_code): t_code for t_code in trackings}
+            for future in concurrent.futures.as_completed(future_to_tcode):
+                t_code, records = future.result()
+                if records:
+                    results.append({"tracking": t_code, "records": records, "status": records[0].get("desc", "Đang xử lý")})
+        
+        # Cập nhật ngược lên MongoDB ngay lập tức
+        if client and results:
+            db = client['shop_database']
+            for r in results:
+                t_code = r.get("tracking")
+                records = r.get("records", [])
+                if not records: continue
+                
+                latest_record = records[0]
+                new_status = latest_record.get("desc") or r.get("status")
+                
+                formatted_history = []
+                for rec in records:
+                    time_str = rec.get("time", "")
+                    emoji = rec.get("emoji", "›")
+                    desc = rec.get("desc", "")
+                    current_loc = rec.get("currentLoc", "")
+                    next_loc = rec.get("nextLoc", "")
                     
-                    latest_record = records[0]
-                    new_status = latest_record.get("desc") or r.get("status")
+                    full_desc = f"<strong style='color:#fff;'>{emoji} {desc}</strong>"
                     
-                    formatted_history = []
-                    for rec in records:
-                        time_str = rec.get("time", "")
-                        emoji = rec.get("emoji", "›")
-                        desc = rec.get("desc", "")
-                        current_loc = rec.get("currentLoc", "")
-                        next_loc = rec.get("nextLoc", "")
+                    if current_loc:
+                        full_desc += f"<br><span class='spx-loc-data' style='color:#9ca3af;font-size:11.5px;display:inline-block;margin-top:3px' data-loc='{current_loc}'>📍 {current_loc}</span>"
+                    if next_loc:
+                        full_desc += f"<br><span style='color:#60a5fa;font-size:11.5px;display:inline-block;margin-top:3px'>→ {next_loc}</span>"
                         
-                        full_desc = f"<strong style='color:#fff;'>{emoji} {desc}</strong>"
-                        
-                        # Gắn data-loc ẩn để Frontend cắt tọa độ chuẩn xác
-                        if current_loc:
-                            full_desc += f"<br><span class='spx-loc-data' style='color:#9ca3af;font-size:11.5px;display:inline-block;margin-top:3px' data-loc='{current_loc}'>📍 {current_loc}</span>"
-                        if next_loc:
-                            full_desc += f"<br><span style='color:#60a5fa;font-size:11.5px;display:inline-block;margin-top:3px'>→ {next_loc}</span>"
-                            
-                        formatted_history.append({"time": time_str, "description": full_desc})
-                    
-                    # Cập nhật mọi đơn hàng trong DB có chứa mã SPX này
-                    db['orders'].update_many(
-                        {"items.spx_code": re.compile(f"^{t_code}$", re.IGNORECASE)},
-                        {"$set": {
-                            "items.$[elem].spx_stage": new_status,
-                            "items.$[elem].tracking_history": formatted_history
-                        }},
-                        array_filters=[{"elem.spx_code": re.compile(f"^{t_code}$", re.IGNORECASE)}]
-                    )
-            return data
-        else:
-            return JSONResponse(status_code=res.status_code, content={"error": "Lỗi từ dodanhvu"})
+                    formatted_history.append({"time": time_str, "description": full_desc})
+                
+                db['orders'].update_many(
+                    {"items.spx_code": re.compile(f"^{t_code}$", re.IGNORECASE)},
+                    {"$set": {
+                        "items.$[elem].spx_stage": new_status,
+                        "items.$[elem].tracking_history": formatted_history
+                    }},
+                    array_filters=[{"elem.spx_code": re.compile(f"^{t_code}$", re.IGNORECASE)}]
+                )
+        return {"results": results}
     except Exception as e:
         return JSONResponse(status_code=500, content={"error": str(e)})
 

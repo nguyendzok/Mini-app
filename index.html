@@ -147,16 +147,7 @@
         @keyframes shine { to { background-position-x: -200%; } }
         .skel-card { background: var(--surface-glass); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px; display: flex; flex-direction: column; gap: 16px; margin-bottom: 16px;}
 
-        .loc-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); backdrop-filter: blur(8px); z-index: 9999; display: none; justify-content: center; align-items: center; opacity: 0; transition: opacity 0.3s ease; }
-        .loc-popup { background: var(--surface); border: 1px solid rgba(255,255,255,0.1); border-radius: var(--radius-lg); padding: 24px; width: 90%; max-width: 320px; text-align: center; box-shadow: 0 15px 40px rgba(0,0,0,0.5); transform: translateY(20px); transition: transform 0.3s ease; }
-        .loc-icon { font-size: 40px; margin-bottom: 16px; text-shadow: 0 0 20px var(--info); }
-        .loc-title { font-size: 18px; font-weight: 800; color: #fff; margin-bottom: 8px; }
-        .loc-desc { font-size: 13px; color: var(--text-sub); line-height: 1.5; margin-bottom: 20px; }
-        .loc-btns { display: flex; gap: 12px; }
-        .loc-btn { flex: 1; padding: 12px; border-radius: var(--radius-md); font-size: 14px; font-weight: 700; cursor: pointer; border: none; transition: transform 0.1s; }
-        .loc-btn:active { transform: scale(0.95); }
-        .loc-btn.allow { background: var(--info); color: #fff; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4); }
-        .loc-btn.deny { background: rgba(255,255,255,0.1); color: var(--text-main); }
+
     </style>
 </head>
 <body>
@@ -169,17 +160,6 @@
         <symbol id="icon-down" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></symbol>
     </svg>
 
-    <div class="loc-overlay" id="locOverlay">
-        <div class="loc-popup" id="locPopup">
-            <div class="loc-icon">📍</div>
-            <div class="loc-title">Chia sẻ vị trí</div>
-            <div class="loc-desc">Cho phép ứng dụng sử dụng vị trí GPS hiện tại của bạn để hiển thị điểm nhận hàng chính xác.</div>
-            <div class="loc-btns">
-                <button class="loc-btn deny" onclick="denyLocation()">Để sau</button>
-                <button class="loc-btn allow" onclick="allowLocation()">Cho phép</button>
-            </div>
-        </div>
-    </div>
 
     <div class="header">
         <div class="user-info">
@@ -277,48 +257,26 @@
             
             // 1. CHUẨN BỊ (Đã lên đơn thành công, chờ lấy hàng, v.v.)
             return 1; 
-        }
-
-        function checkLocationPermission() {
-            const asked = localStorage.getItem('loc_asked');
-            const granted = localStorage.getItem('loc_granted');
-            if (!asked) {
-                const overlay = document.getElementById('locOverlay');
-                const popup = document.getElementById('locPopup');
-                overlay.style.display = 'flex';
-                setTimeout(() => { overlay.style.opacity = '1'; popup.style.transform = 'translateY(0)'; }, 10);
-            } else if (granted === 'true') requestNativeLocation();
-        }
-
-        function allowLocation() {
-            closePopup(); localStorage.setItem('loc_asked', 'true'); localStorage.setItem('loc_granted', 'true'); requestNativeLocation();
-        }
-
-        function denyLocation() {
-            closePopup(); localStorage.setItem('loc_asked', 'true'); localStorage.setItem('loc_granted', 'false');
-        }
-
-        function closePopup() {
-            document.getElementById('locOverlay').style.opacity = '0';
-            document.getElementById('locPopup').style.transform = 'translateY(20px)';
-            setTimeout(() => document.getElementById('locOverlay').style.display = 'none', 300);
-        }
-
-        function requestNativeLocation() {
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(
-                    (position) => { 
-                        let pLat = position.coords.latitude; let pLng = position.coords.longitude;
-                        if(isLocationValid(pLat, pLng)) window.userLiveLocation = [pLat, pLng]; 
-                    },
-                    (error) => {}, { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-                );
+        async function drawRoute(map, startLoc, endLoc, options = {}) {
+            let url = `https://router.project-osrm.org/route/v1/driving/${startLoc[1]},${startLoc[0]};${endLoc[1]},${endLoc[0]}?overview=full&geometries=geojson`;
+            let layer = null;
+            try {
+                let res = await fetch(url);
+                let data = await res.json();
+                if (data.routes && data.routes.length > 0) {
+                    let coords = data.routes[0].geometry.coordinates.map(c => [c[1], c[0]]);
+                    layer = L.polyline(coords, options).addTo(map);
+                } else {
+                    layer = L.polyline([startLoc, endLoc], options).addTo(map);
+                }
+            } catch(e) {
+                layer = L.polyline([startLoc, endLoc], options).addTo(map);
             }
+            return layer;
         }
 
         function initApp() {
             try {
-                checkLocationPermission();
                 const tg = window.Telegram.WebApp; tg.ready(); tg.expand();
                 let attempts = 0;
 
@@ -392,16 +350,11 @@
             let historyData = [];
             try { historyData = JSON.parse(decodeURIComponent(historyDataStr)); } catch(e) {}
             
-            // 1. VỊ TRÍ ĐÍCH
+            // 1. VỊ TRÍ ĐÍCH LẤY CHUẨN TỪ ĐỊA CHỈ NHẬN HÀNG
             let receiverLoc = null; 
-            if (window.userLiveLocation) {
-                receiverLoc = [...window.userLiveLocation];
-                addressText = "📍 Vị trí GPS hiện tại của bạn";
-            } else {
-                let cleanDest = addressText.split(',').map(p => p.trim()).filter(p => p.length > 0).slice(-3).join(', ').replace(/(nhà số|đường|lô|phòng)\s*[\w/.\-]+/gi, '').trim();
-                const geoTarget = await geocodeLocation(cleanDest);
-                if (geoTarget) { receiverLoc = [geoTarget.lat, geoTarget.lng]; addressText = cleanDest; }
-            }
+            let cleanDest = addressText.split(',').map(p => p.trim()).filter(p => p.length > 0).slice(-3).join(', ').replace(/(nhà số|đường|lô|phòng)\s*[\w/.\-]+/gi, '').trim();
+            const geoTarget = await geocodeLocation(cleanDest);
+            if (geoTarget) { receiverLoc = [geoTarget.lat, geoTarget.lng]; addressText = cleanDest; }
 
             // Nếu vẫn không có điểm đích, ẩn bản đồ
             if (!receiverLoc) {
@@ -475,18 +428,19 @@
 
             if (isDelivered) currentHubLoc = [...receiverLoc]; 
 
-            // VẼ ĐƯỜNG NÉT ĐỨT MÀU XANH DƯƠNG (QUÁ KHỨ ĐÃ ĐI)
+            // VẼ ĐƯỜNG NÉT ĐỨT MÀU XANH DƯƠNG (QUÁ KHỨ ĐÃ ĐI) DỰA THEO ĐƯỜNG BỘ
             if (!isDelivered && (startLoc[0] !== currentHubLoc[0] || startLoc[1] !== currentHubLoc[1])) {
-                L.polyline([startLoc, currentHubLoc], { color: '#3b82f6', opacity: 0.8, weight: 4, dashArray: '10, 12' }).addTo(map);
+                drawRoute(map, startLoc, currentHubLoc, { color: '#3b82f6', opacity: 0.8, weight: 4, dashArray: '10, 12' });
             }
 
-            // VẼ ĐƯỜNG NÉT LIỀN MÀU CAM (TƯƠNG LAI SẮP ĐI)
+            // VẼ ĐƯỜNG NÉT LIỀN MÀU CAM (TƯƠNG LAI SẮP ĐI) DỰA THEO ĐƯỜNG BỘ
             if (!isDelivered) {
-                let futureRouting = L.polyline([currentHubLoc, receiverLoc], { color: '#f5a623', opacity: 1, weight: 4 }).addTo(map);
-                window.trackingRoutingControls[mapId] = futureRouting;
+                drawRoute(map, currentHubLoc, receiverLoc, { color: '#f5a623', opacity: 1, weight: 4 }).then(layer => {
+                    window.trackingRoutingControls[mapId] = layer;
+                });
             } else {
                 // Nếu đã giao thì vẽ 1 đường liền xanh lá từ đầu tới cuối
-                L.polyline([startLoc, receiverLoc], { color: '#10b981', opacity: 0.8, weight: 4 }).addTo(map);
+                drawRoute(map, startLoc, receiverLoc, { color: '#10b981', opacity: 0.8, weight: 4 });
             }
             
             // CĂN CHỈNH BẢN ĐỒ VỪA VẶN MÀ KHÔNG BỊ LỆCH
