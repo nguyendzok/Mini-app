@@ -202,7 +202,7 @@
             return tmp.trim();
         }
 
-        // TÁCH ĐỊA CHỈ THỰC TẾ CHO GG MAPS (SIÊU CẤP)
+        // TÁCH ĐỊA CHỈ THỰC TẾ BẰNG BỘ LỌC THÔNG MINH CHO SHOPEE
         async function geocodeLocation(queryText) {
             if (!queryText) return null;
 
@@ -212,21 +212,28 @@
                 let parts = addressPart.split(',').map(p => p.trim());
                 cleanQuery = parts.slice(-3).join(', ').replace(/Việt Nam/gi, '').trim();
             } else {
-                cleanQuery = cleanQuery.replace(/(kho trung chuyển|bưu cục|soc|hub|trạm)/gi, '').trim();
+                // Xóa mã tỉnh/kho Shopee (VD: 30-THA, 20-HNI, 50-HCM)
+                cleanQuery = cleanQuery.replace(/\d{2}-[a-zA-Z]{3}/gi, '');
+                // Xóa các từ khóa rác của Shopee
+                cleanQuery = cleanQuery.replace(/(kho trung chuyển|bưu cục|soc|hub|trạm|mega)/gi, '');
+                // Xóa các số thứ tự (ví dụ: Tinh Gia 2 -> Tinh Gia)
+                cleanQuery = cleanQuery.replace(/\d+/g, '');
+                cleanQuery = cleanQuery.trim();
             }
             if(cleanQuery.length < 3) return null;
 
-            // 1. Dùng Google Maps Geocoding (Nếu có API KEY)
-            if (GOOGLE_MAPS_API_KEY && GOOGLE_MAPS_API_KEY.length > 5) {
-                try {
-                    let ggRes = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(cleanQuery + ', Việt Nam')}&key=${GOOGLE_MAPS_API_KEY}`);
-                    let ggData = await ggRes.json();
-                    if (ggData.results && ggData.results.length > 0) {
-                        let loc = ggData.results[0].geometry.location;
-                        if (isLocationValid(loc.lat, loc.lng)) return { lat: loc.lat, lng: loc.lng };
-                    }
-                } catch(e) {}
-            }
+            // 1. Dùng OpenStreetMap (Nominatim) MIỄN PHÍ - BỘ XỬ LÝ CHÍNH
+            try {
+                let osmRes = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(cleanQuery + ', Việt Nam')}&format=json&limit=1`, {
+                    headers: { 'Accept-Language': 'vi' }
+                });
+                let osmData = await osmRes.json();
+                if (osmData && osmData.length > 0) {
+                    let lat = parseFloat(osmData[0].lat);
+                    let lng = parseFloat(osmData[0].lon);
+                    if (isLocationValid(lat, lng)) return { lat, lng };
+                }
+            } catch(e) {}
 
             // 2. Dự phòng bằng Vietmap Geocoding
             try {
