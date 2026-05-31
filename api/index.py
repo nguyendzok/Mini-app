@@ -61,10 +61,16 @@ def parse_jina_text(text):
             if current_record: records.append(current_record)
             current_record = {"time": time_match.group(1), "desc": "", "currentLoc": "", "nextLoc": "", "emoji": "›"}
         elif current_record:
-            if line.startswith('📍'):
-                current_record["currentLoc"] = line.replace('📍', '').replace('[Định vị ↗]', '').strip()
-            elif line.startswith('➡️'):
-                current_record["nextLoc"] = line.replace('➡️', '').strip()
+            if '📍' in line:
+                parts = line.split('📍', 1)
+                if parts[0].strip() and not current_record["desc"]:
+                    current_record["desc"] = parts[0].strip()
+                current_record["currentLoc"] = parts[1].replace('[Định vị ↗]', '').strip()
+            elif '➡️' in line:
+                parts = line.split('➡️', 1)
+                if parts[0].strip() and not current_record["desc"]:
+                    current_record["desc"] = parts[0].strip()
+                current_record["nextLoc"] = parts[1].replace('Tiếp theo:', '').strip()
             elif not current_record["desc"]:
                 current_record["desc"] = line
                 
@@ -232,7 +238,8 @@ def get_web_stats(user_id: int = Query(0)):
         three_mins_ago = now - timedelta(minutes=3)
         return {
             "online": max(1, db['web_stats'].count_documents({"last_active": {"$gte": three_mins_ago}})),
-            "monthly": max(1, db['web_stats'].count_documents({"month": current_month}))
+            "monthly": max(1, db['web_stats'].count_documents({"month": current_month})),
+            "all_time": len(db['web_stats'].distinct("user_id"))
         }
     except:
-        return {"online": 1, "monthly": 1}
+        return {"online": 1, "monthly": 1, "all_time": 1}

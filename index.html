@@ -38,7 +38,9 @@
         .stat-label { font-size: 10px; color: var(--text-sub); font-weight: 700; margin-top: 4px; text-transform: uppercase; letter-spacing: 1px; }
 
         .metrics-bar { display: flex; justify-content: space-between; background: rgba(0,0,0,0.4); padding: 12px 16px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.04); margin-bottom: 24px; box-shadow: inset 0 2px 10px rgba(0,0,0,0.5); }
-        .metric { font-size: 11px; font-weight: 600; color: var(--text-sub); display: flex; align-items: center; gap: 8px; width: 50%;}
+        .metric { font-size: 11px; font-weight: 600; color: var(--text-sub); display: flex; align-items: center; gap: 8px; width: 33.33%; justify-content: center;}
+        .metric:first-child { justify-content: flex-start; }
+        .metric:last-child { justify-content: flex-end; }
         .metric-val { color: #fff; font-size: 14px; font-weight: 800; text-shadow: 0 0 10px rgba(255,255,255,0.4); }
         .live-dot { width: 8px; height: 8px; background: var(--success); border-radius: 50%; box-shadow: 0 0 10px var(--success); animation: pulseDot 1.5s infinite; }
         @keyframes pulseDot { 0% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(1.3); } 100% { opacity: 1; transform: scale(1); } }
@@ -172,6 +174,12 @@
         <div class="stat"><div class="stat-num" id="uTotal">-</div><div class="stat-label">Tổng Đơn</div></div>
     </div>
 
+    <div class="metrics-bar">
+        <div class="metric"><div class="live-dot"></div> Online: <span class="metric-val" id="onlineCount">-</span></div>
+        <div class="metric"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg> Tháng: <span class="metric-val" id="monthCount">-</span></div>
+        <div class="metric"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg> Tổng: <span class="metric-val" id="allTimeCount">-</span></div>
+    </div>
+
     <div class="order-list" id="orderList">
         <div class="skel-card"><div style="display:flex; justify-content:space-between;"><div style="width:80px;height:24px;border-radius:12px;" class="skeleton"></div><div style="width:100px;height:24px;border-radius:12px;" class="skeleton"></div></div><div style="width:80%;height:24px;margin-top:16px;" class="skeleton"></div></div>
     </div>
@@ -179,6 +187,7 @@
     <script>
         const API_BASE = ""; 
         const VIETMAP_API_KEY = "8916492a97574bcf7a1fd2465932ccdb2c40a48cef2a8447"; // Thay thế chuỗi này bằng Vietmap API Key của bạn
+        const GOOGLE_MAPS_API_KEY = ""; // Bổ sung Google Maps API Key tại đây (dành cho Geocoding)
         window.trackingMaps = {}; window.trackingMarkers = {}; window.trackingIntervals = {}; window.trackingRoutingControls = {};
         window.userLiveLocation = null; 
 
@@ -219,20 +228,30 @@
             let known = findKnownLocation(queryText);
             if (known) return { lat: known[0], lng: known[1] };
 
+            let cleanQuery = queryText;
+            if (cleanQuery.includes('— VN')) {
+                let addressPart = cleanQuery.split('— VN')[1];
+                let parts = addressPart.split(',').map(p => p.trim());
+                cleanQuery = parts.slice(-3).join(', ').replace(/Việt Nam/gi, '').trim();
+            } else {
+                cleanQuery = cleanQuery.replace(/(kho trung chuyển|bưu cục|soc|hub|trạm)/gi, '').trim();
+            }
+            if(cleanQuery.length < 3) return null;
+
+            // 1. Thử Google Maps Geocoding (Nếu có API KEY)
+            if (GOOGLE_MAPS_API_KEY && GOOGLE_MAPS_API_KEY.length > 5) {
+                try {
+                    let ggRes = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(cleanQuery + ', Việt Nam')}&key=${GOOGLE_MAPS_API_KEY}`);
+                    let ggData = await ggRes.json();
+                    if (ggData.results && ggData.results.length > 0) {
+                        let loc = ggData.results[0].geometry.location;
+                        if (isLocationValid(loc.lat, loc.lng)) return { lat: loc.lat, lng: loc.lng };
+                    }
+                } catch(e) {}
+            }
+
+            // 2. Dự phòng bằng Vietmap Geocoding
             try {
-                let cleanQuery = queryText;
-                if (cleanQuery.includes('— VN')) {
-                    // Cắt lấy phần địa chỉ phía sau "— VN"
-                    let addressPart = cleanQuery.split('— VN')[1];
-                    // Chỉ lấy 3 thành phần cuối cùng (Xã, Huyện, Tỉnh) để tìm kiếm
-                    let parts = addressPart.split(',').map(p => p.trim());
-                    cleanQuery = parts.slice(-3).join(', ').replace(/Việt Nam/gi, '').trim();
-                } else {
-                    cleanQuery = cleanQuery.replace(/(kho trung chuyển|bưu cục|soc|hub|trạm)/gi, '').trim();
-                }
-
-                if(cleanQuery.length < 3) return null;
-
                 let res = await fetch(`https://maps.vietmap.vn/api/search/v3?api-version=1.1&apikey=${VIETMAP_API_KEY}&text=${encodeURIComponent(cleanQuery + ', Việt Nam')}`);
                 let data = await res.json();
                 if (Array.isArray(data) && data.length > 0 && data[0].lat !== undefined && isLocationValid(parseFloat(data[0].lat), parseFloat(data[0].lng))) {
@@ -296,6 +315,18 @@
                         }
                         
                         fetchOrders(userId); 
+                        
+                        const loadStats = () => {
+                            fetch(`${API_BASE}/api/stats?user_id=${userId}`)
+                                .then(res => res.json())
+                                .then(data => {
+                                    if(data.online) document.getElementById('onlineCount').innerText = data.online;
+                                    if(data.monthly) document.getElementById('monthCount').innerText = data.monthly;
+                                    if(data.all_time) document.getElementById('allTimeCount').innerText = data.all_time;
+                                }).catch(()=>{});
+                        };
+                        loadStats();
+                        setInterval(loadStats, 30000);
                         
                         // AUTO SYNC MỖI 60 GIÂY
                         setInterval(() => {
