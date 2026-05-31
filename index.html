@@ -358,10 +358,19 @@
                 fetch(`${API_BASE}/api/sync_spx_from_db?user_id=${id}`, { method: 'POST' }).catch(() => {});
                 const response = await fetch(`${API_BASE}/api/orders?user_id=${id}`);
                 const data = await response.json();
+                
+                if (!Array.isArray(data)) {
+                    let errMsg = "Lỗi dữ liệu từ máy chủ (Backend Error)";
+                    if (data && data.detail) errMsg = typeof data.detail === 'string' ? data.detail : JSON.stringify(data.detail);
+                    else if (data && data.error) errMsg = data.error;
+                    throw new Error(errMsg);
+                }
+                
                 document.getElementById('uTotal').innerText = data.length;
                 renderOrders(data);
             } catch (error) {
-                document.getElementById('orderList').innerHTML = `<div style="text-align:center; padding: 40px; color: var(--danger);">LỖI KẾT NỐI API</div>`;
+                document.getElementById('uTotal').innerText = "-";
+                document.getElementById('orderList').innerHTML = `<div style="text-align:center; padding: 40px; color: var(--danger);">LỖI KẾT NỐI API<br><span style="font-size:13px; color:var(--text-sub); margin-top:10px; display:block;">${error.message}</span></div>`;
             }
         }
 
