@@ -102,17 +102,17 @@
         .map-dot-customer::before { content: "✓"; color: #fff; font-size: 10px; font-weight: 900; }
         .map-dot-customer::after { content: "Điểm giao"; position: absolute; top: 18px; left: 50%; transform: translateX(-50%); font-size: 10px; font-weight: 700; color: #10b981; background: rgba(0,0,0,0.8); padding: 2px 6px; border-radius: 4px; white-space: nowrap;}
 
-        .radar-box { position: absolute; bottom: 10px; left: 50%; transform: translate(-50%, 50%); width: 80px; height: 80px; z-index: 1; pointer-events: none; }
+        .radar-box { position: absolute; top: -40px; left: 50%; transform: translateX(-50%); width: 80px; height: 80px; z-index: 1; pointer-events: none; }
         .radar-beam { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: 50%; background: conic-gradient(from 0deg, transparent 70%, rgba(59, 130, 246, 0.7) 100%); animation: radarSpin 2s linear infinite; box-shadow: inset 0 0 20px rgba(59, 130, 246, 0.2); border: 1px solid rgba(59, 130, 246, 0.4); }
         .radar-beam::after { content:''; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 8px; height: 8px; background: #3b82f6; border-radius: 50%; box-shadow: 0 0 15px #fff; }
         @keyframes radarSpin { 100% { transform: rotate(360deg); } }
 
-        .animated-truck-icon { position: absolute; bottom: 25px; left: 50%; transform: translateX(-50%); font-size: 24px; z-index: 5; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.6)); animation: truckDrive 0.3s infinite alternate ease-in-out; }
+        .animated-truck-icon { position: absolute; bottom: -12px; left: 50%; transform: translateX(-50%); font-size: 24px; z-index: 5; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.6)); animation: truckDrive 0.3s infinite alternate ease-in-out; }
         @keyframes truckDrive { 0% { transform: translateX(-50%) translateY(0) rotate(-2deg); } 100% { transform: translateX(-50%) translateY(-4px) rotate(2deg); } }
         
-        .shopee-truck-icon-static { position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); font-size: 16px; z-index: 5; filter: drop-shadow(0 2px 2px rgba(0,0,0,0.4));}
+        .shopee-truck-icon-static { position: absolute; bottom: -8px; left: 50%; transform: translateX(-50%); font-size: 16px; z-index: 5; filter: drop-shadow(0 2px 2px rgba(0,0,0,0.4));}
         
-        .shopee-marker-label { background: #fff; color: #ee4d2d; border: 1px solid rgba(238, 77, 45, 0.3); padding: 6px 12px; border-radius: 4px; font-size: 11px; font-weight: 800; white-space: nowrap; box-shadow: 0 4px 10px rgba(0,0,0,0.15); position: absolute; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 4px; z-index: 10; }
+        .shopee-marker-label { background: #fff; color: #ee4d2d; border: 1px solid rgba(238, 77, 45, 0.3); padding: 6px 12px; border-radius: 4px; font-size: 11px; font-weight: 800; white-space: nowrap; box-shadow: 0 4px 10px rgba(0,0,0,0.15); position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 4px; z-index: 10; }
         .shopee-marker-label::after { content: ''; position: absolute; bottom: -6px; left: 50%; transform: translateX(-50%); border-width: 6px 6px 0; border-style: solid; border-color: #fff transparent transparent transparent; }
 
         .gps-data-panel { position: absolute; bottom: 10px; right: 10px; background: rgba(20, 20, 24, 0.85); backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.08); border-radius: var(--radius-sm); padding: 10px 14px; width: 260px; z-index: 1000; font-size: 11px; color: rgba(255,255,255,0.7); }
@@ -464,35 +464,26 @@
 
             if (isDelivered) currentHubLoc = [...receiverLoc]; 
 
-            map.setView(currentHubLoc, 12);
-
             // VẼ ĐƯỜNG NÉT ĐỨT MÀU XANH DƯƠNG (QUÁ KHỨ ĐÃ ĐI)
             if (!isDelivered && (startLoc[0] !== currentHubLoc[0] || startLoc[1] !== currentHubLoc[1])) {
-                L.Routing.control({
-                    waypoints: [ L.latLng(startLoc[0], startLoc[1]), L.latLng(currentHubLoc[0], currentHubLoc[1]) ],
-                    routeWhileDragging: false, addWaypoints: false, showAlternatives: false, fitSelectedRoutes: false,
-                    lineOptions: { styles: [{ color: '#3b82f6', opacity: 0.8, weight: 4, dashArray: '10, 12' }] },
-                    createMarker: function() { return null; }
-                }).addTo(map);
+                L.polyline([startLoc, currentHubLoc], { color: '#3b82f6', opacity: 0.8, weight: 4, dashArray: '10, 12' }).addTo(map);
             }
 
             // VẼ ĐƯỜNG NÉT LIỀN MÀU CAM (TƯƠNG LAI SẮP ĐI)
             if (!isDelivered) {
-                let futureRouting = L.Routing.control({
-                    waypoints: [ L.latLng(currentHubLoc[0], currentHubLoc[1]), L.latLng(receiverLoc[0], receiverLoc[1]) ],
-                    routeWhileDragging: false, addWaypoints: false, showAlternatives: false, fitSelectedRoutes: true,
-                    lineOptions: { styles: [{ color: '#f5a623', opacity: 1, weight: 4 }] },
-                    createMarker: function() { return null; }
-                }).addTo(map);
+                let futureRouting = L.polyline([currentHubLoc, receiverLoc], { color: '#f5a623', opacity: 1, weight: 4 }).addTo(map);
                 window.trackingRoutingControls[mapId] = futureRouting;
             } else {
                 // Nếu đã giao thì vẽ 1 đường liền xanh lá từ đầu tới cuối
-                L.Routing.control({
-                    waypoints: [ L.latLng(startLoc[0], startLoc[1]), L.latLng(receiverLoc[0], receiverLoc[1]) ],
-                    routeWhileDragging: false, addWaypoints: false, showAlternatives: false, fitSelectedRoutes: true,
-                    lineOptions: { styles: [{ color: '#10b981', opacity: 0.8, weight: 4 }] },
-                    createMarker: function() { return null; }
-                }).addTo(map);
+                L.polyline([startLoc, receiverLoc], { color: '#10b981', opacity: 0.8, weight: 4 }).addTo(map);
+            }
+            
+            // CĂN CHỈNH BẢN ĐỒ VỪA VẶN MÀ KHÔNG BỊ LỆCH
+            let bounds = L.latLngBounds([startLoc, currentHubLoc, receiverLoc]);
+            if (bounds.getNorthEast().equals(bounds.getSouthWest())) {
+                map.setView(currentHubLoc, 14);
+            } else {
+                map.fitBounds(bounds, { padding: [40, 40], maxZoom: 14 });
             }
 
             // THÊM MARKER ĐẦU/CUỐI
@@ -505,7 +496,7 @@
             var truckIcon = L.divIcon({
                 className: 'custom-map-marker',
                 html: `
-                    <div class="shopee-marker-label" id="label_${mapId}" style="bottom: ${isDelivered ? '30px' : '45px'}">
+                    <div class="shopee-marker-label" id="label_${mapId}" style="bottom: ${isDelivered ? '20px' : '30px'}">
                         <span style="color:${isDelivered ? '#10b981' : '#ee4d2d'}">●</span> <span class="status-text">${mapLabelStatus}</span>
                     </div>
                     <div class="${truckClass}">${truckOrCheck}</div>
@@ -550,7 +541,7 @@
                                     labelEl.innerText = newLabel;
                                     if (newStep === 4) {
                                         labelEl.previousElementSibling.style.color = '#10b981';
-                                        labelEl.parentElement.style.bottom = '30px';
+                                        labelEl.parentElement.style.bottom = '20px';
                                         labelEl.parentElement.nextElementSibling.className = 'shopee-truck-icon-static';
                                         labelEl.parentElement.nextElementSibling.innerText = '✅';
                                         if (labelEl.parentElement.nextElementSibling.nextElementSibling) {
@@ -559,7 +550,9 @@
                                     } 
                                 }
                                 const rControl = window.trackingRoutingControls[mapId];
-                                if (rControl) rControl.setWaypoints([newLatLng, rControl.getWaypoints()[1].latLng]);
+                                if (rControl && rControl.setLatLngs) {
+                                    rControl.setLatLngs([newLatLng, receiverLoc]);
+                                }
                             }
                         }
                     } catch (err) {}
@@ -590,6 +583,15 @@
         function renderOrders(orders) {
             const list = document.getElementById('orderList');
             list.innerHTML = '';
+            
+            // Chỉ giữ lại các mã đơn hàng DH
+            if (orders) {
+                orders = orders.filter(o => o.order_id && String(o.order_id).toUpperCase().startsWith('DH'));
+            }
+            
+            // Cập nhật lại tổng số đơn
+            const totalEl = document.getElementById('uTotal');
+            if (totalEl) totalEl.innerText = orders ? orders.length : 0;
             
             if(!orders || orders.length === 0) {
                 list.innerHTML = `<div style="text-align:center; padding: 40px; color: var(--text-sub)">Bạn chưa có đơn hàng nào.</div>`;
